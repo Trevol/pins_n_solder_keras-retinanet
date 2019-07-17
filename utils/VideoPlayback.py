@@ -1,11 +1,13 @@
 import cv2
 
 from .KbdKeys import KbdKeys
+from .VideoController import VideoController
 
 
 class VideoPlayback:
-    def __init__(self, videoPath):
+    def __init__(self, videoPath, initialFrameDelay=1, initialyPaused=False):
         self.cap = cv2.VideoCapture(videoPath)
+        self._controller = VideoController(self, initialFrameDelay, initialyPaused)
 
     def __enter__(self):
         return self
@@ -53,7 +55,4 @@ class VideoPlayback:
         return int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     def handleKey(self):
-        key = cv2.waitKey()
-        if key == KbdKeys.L_ARROW:
-            self.backward()
-        return key
+        return self._controller.handleKey()
