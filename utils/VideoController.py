@@ -11,9 +11,11 @@ class VideoController:
         self.videoPlayback = videoPlayback
         self.frameDelay = initialFrameDelay
         self.state = self.States.PAUSE if initialyPaused else self.States.PLAYING
+        self._schedulePause = False
 
     def _enterPausedState(self):
         assert self.state != self.States.PAUSE
+        self._schedulePause = False
         self.state = self.States.PAUSE
         return self.__inPausedState()
 
@@ -41,21 +43,23 @@ class VideoController:
             return self._enterPausedState()
         elif key == KbdKeys.L_ARROW:
             self.videoPlayback.backward()
-            return self._enterPausedState()
+            self._schedulePause = True  # return outside for frame retrieval and then enterPause
 
         return key
 
     def handleKey(self):
+        if self._schedulePause:
+            return self._enterPausedState()
         if self.state == self.States.PAUSE:
             return self.__inPausedState()
         else:
             return self.__inPlayingState()
 
-    def handleKey___(self):
-        key = cv2.waitKey()
-        if key == KbdKeys.L_ARROW:
-            self.videoPlayback.backward()
-        return key
+    # def handleKey___(self):
+    #     key = cv2.waitKey()
+    #     if key == KbdKeys.L_ARROW:
+    #         self.videoPlayback.backward()
+    #     return key
 
 # class VideoController_OLD:
 #     class States:
