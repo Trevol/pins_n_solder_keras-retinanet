@@ -8,37 +8,37 @@ def framePos(videoCapture):
     return int(videoCapture.get(cv2.CAP_PROP_POS_FRAMES))
 
 
-def main():
-    files = [
-        ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
-         './data/detections_video6.csv'),
-
-        ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
-         './data/detections_video2.csv')
-    ]
-
-    for sourceVideoFile, detectionsCsvFile in files:
-        videoSource = cv2.VideoCapture(sourceVideoFile)
-        ctrl = VideoController(1, state='pause')
-
-        framesDetections = DetectionsCSV.readAsDict(detectionsCsvFile)
-
-        while True:
-            pos = framePos(videoSource)
-            ret, frame = videoSource.read()
-            if not ret:
-                break
-            detections = framesDetections.get(pos, [])
-
-            detection.visualize.drawDetections(frame, detections)
-            detection.visualize.putFramePos(frame, pos)
-            cv2.imshow('Video', frame)
-
-            key = ctrl.waitKey()
-            if key == 27:
-                break
-
-        videoSource.release()
+# def main():
+#     files = [
+#         ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
+#          './data/detections_video6.csv'),
+#
+#         ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
+#          './data/detections_video2.csv')
+#     ]
+#
+#     for sourceVideoFile, detectionsCsvFile in files:
+#         videoSource = cv2.VideoCapture(sourceVideoFile)
+#         ctrl = VideoController(1, state='pause')
+#
+#         framesDetections = DetectionsCSV.readAsDict(detectionsCsvFile)
+#
+#         while True:
+#             pos = framePos(videoSource)
+#             ret, frame = videoSource.read()
+#             if not ret:
+#                 break
+#             detections = framesDetections.get(pos, [])
+#
+#             detection.visualize.drawDetections(frame, detections)
+#             detection.visualize.putFramePos(frame, pos)
+#             cv2.imshow('Video', frame)
+#
+#             key = ctrl.waitKey()
+#             if key == 27:
+#                 break
+#
+#         videoSource.release()
 
 
 def main():
@@ -46,17 +46,14 @@ def main():
 
     files = [
         ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
-         './data/detections_video6.csv'),
+         DetectionsCSV.readAsDict('./data/detections_video6.csv')),
 
         ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
-         './data/detections_video2.csv')
+         DetectionsCSV.readAsDict('./data/detections_video2.csv'))
     ]
 
-    for sourceVideoFile, detectionsCsvFile in files:
-        videoPlayback = VideoPlayback(sourceVideoFile)
-        # ctrl = VideoController(1, state='pause')
-
-        framesDetections = DetectionsCSV.readAsDict(detectionsCsvFile)
+    for sourceVideoFile, framesDetections in files:
+        videoPlayback = VideoPlayback(sourceVideoFile, 1000, initialyPaused=True)
 
         for pos, frame in videoPlayback.frames():
             detections = framesDetections.get(pos, [])
