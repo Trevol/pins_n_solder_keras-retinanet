@@ -44,3 +44,5 @@ class DetectionsCSV:
             reader = ((framePos, cls.skipFramePos(rows)) for framePos, rows in groupby(reader, key=cls.framePosFn))
             framesDetections = dict(reader)
             return framesDetections
+
+

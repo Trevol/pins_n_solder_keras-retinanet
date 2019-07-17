@@ -1,4 +1,11 @@
 import cv2
+from utils.VideoController import VideoController
+from detection.DetectionsCSV import DetectionsCSV
+import detection.visualize
+
+
+def framePos(videoCapture):
+    return int(videoCapture.get(cv2.CAP_PROP_POS_FRAMES))
 
 
 def main():
@@ -12,26 +19,24 @@ def main():
 
     for sourceVideoFile, detectionsCsvFile in files:
         videoSource = cv2.VideoCapture(sourceVideoFile)
-
-        from detection.DetectionsCSV import DetectionsCSV
-        import detection.visualize
+        ctrl = VideoController(1, state='pause')
 
         framesDetections = DetectionsCSV.readAsDict(detectionsCsvFile)
 
-        framePos = 0
         while True:
+            pos = framePos(videoSource)
             ret, frame = videoSource.read()
             if not ret:
                 break
-            detections = framesDetections.get(framePos, [])
+            detections = framesDetections.get(pos, [])
 
             detection.visualize.drawDetections(frame, detections)
-            detection.visualize.putFramePos(frame, framePos)
+            detection.visualize.putFramePos(frame, pos)
             cv2.imshow('Video', frame)
 
-            if cv2.waitKey(1) == 27:
+            key = ctrl.waitKey()
+            if key == 27:
                 break
-            framePos += 1
 
         videoSource.release()
 
