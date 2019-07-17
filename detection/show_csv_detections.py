@@ -41,5 +41,36 @@ def main():
         videoSource.release()
 
 
+def main():
+    from utils.VideoPlayback import VideoPlayback
+
+    files = [
+        ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
+         './data/detections_video6.csv'),
+
+        ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
+         './data/detections_video2.csv')
+    ]
+
+    for sourceVideoFile, detectionsCsvFile in files:
+        videoPlayback = VideoPlayback(sourceVideoFile)
+        # ctrl = VideoController(1, state='pause')
+
+        framesDetections = DetectionsCSV.readAsDict(detectionsCsvFile)
+
+        for pos, frame in videoPlayback.frames():
+            detections = framesDetections.get(pos, [])
+
+            detection.visualize.drawDetections(frame, detections)
+            detection.visualize.putFramePos(frame, pos)
+            cv2.imshow('Video', frame)
+
+            key = videoPlayback.handleKey()
+            if key == 27:
+                break
+
+        videoPlayback.release()
+
+
 if __name__ == '__main__':
     main()

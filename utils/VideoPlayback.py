@@ -53,7 +53,7 @@ class VideoPlayback:
         return int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     def handleKey(self):
-        key = cv2.waitKeyEx()
+        key = cv2.waitKey()
         if key == KbdKeys.L_ARROW:
             self.backward()
         return key
