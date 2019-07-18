@@ -1,5 +1,6 @@
 import cv2
 from .KbdKeys import KbdKeys
+from . import leftClip
 
 
 class VideoController:
@@ -28,8 +29,20 @@ class VideoController:
             self._enterPlayingState()
         elif key == KbdKeys.L_ARROW:
             self.videoPlayback.backward()
+        elif key == KbdKeys.UP_ARROW:
+            self._speedUp()
+        elif key == KbdKeys.DOWN_ARROW:
+            self._speedDown()
 
         return key
+
+    def _speedUp(self):
+        self.frameDelay -= 1  # TODO: manage step depending of frameDelay magnitude
+        self.frameDelay = leftClip(self.frameDelay, 1)
+
+    def _speedDown(self):
+        self.frameDelay -= 1  # TODO: manage step depending of frameDelay magnitude
+        self.frameDelay = leftClip(self.frameDelay, 1)
 
     def _enterPlayingState(self):
         assert self.state != self.States.PLAYING
@@ -44,6 +57,10 @@ class VideoController:
         elif key == KbdKeys.L_ARROW:
             self.videoPlayback.backward()
             self._schedulePause = True  # return outside for frame retrieval and then enterPause
+        elif key == KbdKeys.UP_ARROW:
+            self._speedUp()
+        elif key == KbdKeys.DOWN_ARROW:
+            self._speedDown()
 
         return key
 
