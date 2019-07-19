@@ -34,8 +34,10 @@ def main():
 
 
 def proto():
-    pass
-
+    videoFile = '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
+    videoPlayback = VideoPlayback2(videoFile, 1000, autoplayInitially=False)
+    videoPlayback.play(onFrameReady=None, onStateChange=None)
+    videoPlayback.release()
 
 if __name__ == '__main__':
     main()
