@@ -33,11 +33,30 @@ def main():
     videoPlayback.release()
 
 
-def proto():
+def main_():
     videoFile = '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
     videoPlayback = VideoPlayback2(videoFile, 1000, autoplayInitially=False)
     videoPlayback.play(onFrameReady=None, onStateChange=None)
     videoPlayback.release()
+
+
+def main():
+    winname = 'Video123'
+
+    def indicatePlaybackState(frameDelay, autoPlay, framePos, playback):
+        autoplayLabel = 'ON' if autoPlay else 'OFF'
+        stateTitle = f'{winname} (FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
+        cv2.setWindowTitle(winname, stateTitle)
+
+    def frameReady(frame, framePos, playback):
+        putFramePos(frame, framePos)
+        cv2.imshow(winname, frame)
+
+    videoFile = '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
+    videoPlayback = VideoPlayback2(videoFile, 1000, autoplayInitially=False)
+    videoPlayback.play(onFrameReady=frameReady, onStateChange=indicatePlaybackState)
+    videoPlayback.release()
+
 
 if __name__ == '__main__':
     main()

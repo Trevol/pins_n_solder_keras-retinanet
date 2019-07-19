@@ -4,8 +4,7 @@ from .VideoController2 import VideoController2
 
 
 class VideoPlayback2:
-    def __init__(self, videoPath, initialFrameDelay=1, autoplayInitially=True, frameCallback=None,
-                 changeStateCallback=None):
+    def __init__(self, videoPath, initialFrameDelay=1, autoplayInitially=True):
         self.cap = cv2.VideoCapture(videoPath)
         self.frameDelay = initialFrameDelay
         self.autoPlay = autoplayInitially
@@ -76,3 +75,28 @@ class VideoPlayback2:
 
     def handleAction(self):
         return self._controller.handleAction()
+
+    def play(self, onFrameReady=None, onStateChange=None):
+        def defaultFrameReady(frame, framePos, playback):
+            cv2.imshow('Video', frame)
+
+        def defaultStateChange(frameDelay, autoPlay, framePos, playback):
+            autoplayLabel = 'ON' if autoPlay else 'OFF'
+            stateTitle = f'Video (Pos: {framePos}, FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
+            cv2.setWindowTitle('Video', stateTitle)
+
+        if onFrameReady is None and onStateChange is None:
+            onStateChange = defaultStateChange
+        onFrameReady = onFrameReady or defaultFrameReady
+
+        for pos, frame in self.frames():
+            onFrameReady(frame, pos, self)
+            onStateChange(self.frameDelay, self.autoPlay, pos, self)
+            while True:
+                read, stop, changed, key = self.handleAction()  # enter in user action handling
+                if changed:
+                    onStateChange(self.frameDelay, self.autoPlay, pos, self)
+                if read:
+                    break
+                if stop:
+                    return
