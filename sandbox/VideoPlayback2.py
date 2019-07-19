@@ -1,6 +1,6 @@
 import cv2
 from utils import leftClip
-from .VideoController2 import VideoController2, VideoPlaybackActionResult
+from .VideoController2 import VideoController2
 
 
 class VideoPlayback2:
@@ -42,10 +42,17 @@ class VideoPlayback2:
         self.setPos(newPos)
 
     def changeFrameDelay(self, direction):
-        # TODO: manage change value depending of current frameDelay magnitude
-        # self.frameDelay += self.frameDelay // 2 * direction
+        # manage change value depending of current frameDelay magnitude
+        if self.frameDelay > 500:
+            step = 20
+        elif self.frameDelay > 100:
+            step = 10
+        elif self.frameDelay > 20:
+            step = 5
+        else:
+            step = 1
 
-        self.frameDelay += 1 * direction
+        self.frameDelay += step * direction
         self.frameDelay = leftClip(self.frameDelay, 1)
 
     def frames(self):
