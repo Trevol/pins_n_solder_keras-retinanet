@@ -1,5 +1,5 @@
 import cv2
-from detection.DetectionsCSV import DetectionsCSV
+from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
 from utils.VideoPlayback import VideoPlayback
 
@@ -20,13 +20,13 @@ def main():
          DetectionsCSV.readAsDict('./data/detections_video2.csv'))
     ]
 
-    for sourceVideoFile, framesDetections in files:
-        def frameReady(frame, framePos, playback):
-            detections = framesDetections.get(framePos, [])
-            utils.visualize.drawDetections(frame, detections)
-            utils.visualize.putFramePos(frame, framePos)
-            cv2.imshow(winname, frame)
+    def frameReady(frame, framePos, playback):
+        detections = framesDetections.get(framePos, [])
+        utils.visualize.drawDetections(frame, detections)
+        utils.visualize.putFramePos(frame, framePos)
+        cv2.imshow(winname, frame)
 
+    for sourceVideoFile, framesDetections in files:
         videoPlayback = VideoPlayback(sourceVideoFile, 500, autoplayInitially=False)
         videoPlayback.play(onFrameReady=frameReady, onStateChange=indicatePlaybackState)
         videoPlayback.release()

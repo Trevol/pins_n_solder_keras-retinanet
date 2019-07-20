@@ -59,13 +59,32 @@ class VideoPlayback:
         self.frameDelay += step * direction
         self.frameDelay = leftClip(self.frameDelay, 1)
 
-    def frames(self):
+    @staticmethod
+    def __range(range):
+        from_, to = 0, None
+        if not range:
+            return from_, to
+        if isinstance(range, int):
+            from_ = range
+            return from_, to
+        if len(range) == 1:
+            range = (range[0], None)
+        from_, to = range
+        return from_, to
+
+    def frames(self, range=None):
         assert self.cap
+        from_, to = self.__range(range)
+        if from_:
+            self.setPos(from_)
         while True:
+            pos = self.__currentPos()
+            if pos > to:
+                break
             frame = self.readFrame()
             if frame is None:
                 break
-            yield self.__currentPos() - 1, frame
+            yield pos, frame
 
     def readFrame(self, pos=None):
         if pos is not None:
@@ -81,7 +100,7 @@ class VideoPlayback:
     def handleAction(self):
         return self._controller.handleAction()
 
-    def play(self, onFrameReady=None, onStateChange=None):
+    def play(self, range=None, onFrameReady=None, onStateChange=None):
         def defaultFrameReady(frame, framePos, playback):
             cv2.imshow('Video', frame)
 
@@ -90,11 +109,16 @@ class VideoPlayback:
             stateTitle = f'Video (Pos: {framePos}, FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
             cv2.setWindowTitle('Video', stateTitle)
 
+        def emptyStateChange(frameDelay, autoPlay, framePos, playback):
+            pass
+
         if onFrameReady is None and onStateChange is None:
             onStateChange = defaultStateChange
+        if onStateChange is None:
+            onStateChange = emptyStateChange
         onFrameReady = onFrameReady or defaultFrameReady
 
-        for pos, frame in self.frames():
+        for pos, frame in self.frames(range):
             onFrameReady(frame, pos, self)
             onStateChange(self.frameDelay, self.autoPlay, pos, self)
             while True:
