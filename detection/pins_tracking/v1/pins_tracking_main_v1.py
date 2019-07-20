@@ -2,25 +2,29 @@ import cv2
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
 from utils.VideoPlayback import VideoPlayback
-import numpy as np
+from detection.pins_tracking.v1.BBoxTracker import BBoxTracker
 
 
-class ROI:
-    initialBbox = np.round([1501.1188, 785.05164, 1555.3042, 833.12695]).astype(np.int32)
+class VideoHandler:
+    winname = 'Video'
 
-    @classmethod
-    def draw(cls, frame):
-        x1, y1, x2, y2 = cls.initialBbox
-        cv2.rectangle(frame, (x1 - 5, y1 - 5), (x2 + 5, y2 + 5), (0, 255, 0), 2)
+    def __init__(self, framesDetections):
+        self.framesDetections = framesDetections
+        self.bboxTracker = BBoxTracker()
 
+    def syncPlaybackState(self, frameDelay, autoPlay, framePos, playback):
+        autoplayLabel = 'ON' if autoPlay else 'OFF'
+        stateTitle = f'{self.winname} (FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
+        cv2.setWindowTitle(self.winname, stateTitle)
 
-winname = 'Video'
+    def frameReady(self, frame, framePos, playback):
+        detections = self.framesDetections.get(framePos, [])
+        self.bboxTracker.applyRawFrameDetections(detections, framePos, frame)
+        self.bboxTracker.draw(frame)
+        utils.visualize.drawDetections(frame, detections)
+        utils.visualize.putFramePos(frame, framePos)
 
-
-def indicatePlaybackState(frameDelay, autoPlay, framePos, playback):
-    autoplayLabel = 'ON' if autoPlay else 'OFF'
-    stateTitle = f'{winname} (FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
-    cv2.setWindowTitle(winname, stateTitle)
+        cv2.imshow(self.winname, frame)
 
 
 def main():
@@ -29,18 +33,10 @@ def main():
          DetectionsCSV.readAsDict('../../csv_cache/data/detections_video6.csv'))
     ]
 
-    def frameReady(frame, framePos, playback):
-        detections = framesDetections.get(framePos, [])
-
-        utils.visualize.drawDetections(frame, detections)
-        # ROI.draw(frame)
-
-        utils.visualize.putFramePos(frame, framePos)
-        cv2.imshow(winname, frame)
-
     for sourceVideoFile, framesDetections in files:
         videoPlayback = VideoPlayback(sourceVideoFile, 500, autoplayInitially=False)
-        videoPlayback.play(range=(9, 184), onFrameReady=frameReady, onStateChange=indicatePlaybackState)
+        handler = VideoHandler(framesDetections)
+        videoPlayback.play(range=(9, 184), onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
         videoPlayback.release()
     cv2.waitKey()
 

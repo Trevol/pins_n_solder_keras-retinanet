@@ -12,7 +12,7 @@ def drawDetections(image, detections):  # visualize detections
         elif label == 1:  # solder
             color = (0, 255, 0)
         else:
-            color = (0, 255, 255)
+            color = (200, 0, 0)
         b = np.round(box, 0).astype(int)
         draw_box(image, b, color=color, thickness=1)
 
