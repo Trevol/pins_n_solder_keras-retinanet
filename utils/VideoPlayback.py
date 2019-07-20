@@ -1,13 +1,23 @@
 import cv2
-
-from .KbdKeys import KbdKeys
-from .VideoController import VideoController
+from utils import leftClip
+from utils.KbdKeys import KbdKeys
+from utils.visualize import putFramePos
 
 
 class VideoPlayback:
-    def __init__(self, videoPath, initialFrameDelay=1, initialyPaused=False):
+    def __init__(self, videoPath, initialFrameDelay=1, autoplayInitially=True):
         self.cap = cv2.VideoCapture(videoPath)
-        self._controller = VideoController(self, initialFrameDelay, initialyPaused)
+        self.frameDelay = initialFrameDelay
+        self.autoPlay = autoplayInitially
+        self._controller = VideoController(self)
+
+    @property
+    def manualPlay(self):
+        return not self.autoPlay
+
+    @manualPlay.setter
+    def manualPlay(self, manualPlay):
+        self.autoPlay = not manualPlay
 
     def __enter__(self):
         return self
@@ -35,6 +45,20 @@ class VideoPlayback:
             newPos = 0
         self.setPos(newPos)
 
+    def changeFrameDelay(self, direction):
+        # manage change value depending of current frameDelay magnitude
+        if self.frameDelay > 500:
+            step = 20
+        elif self.frameDelay > 100:
+            step = 10
+        elif self.frameDelay > 20:
+            step = 5
+        else:
+            step = 1
+
+        self.frameDelay += step * direction
+        self.frameDelay = leftClip(self.frameDelay, 1)
+
     def frames(self):
         assert self.cap
         while True:
@@ -54,5 +78,162 @@ class VideoPlayback:
     def framesCount(self):
         return int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    def handleKey(self):
-        return self._controller.handleKey()
+    def handleAction(self):
+        return self._controller.handleAction()
+
+    def play(self, onFrameReady=None, onStateChange=None):
+        def defaultFrameReady(frame, framePos, playback):
+            cv2.imshow('Video', frame)
+
+        def defaultStateChange(frameDelay, autoPlay, framePos, playback):
+            autoplayLabel = 'ON' if autoPlay else 'OFF'
+            stateTitle = f'Video (Pos: {framePos}, FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
+            cv2.setWindowTitle('Video', stateTitle)
+
+        if onFrameReady is None and onStateChange is None:
+            onStateChange = defaultStateChange
+        onFrameReady = onFrameReady or defaultFrameReady
+
+        for pos, frame in self.frames():
+            onFrameReady(frame, pos, self)
+            onStateChange(self.frameDelay, self.autoPlay, pos, self)
+            while True:
+                read, stop, changed, key = self.handleAction()  # enter in user action handling
+                if changed:
+                    onStateChange(self.frameDelay, self.autoPlay, pos, self)
+                if read:
+                    break
+                if stop:
+                    return
+
+
+class VideoController:
+    def __init__(self, videoPlayback):
+        self.videoPlayback = videoPlayback
+        self._scheduleManualPlay = False
+
+    @staticmethod
+    def waitKey(delay):
+        return cv2.waitKey(delay)
+
+    def _handleManualPlay(self):
+        assert self.videoPlayback.manualPlay
+
+        read, stop, changed = False, False, False
+        key = self.waitKey(-1)
+
+        if key == KbdKeys.Q:
+            self.videoPlayback.autoPlay = True
+            read, stop, changed = True, False, True
+
+        elif key == KbdKeys.ESC:
+            read, stop, changed = False, True, False
+
+        elif key == KbdKeys.L_ARROW:
+            self.videoPlayback.backward()
+            read, stop, changed = True, False, False
+
+        elif key == KbdKeys.R_ARROW:
+            read, stop, changed = True, False, False
+
+        elif key == KbdKeys.UP_ARROW:
+            self.videoPlayback.changeFrameDelay(+1)
+            read, stop, changed = False, False, True
+
+        elif key == KbdKeys.DOWN_ARROW:
+            self.videoPlayback.changeFrameDelay(-1)
+            read, stop, changed = False, False, True
+
+        return read, stop, changed, key
+
+    def _handleAutoPlay(self):
+        assert self.videoPlayback.autoPlay
+
+        read, stop, changed = False, False, False
+        key = self.waitKey(self.videoPlayback.frameDelay)
+
+        if key == -1:  # wait time elapsed
+            read, stop, changed = True, False, False
+
+        elif key == KbdKeys.ESC:
+            read, stop, changed = False, True, False
+
+        elif key == KbdKeys.Q:
+            self.videoPlayback.manualPlay = True
+            read, stop, changed = False, False, True
+
+        elif key == KbdKeys.L_ARROW:
+            self.videoPlayback.backward()
+            self.videoPlayback.manualPlay = True
+            read, stop, changed = True, False, True
+
+        elif key == KbdKeys.UP_ARROW:
+            self.videoPlayback.changeFrameDelay(+1)
+            read, stop, changed = False, False, True
+
+        elif key == KbdKeys.DOWN_ARROW:
+            self.videoPlayback.changeFrameDelay(-1)
+            read, stop, changed = False, False, True
+
+        return read, stop, changed, key
+
+    def handleAction(self):
+        if self.videoPlayback.manualPlay:
+            return self._handleManualPlay()
+        else:
+            return self._handleAutoPlay()
+
+
+if __name__ == '__main__':
+    def examples():
+        def ex_1():
+            def indicatePlaybackState(playback, winname):
+                autoplayLabel = 'ON' if playback.autoPlay else 'OFF'
+                stateTitle = f'Video (FrameDelay: {playback.frameDelay}, Autoplay: {autoplayLabel})'
+                cv2.setWindowTitle(winname, stateTitle)
+
+            def showFrameAndHandleActions(frame, playback):
+                cv2.imshow('Video', frame)  # show frame
+                indicatePlaybackState(playback, winname='Video')
+                while True:
+                    read, stop, changed, key = playback.handleAction()  # enter in user action handling
+                    if changed:
+                        indicatePlaybackState(playback, winname='Video')
+                    if stop:
+                        return True
+                    if read:
+                        return False
+
+            # ---------------------------------------
+            videoFile = '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
+            videoPlayback = VideoPlayback2(videoFile, 1000, autoplayInitially=False)
+
+            for pos, frame in videoPlayback.frames():
+                putFramePos(frame, pos)  # process frame
+                stop = showFrameAndHandleActions(frame, videoPlayback)
+                if stop:
+                    break
+            videoPlayback.release()
+
+        def ex_2():
+            videoFile = '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
+            videoPlayback = VideoPlayback2(videoFile, 1000, autoplayInitially=False)
+            videoPlayback.play(onFrameReady=None, onStateChange=None)
+            videoPlayback.release()
+
+        def ex_3():
+            winname = 'Video123'
+
+            def indicatePlaybackState(frameDelay, autoPlay, framePos, playback):
+                autoplayLabel = 'ON' if autoPlay else 'OFF'
+                stateTitle = f'{winname} (FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
+                cv2.setWindowTitle(winname, stateTitle)
+
+            def frameReady(frame, framePos, playback):
+                putFramePos(frame, framePos)
+                cv2.imshow(winname, frame)
+
+            videoFile = '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
+            videoPlayback = VideoPlayback2(videoFile, 1000, autoplayInitially=False)
+            videoPlayback.play(onFrameReady=frameReady, onStateChange=indicatePlaybackState)
+            videoPlayback.release()

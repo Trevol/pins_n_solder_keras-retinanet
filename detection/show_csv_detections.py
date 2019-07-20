@@ -1,10 +1,10 @@
 import cv2
 from detection.DetectionsCSV import DetectionsCSV
 import utils.visualize
-
+from utils.VideoPlayback import VideoPlayback
 
 def main():
-    from sandbox.VideoPlayback2 import VideoPlayback2
+
     winname = 'Video'
 
     def indicatePlaybackState(frameDelay, autoPlay, framePos, playback):
@@ -27,7 +27,7 @@ def main():
             utils.visualize.putFramePos(frame, framePos)
             cv2.imshow(winname, frame)
 
-        videoPlayback = VideoPlayback2(sourceVideoFile, 500, autoplayInitially=False)
+        videoPlayback = VideoPlayback(sourceVideoFile, 500, autoplayInitially=False)
         videoPlayback.play(onFrameReady=frameReady, onStateChange=indicatePlaybackState)
         videoPlayback.release()
 
