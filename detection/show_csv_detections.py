@@ -1,48 +1,16 @@
 import cv2
-from utils.VideoController import VideoController
 from detection.DetectionsCSV import DetectionsCSV
-import detection.visualize
-
-
-def framePos(videoCapture):
-    return int(videoCapture.get(cv2.CAP_PROP_POS_FRAMES))
-
-
-# def main():
-#     files = [
-#         ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
-#          './data/detections_video6.csv'),
-#
-#         ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
-#          './data/detections_video2.csv')
-#     ]
-#
-#     for sourceVideoFile, detectionsCsvFile in files:
-#         videoSource = cv2.VideoCapture(sourceVideoFile)
-#         ctrl = VideoController(1, state='pause')
-#
-#         framesDetections = DetectionsCSV.readAsDict(detectionsCsvFile)
-#
-#         while True:
-#             pos = framePos(videoSource)
-#             ret, frame = videoSource.read()
-#             if not ret:
-#                 break
-#             detections = framesDetections.get(pos, [])
-#
-#             detection.visualize.drawDetections(frame, detections)
-#             detection.visualize.putFramePos(frame, pos)
-#             cv2.imshow('Video', frame)
-#
-#             key = ctrl.waitKey()
-#             if key == 27:
-#                 break
-#
-#         videoSource.release()
+import utils.visualize
 
 
 def main():
-    from utils.VideoPlayback import VideoPlayback
+    from sandbox.VideoPlayback2 import VideoPlayback2
+    winname = 'Video'
+
+    def indicatePlaybackState(frameDelay, autoPlay, framePos, playback):
+        autoplayLabel = 'ON' if autoPlay else 'OFF'
+        stateTitle = f'{winname} (FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
+        cv2.setWindowTitle(winname, stateTitle)
 
     files = [
         ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
@@ -53,19 +21,14 @@ def main():
     ]
 
     for sourceVideoFile, framesDetections in files:
-        videoPlayback = VideoPlayback(sourceVideoFile, 1000, initialyPaused=True)
+        def frameReady(frame, framePos, playback):
+            detections = framesDetections.get(framePos, [])
+            utils.visualize.drawDetections(frame, detections)
+            utils.visualize.putFramePos(frame, framePos)
+            cv2.imshow(winname, frame)
 
-        for pos, frame in videoPlayback.frames():
-            detections = framesDetections.get(pos, [])
-
-            detection.visualize.drawDetections(frame, detections)
-            detection.visualize.putFramePos(frame, pos)
-            cv2.imshow('Video', frame)
-
-            key = videoPlayback.handleKey()
-            if key == 27:
-                break
-
+        videoPlayback = VideoPlayback2(sourceVideoFile, 500, autoplayInitially=False)
+        videoPlayback.play(onFrameReady=frameReady, onStateChange=indicatePlaybackState)
         videoPlayback.release()
 
 
