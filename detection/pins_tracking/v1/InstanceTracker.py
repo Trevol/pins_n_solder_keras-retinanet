@@ -7,6 +7,7 @@ class InstanceTracker:
             instance.draw()
 
     def findInstance(self, bbox):
+        return self.__instances[-1] if any(self.__instances) else None
         raise NotImplementedError()
         pass
 
@@ -31,3 +32,6 @@ class DetectedInstance:
 
     def addBBox(self, bbox):
         self.__bboxes.append(bbox)
+
+    def draw(self):
+        pass

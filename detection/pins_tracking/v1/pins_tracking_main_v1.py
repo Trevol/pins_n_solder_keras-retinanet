@@ -3,7 +3,7 @@ from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
 from utils import resize
 from utils.VideoPlayback import VideoPlayback
-from detection.pins_tracking.v1.InstanceTracker import InstanceTracker
+from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
 
 
 class VideoHandler:
@@ -11,33 +11,35 @@ class VideoHandler:
 
     def __init__(self, framesDetections):
         self.framesDetections = framesDetections
-        self.instanceTracker = InstanceTracker()
+        self.techProcessTracker = TechProcessTracker()
 
-    def syncPlaybackState(self, frameDelay, autoPlay, framePos, playback):
+    def syncPlaybackState(self, frameDelay, autoPlay, framePos, framePosMsec, playback):
         autoplayLabel = 'ON' if autoPlay else 'OFF'
         stateTitle = f'{self.winname} (FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
         cv2.setWindowTitle(self.winname, stateTitle)
 
-    def frameReady(self, frame, framePos, playback):
-        detections = [d for d in self.framesDetections.get(framePos, []) if d[-1] >= .9] #with score >= .9
-        self.instanceTracker.applyRawFrameDetections(detections, framePos, frame)
-        self.instanceTracker.draw(frame)
-        utils.visualize.drawDetections(frame, detections)
-        utils.visualize.putFramePos(frame, framePos)
+    def frameReady(self, frame, framePos, framePosMsec, playback):
+        rawDetections = [d for d in self.framesDetections.get(framePos, []) if d[-1] >= .9]  # with score >= .9
+
+        self.techProcessTracker.track(rawDetections, framePos, framePosMsec, frame)
+
+        self.techProcessTracker.draw(frame)
+        utils.visualize.drawDetections(frame, rawDetections)
+        utils.visualize.putFramePos(frame, framePos, framePosMsec)
 
         if frame.shape[1] >= 1900:  # fit view to screen
             frame = resize(frame, 0.7)
         cv2.imshow(self.winname, frame)
 
 
-def main():
-    files = [
-        ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
-         DetectionsCSV.readAsDict('../../csv_cache/data/detections_video6.csv'))
-    ]
+def files():
+    yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
+           DetectionsCSV.loadPickle('../../csv_cache/data/detections_video6.pcl'))
 
-    for sourceVideoFile, framesDetections in files:
-        videoPlayback = VideoPlayback(sourceVideoFile, 500, autoplayInitially=False)
+
+def main():
+    for sourceVideoFile, framesDetections in files():
+        videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         handler = VideoHandler(framesDetections)
         videoPlayback.play(range=(9, 184), onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
         videoPlayback.release()

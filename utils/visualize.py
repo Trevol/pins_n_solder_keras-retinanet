@@ -36,6 +36,8 @@ def draw_caption(image, box, caption, fontScale=1):
     cv2.putText(image, caption, (box[0], box[1] + 7), cv2.FONT_HERSHEY_PLAIN, fontScale, (255, 255, 255), 1)
 
 
-def putFramePos(frame, pos):
-    cv2.putText(frame, str(int(pos)), (10, 40), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255))
+def putFramePos(frame, pos, posMsec=None):
+    cv2.putText(frame, str(pos), (10, 40), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255))
+    if posMsec is not None:
+        cv2.putText(frame, f'{posMsec:.1f}ms', (10, 70), cv2.FONT_HERSHEY_COMPLEX, .7, (0, 0, 255))
     return frame

@@ -39,6 +39,10 @@ class VideoPlayback:
         assert self.cap
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, pos)
 
+    def __currentPosMsec(self):
+        assert self.cap
+        return self.cap.get(cv2.CAP_PROP_POS_MSEC)
+
     def backward(self, numFrames=1):
         assert self.cap
         newPos = self.__currentPos() - numFrames - 1
@@ -82,10 +86,11 @@ class VideoPlayback:
             pos = self.__currentPos()
             if pos > to:
                 break
+            posMsec = self.__currentPosMsec()
             frame = self.readFrame()
             if frame is None:
                 break
-            yield pos, frame
+            yield pos, frame, posMsec
 
     def readFrame(self, pos=None):
         if pos is not None:
@@ -102,15 +107,15 @@ class VideoPlayback:
         return self._controller.handleAction()
 
     def play(self, range=None, onFrameReady=None, onStateChange=None):
-        def defaultFrameReady(frame, framePos, playback):
+        def defaultFrameReady(frame, framePos, framePosMsec, playback):
             cv2.imshow('Video', frame)
 
-        def defaultStateChange(frameDelay, autoPlay, framePos, playback):
+        def defaultStateChange(frameDelay, autoPlay, framePos, framePosMsec, playback):
             autoplayLabel = 'ON' if autoPlay else 'OFF'
             stateTitle = f'Video (Pos: {framePos}, FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
             cv2.setWindowTitle('Video', stateTitle)
 
-        def emptyStateChange(frameDelay, autoPlay, framePos, playback):
+        def emptyStateChange(frameDelay, autoPlay, framePos, framePosMsec, playback):
             pass
 
         if onFrameReady is None and onStateChange is None:
@@ -119,13 +124,13 @@ class VideoPlayback:
             onStateChange = emptyStateChange
         onFrameReady = onFrameReady or defaultFrameReady
 
-        for pos, frame in self.frames(range):
-            onFrameReady(frame, pos, self)
-            onStateChange(self.frameDelay, self.autoPlay, pos, self)
+        for pos, frame, posMsec in self.frames(range):
+            onFrameReady(frame, pos, posMsec, self)
+            onStateChange(self.frameDelay, self.autoPlay, pos, posMsec, self)
             while True:
                 read, stop, changed, key = self.handleAction()  # enter in user action handling
                 if changed:
-                    onStateChange(self.frameDelay, self.autoPlay, pos, self)
+                    onStateChange(self.frameDelay, self.autoPlay, pos, posMsec, self)
                 if read:
                     break
                 if stop:
