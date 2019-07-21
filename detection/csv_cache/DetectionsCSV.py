@@ -1,7 +1,7 @@
 import csv
 from itertools import groupby
 import numpy as np
-
+import pickle
 
 class DetectionsCSV:
     def __init__(self, csvPath):
@@ -44,5 +44,18 @@ class DetectionsCSV:
             reader = ((framePos, cls.skipFramePos(rows)) for framePos, rows in groupby(reader, key=cls.framePosFn))
             framesDetections = dict(reader)
             return framesDetections
+
+    @classmethod
+    def csvToPickle(cls, csvPath, pclPath):
+        dict = cls.readAsDict(csvPath)
+        with open(pclPath, mode='wb') as file:
+            pickle.dump(dict, file, pickle.HIGHEST_PROTOCOL)
+
+    @staticmethod
+    def loadPickle(pclPath):
+        with open(pclPath, mode='rb') as file:
+            return pickle.load(file)
+
+
 
 

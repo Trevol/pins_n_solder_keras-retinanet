@@ -73,11 +73,6 @@ def predict_on_image(model, image, labels_to_names, scoreThresh):
     return detections
 
 
-def resize(img, factor):
-    dsize = tuple(np.multiply(img.shape[1::-1], factor).astype(int))
-    return cv2.resize(img, dsize, interpolation=cv2.INTER_AREA)
-
-
 def videoWriter(videoCapture: cv2.VideoCapture, videoPath):
     cc = cv2.VideoWriter_fourcc(*'MP4V')  # 'XVID' ('M', 'J', 'P', 'G')
     # videoOut = cv2.VideoWriter('/mnt/HDD/Rec_15_720_out_76.mp4', fourcc, videoIn.fps(), videoIn.resolution())

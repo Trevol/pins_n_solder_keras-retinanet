@@ -3,8 +3,13 @@ from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
 from utils.VideoPlayback import VideoPlayback
 
-def main():
 
+def csvToPcl():
+    DetectionsCSV.csvToPickle('./data/detections_video6.csv', './data/detections_video6.pcl')
+    DetectionsCSV.csvToPickle('./data/detections_video2.csv', './data/detections_video2.pcl')
+
+
+def main():
     winname = 'Video'
 
     def indicatePlaybackState(frameDelay, autoPlay, framePos, playback):
@@ -14,10 +19,10 @@ def main():
 
     files = [
         ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
-         DetectionsCSV.readAsDict('./data/detections_video6.csv')),
+         DetectionsCSV.loadPickle('./data/detections_video6.pcl')),
 
         ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
-         DetectionsCSV.readAsDict('./data/detections_video2.csv'))
+         DetectionsCSV.loadPickle('./data/detections_video2.pcl'))
     ]
 
     def frameReady(frame, framePos, playback):
@@ -27,7 +32,7 @@ def main():
         cv2.imshow(winname, frame)
 
     for sourceVideoFile, framesDetections in files:
-        videoPlayback = VideoPlayback(sourceVideoFile, 500, autoplayInitially=False)
+        videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         videoPlayback.play(onFrameReady=frameReady, onStateChange=indicatePlaybackState)
         videoPlayback.release()
 

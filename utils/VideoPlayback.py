@@ -1,4 +1,5 @@
 import cv2
+import math
 from utils import leftClip
 from utils.KbdKeys import KbdKeys
 from utils.visualize import putFramePos
@@ -61,15 +62,15 @@ class VideoPlayback:
 
     @staticmethod
     def __range(range):
-        from_, to = 0, None
+        from_, to = 0, math.inf
         if not range:
             return from_, to
         if isinstance(range, int):
             from_ = range
             return from_, to
         if len(range) == 1:
-            range = (range[0], None)
-        from_, to = range
+            range = (range[0], math.inf)
+        from_, to = range[:2]
         return from_, to
 
     def frames(self, range=None):

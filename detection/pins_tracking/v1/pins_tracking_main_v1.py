@@ -1,8 +1,9 @@
 import cv2
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
+from utils import resize
 from utils.VideoPlayback import VideoPlayback
-from detection.pins_tracking.v1.BBoxTracker import BBoxTracker
+from detection.pins_tracking.v1.InstanceTracker import InstanceTracker
 
 
 class VideoHandler:
@@ -10,7 +11,7 @@ class VideoHandler:
 
     def __init__(self, framesDetections):
         self.framesDetections = framesDetections
-        self.bboxTracker = BBoxTracker()
+        self.instanceTracker = InstanceTracker()
 
     def syncPlaybackState(self, frameDelay, autoPlay, framePos, playback):
         autoplayLabel = 'ON' if autoPlay else 'OFF'
@@ -18,12 +19,14 @@ class VideoHandler:
         cv2.setWindowTitle(self.winname, stateTitle)
 
     def frameReady(self, frame, framePos, playback):
-        detections = self.framesDetections.get(framePos, [])
-        self.bboxTracker.applyRawFrameDetections(detections, framePos, frame)
-        self.bboxTracker.draw(frame)
+        detections = [d for d in self.framesDetections.get(framePos, []) if d[-1] >= .9] #with score >= .9
+        self.instanceTracker.applyRawFrameDetections(detections, framePos, frame)
+        self.instanceTracker.draw(frame)
         utils.visualize.drawDetections(frame, detections)
         utils.visualize.putFramePos(frame, framePos)
 
+        if frame.shape[1] >= 1900:  # fit view to screen
+            frame = resize(frame, 0.7)
         cv2.imshow(self.winname, frame)
 
 
