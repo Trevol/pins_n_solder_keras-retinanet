@@ -6,6 +6,10 @@ from utils.VideoPlayback import VideoPlayback
 from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
 
 
+class BoxStats:
+    pass
+
+
 class VideoHandler:
     winname = 'Video'
 
@@ -21,10 +25,7 @@ class VideoHandler:
     def frameReady(self, frame, framePos, framePosMsec, playback):
         frameDetections = [d for d in self.framesDetections.get(framePos, []) if d[-1] >= .9]  # with score >= .9
 
-        self.techProcessTracker.track(frameDetections, framePos, framePosMsec, frame)
-        self.techProcessTracker.draw(frame)
-
-        utils.visualize.drawDetections(frame, frameDetections)
+        utils.visualize.drawDetections(frame, frameDetections, drawCenters=True)
         utils.visualize.putFramePos(frame, framePos, framePosMsec)
 
         if frame.shape[1] >= 1900:  # fit view to screen
@@ -41,7 +42,7 @@ def main():
     for sourceVideoFile, framesDetections in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         handler = VideoHandler(framesDetections)
-        videoPlayback.play(range=(9, 184), onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
+        videoPlayback.play(range=(56, 133), onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
         videoPlayback.release()
     cv2.waitKey()
 

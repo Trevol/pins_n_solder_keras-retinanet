@@ -21,12 +21,12 @@ def files():
 def main():
     winname = 'Video'
 
-    def indicatePlaybackState(frameDelay, autoPlay, framePos, playback):
+    def indicatePlaybackState(frameDelay, autoPlay, framePos, framePosMsec, playback):
         autoplayLabel = 'ON' if autoPlay else 'OFF'
         stateTitle = f'{winname} (FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
         cv2.setWindowTitle(winname, stateTitle)
 
-    def frameReady(frame, framePos, playback):
+    def frameReady(frame, framePos, framePosMsec, playback):
         detections = framesDetections.get(framePos, [])
         utils.visualize.drawDetections(frame, detections)
         utils.visualize.putFramePos(frame, framePos)

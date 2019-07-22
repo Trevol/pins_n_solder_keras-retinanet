@@ -2,9 +2,10 @@ import numpy as np
 import cv2
 from keras_retinanet.utils.visualization import draw_box
 from keras_retinanet.utils.colors import label_color
+from . import boxCenter
 
 
-def drawDetections(image, detections):  # visualize detections
+def drawDetections(image, detections, drawCenters=False):  # visualize detections
     for box, label, score in detections:
         # color = label_color(label)
         if score < 0.99:
@@ -15,12 +16,18 @@ def drawDetections(image, detections):  # visualize detections
             color = (200, 0, 0)
         b = np.round(box, 0).astype(int)
         draw_box(image, b, color=color, thickness=1)
+        if drawCenters:
+            center = boxCenter(box, roundToInt=True)
+            cv2.circle(image, tuple(center), 1, color)
 
-        # caption = f"{labels_to_names[label]} {score:.2f}"
+            # caption = f"{labels_to_names[label]} {score:.2f}"
         # draw_caption(draw, b, caption)
         if score < 1.0:
             draw_caption(image, b, str(int(score * 100)), fontScale=0.7)
     return image
+
+
+
 
 
 def draw_caption(image, box, caption, fontScale=1):

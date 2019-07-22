@@ -1,34 +1,36 @@
 class TechProcessTracker:
-
     def __init__(self):
         self.__stableRanges = []
         self.__currentFrameRange = None
 
-    def track(self, rawDetections, framePos, frameMs, frame):
+    def track(self, frameDetections, framePos, framePosMsec, frame):
         if not self.__currentFrameRange:
-            self.__currentFrameRange = FrameRange(rawDetections, framePos, frameMs, frame)
+            if any(frameDetections):
+                self.__currentFrameRange = FrameRange(frameDetections, framePos, framePosMsec, frame)
             return
 
         wasUnstable = not self.__currentFrameRange.stable
 
-        belongToRange = self.__currentFrameRange.tryAdd(rawDetections, framePos, frameMs, frame)
+        belongToRange = self.__currentFrameRange.tryAdd(frameDetections, framePos, framePosMsec, frame)
 
-        if wasUnstable and self.__currentFrameRange.stable:  # add to stable ranges IF unstable before addition new frame and become stable after
+        if wasUnstable and self.__currentFrameRange.stable:
+            # add to stable ranges IF range was unstable before addition new frame and become stable after
             self.__addCurrentRangeAsStable()
 
         if not belongToRange:  # start new FrameRange
-            self.__currentFrameRange = FrameRange(rawDetections, framePos, frameMs, frame)
-            pass
+            self.__currentFrameRange = FrameRange(frameDetections, framePos, framePosMsec, frame)
 
     def __addCurrentRangeAsStable(self):
         assert self.__currentFrameRange.stable
         assert self.__currentFrameRange not in self.__stableRanges
 
         self.__stableRanges.append(self.__currentFrameRange)
-        self.logNewStableChanges()
+        self.__logNewStableChanges()
 
-    def logNewStableChanges(self):
-        raise NotImplementedError()
+    def __logNewStableChanges(self):
+        # raise NotImplementedError()
+        # diff between
+        pass
 
     def draw(self, img):
         if any(self.__stableRanges):  # draw last stable range
@@ -36,44 +38,52 @@ class TechProcessTracker:
 
 
 class FrameRange:
-    def __init__(self, rawDetections, framePos, frameMs, frame):
+    def __init__(self, frameDetections, framePos, frameMs, frame):
         self.__frames = []  # or collections.deque(maxlen = 50)
-        self.__stable = False
-        self.tryAdd(rawDetections, framePos, frameMs, frame)
+        self.tryAdd(frameDetections, framePos, frameMs, frame)
+        self.__statistics = None
 
     @property
     def stable(self):
-        return self.__stable
+        return len(self.__frames) >= 3
 
-    def tryAdd(self, rawDetections, framePos, frameMs, frame):
-        frameInfo = FrameInfo(rawDetections, framePos, frameMs, frame)
-        belongToRange = True
+    def tryAdd(self, frameDetections, framePos, framePosMsec, frame):
+        if not any(frameDetections):
+            return False  # skip empty detections
+
         if not any(self.__frames):
-            self.__frames.append(frameInfo)
-            return belongToRange  # True
+            self.__addToRange(FrameInfo(frameDetections, framePos, framePosMsec, frame))
+            return True  # first frame belong to Range
 
-        belongToRange = self.__checkBelongingToRange(frameInfo, self.__frames)
+        belongToRange, frameDetections = self.__checkBelongingToRange(frameDetections)
         if belongToRange:
-            self.__addToRange(frameInfo)
-
+            self.__addToRange(FrameInfo(frameDetections, framePos, framePosMsec, frame))
         return belongToRange
 
-    @staticmethod
-    def __checkBelongingToRange(frameInfo, frameInfos):
-        # TODO: check actual belonging to Range
+    def __checkBelongingToRange(self, detections):
+        assert any(self.__frames)
+        if len(detections) != self.__statistics.detectionsCount:
+            return False
+        for d in detections:
+            bbox = d[0]
+
         raise NotImplementedError()
-        pass
 
     def draw(self, img):
         raise NotImplementedError()
 
     def __addToRange(self, frameInfo):
-        raise NotImplementedError
         self.__frames.append(frameInfo)
+        self.__recalcStatistics()
+
+    def __recalcStatistics(self):
         # recalc aggregated values - max/avg bbox/center
-        pass
+        raise NotImplementedError('Recalc ')
 
 
 class FrameInfo:
-    def __init__(self, rawDetections, framePos, frameMs, frame):
-        pass
+    def __init__(self, detections, pos, posMsec, frame):
+        self.pos = pos
+        self.posMsec = posMsec
+        self.bboxes = [d[0] for d in detections]
+        # TODO: extract frame patches for bboxes
