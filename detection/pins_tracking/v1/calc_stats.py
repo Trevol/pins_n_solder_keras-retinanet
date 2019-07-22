@@ -7,7 +7,20 @@ from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
 
 
 class BoxStats:
-    pass
+    framesBBoxes = []
+
+    @classmethod
+    def update(cls, detections):
+        bboxes = [d[0] for d in detections]
+        if not any(cls.framesBBoxes):
+            cls.framesBBoxes.append(bboxes)
+            return
+        assert len(bboxes) == len(cls.framesBBoxes[0])
+
+        reorderedBBoxes = []
+        for bbox in bboxes:
+            pass
+
 
 
 class VideoHandler:
@@ -24,6 +37,9 @@ class VideoHandler:
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
         frameDetections = [d for d in self.framesDetections.get(framePos, []) if d[-1] >= .9]  # with score >= .9
+
+        # print??
+        BoxStats.update(frameDetections)
 
         utils.visualize.drawDetections(frame, frameDetections, drawCenters=True)
         utils.visualize.putFramePos(frame, framePos, framePosMsec)

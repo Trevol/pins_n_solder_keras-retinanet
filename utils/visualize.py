@@ -27,9 +27,6 @@ def drawDetections(image, detections, drawCenters=False):  # visualize detection
     return image
 
 
-
-
-
 def draw_caption(image, box, caption, fontScale=1):
     """ Draws a caption above the box in an image.
 
