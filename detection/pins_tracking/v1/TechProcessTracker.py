@@ -1,24 +1,32 @@
+from detection.pins_tracking.v1.Box import Box
+import cv2
+
+
 class TechProcessTracker:
     def __init__(self):
         self.__stableRanges = []
         self.__currentFrameRange = None
 
     def track(self, frameDetections, framePos, framePosMsec, frame):
+        bboxes = [Box(d[0]) for d in frameDetections]
+        self.__trackBoxes(bboxes, framePos, framePosMsec, frame)
+
+    def __trackBoxes(self, bboxes, framePos, framePosMsec, frame):
         if not self.__currentFrameRange:
-            if any(frameDetections):
-                self.__currentFrameRange = FrameRange(frameDetections, framePos, framePosMsec, frame)
+            if any(bboxes):
+                self.__currentFrameRange = FrameRange(bboxes, framePos, framePosMsec, frame)
             return
 
         wasUnstable = not self.__currentFrameRange.stable
 
-        belongToRange = self.__currentFrameRange.tryAdd(frameDetections, framePos, framePosMsec, frame)
+        closeToRange = self.__currentFrameRange.addIfClose(bboxes, framePos, framePosMsec, frame)
 
         if wasUnstable and self.__currentFrameRange.stable:
             # add to stable ranges IF range was unstable before addition new frame and become stable after
             self.__addCurrentRangeAsStable()
 
-        if not belongToRange:  # start new FrameRange
-            self.__currentFrameRange = FrameRange(frameDetections, framePos, framePosMsec, frame)
+        if not closeToRange:  # start new FrameRange
+            self.__currentFrameRange = FrameRange(bboxes, framePos, framePosMsec, frame)
 
     def __addCurrentRangeAsStable(self):
         assert self.__currentFrameRange.stable
@@ -38,52 +46,78 @@ class TechProcessTracker:
 
 
 class FrameRange:
-    def __init__(self, frameDetections, framePos, frameMs, frame):
+    def __init__(self, bboxes, framePos, frameMs, frame):
         self.__frames = []  # or collections.deque(maxlen = 50)
-        self.tryAdd(frameDetections, framePos, frameMs, frame)
-        self.__statistics = None
+        self.__meanBoxes = []
+        self.addIfClose(bboxes, framePos, frameMs, frame)
 
     @property
     def stable(self):
         return len(self.__frames) >= 3
 
-    def tryAdd(self, frameDetections, framePos, framePosMsec, frame):
-        if not any(frameDetections):
+    def addIfClose(self, bboxes, framePos, framePosMsec, frame):
+        if not any(bboxes):
             return False  # skip empty detections
 
         if not any(self.__frames):
-            self.__addToRange(FrameInfo(frameDetections, framePos, framePosMsec, frame))
+            self.__addToRange(FrameInfo(bboxes, framePos, framePosMsec, frame))
             return True  # first frame belong to Range
 
-        belongToRange, frameDetections = self.__checkBelongingToRange(frameDetections)
-        if belongToRange:
-            self.__addToRange(FrameInfo(frameDetections, framePos, framePosMsec, frame))
-        return belongToRange
+        closeToRange, bboxes = self.__checkCloseToRange(bboxes)
+        if closeToRange:
+            self.__addToRange(FrameInfo(bboxes, framePos, framePosMsec, frame))
+        return closeToRange
 
-    def __checkBelongingToRange(self, detections):
-        assert any(self.__frames)
-        if len(detections) != self.__statistics.detectionsCount:
-            return False
-        for d in detections:
-            bbox = d[0]
+    ####################################
+    def __checkCloseToRange(self, boxes):
+        assert any(self.__meanBoxes)
+        if len(boxes) != len(self.__meanBoxes):
+            return False, None
 
-        raise NotImplementedError()
+        # detection close to mean boxes
+        instanceOrderedBoxes = []
+        for meanBox in self.__meanBoxes:
+            boxForMeanBox = None
+            maxDist = meanBox.cityblockDiagonal / 8  # box.distToCenter / 4
+            for box in boxes:
+                if box.withinDistance(meanBox, maxDist):
+                    boxForMeanBox = box
+                    instanceOrderedBoxes.append(boxForMeanBox)
+                    break
+
+            if not boxForMeanBox:
+                return False, None
+        return True, instanceOrderedBoxes
+
+    #################################
 
     def draw(self, img):
-        raise NotImplementedError()
+        green = (0, 200, 0)
+        for meanBox in self.__meanBoxes:
+            cv2.circle(img, tuple(meanBox.center), 3, green, -1)
+
 
     def __addToRange(self, frameInfo):
         self.__frames.append(frameInfo)
         self.__recalcStatistics()
 
     def __recalcStatistics(self):
-        # recalc aggregated values - max/avg bbox/center
-        raise NotImplementedError('Recalc ')
+        assert any(self.__frames)
+
+        if len(self.__frames) == 1:
+            self.__meanBoxes = list(self.__frames[0].bboxes)
+            return
+
+        countOfInstances = len(self.__frames[0].bboxes)
+        for instanceIndex in range(countOfInstances):
+            instanceBoxesAcrossFrames = [frameInfo.bboxes[instanceIndex] for frameInfo in self.__frames]
+            instanceMeanBox = Box.meanBox(instanceBoxesAcrossFrames)
+            self.__meanBoxes[instanceIndex] = instanceMeanBox
 
 
 class FrameInfo:
-    def __init__(self, detections, pos, posMsec, frame):
+    def __init__(self, bboxes, pos, posMsec, frame):
         self.pos = pos
         self.posMsec = posMsec
-        self.bboxes = [d[0] for d in detections]
+        self.bboxes = bboxes
         # TODO: extract frame patches for bboxes

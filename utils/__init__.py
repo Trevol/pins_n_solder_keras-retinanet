@@ -29,3 +29,8 @@ def boxCenter(box, roundToInt=False):
     if roundToInt:
         result = np.round(result, 0, out=result).astype(np.int32)
     return result
+
+
+def cityblockDistance(pt1, pt2):
+    x, y = np.abs(np.subtract(pt1, pt2))
+    return x + y
