@@ -8,6 +8,7 @@ class Box:
         self.box = bbox
         self.pt0 = np.array([bbox[0], bbox[1]])
         self.pt1 = np.array([bbox[2], bbox[3]])
+        self.size = np.abs(self.pt1 - self.pt0)
         self.center = boxCenter(bbox)
         self.cityblockDiagonal = cityblockDistance(self.pt0, self.pt1)
 

@@ -53,7 +53,7 @@ class FrameRange:
 
     @property
     def stable(self):
-        return len(self.__frames) >= 3
+        return len(self.__frames) >= 20
 
     def addIfClose(self, bboxes, framePos, framePosMsec, frame):
         if not any(bboxes):
@@ -78,7 +78,7 @@ class FrameRange:
         instanceOrderedBoxes = []
         for meanBox in self.__meanBoxes:
             boxForMeanBox = None
-            maxDist = meanBox.cityblockDiagonal / 8  # box.distToCenter / 4
+            maxDist = meanBox.cityblockDiagonal / 10  # TODO: make adaptive
             for box in boxes:
                 if box.withinDistance(meanBox, maxDist):
                     boxForMeanBox = box
@@ -94,8 +94,9 @@ class FrameRange:
     def draw(self, img):
         green = (0, 200, 0)
         for meanBox in self.__meanBoxes:
-            cv2.circle(img, tuple(meanBox.center), 3, green, -1)
-
+            w, h = meanBox.size
+            r = int(min(w, h) // 4)
+            cv2.circle(img, tuple(meanBox.center), r, green, -1)
 
     def __addToRange(self, frameInfo):
         self.__frames.append(frameInfo)

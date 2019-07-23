@@ -41,7 +41,9 @@ def main():
     for sourceVideoFile, framesDetections in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         handler = VideoHandler(framesDetections)
-        videoPlayback.play(range=(9, 184), onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
+        # framesRange = (9, 184)
+        framesRange = None
+        videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
         videoPlayback.release()
     cv2.waitKey()
 
