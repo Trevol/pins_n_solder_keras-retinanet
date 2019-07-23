@@ -2,6 +2,7 @@ from detection.pins_tracking.v1.Box import Box
 import cv2
 
 
+# TODO: calc bounding box for stable Scene -
 class TechProcessTracker:
     def __init__(self):
         self.__stableRanges = []
@@ -36,20 +37,29 @@ class TechProcessTracker:
         self.__logNewStableChanges()
 
     def __logNewStableChanges(self):
-        # raise NotImplementedError()
-        # diff between
-        pass
+        assert any(self.__stableRanges)
+
+        framePos, framePosMs, objectsCount = self.__stableRanges[-1].stats()
+        print(f'{framePos}, {framePosMs}, {objectsCount}')
 
     def draw(self, img):
-        if any(self.__stableRanges):  # draw last stable range
-            self.__stableRanges[-1].draw(img)
+        if self.__currentFrameRange and self.__currentFrameRange.stable:
+            self.__currentFrameRange.draw(img)
+        # if any(self.__stableRanges):  # draw last stable range
+        #     self.__stableRanges[-1].draw(img)
 
 
 class FrameRange:
-    def __init__(self, bboxes, framePos, frameMs, frame):
+    def __init__(self, bboxes, framePos, framePosMsec, frame):
         self.__frames = []  # or collections.deque(maxlen = 50)
         self.__meanBoxes = []
-        self.addIfClose(bboxes, framePos, frameMs, frame)
+        self.addIfClose(bboxes, framePos, framePosMsec, frame)
+
+    def stats(self):
+        assert self.stable
+        first = self.__frames[0]
+        objectsCount = len(self.__meanBoxes)
+        return first.pos, first.posMsec, objectsCount
 
     @property
     def stable(self):
@@ -94,8 +104,7 @@ class FrameRange:
     def draw(self, img):
         green = (0, 200, 0)
         for meanBox in self.__meanBoxes:
-            w, h = meanBox.size
-            r = int(min(w, h) // 4)
+            r = int(min(*meanBox.size) // 4)  # min(w,h)/4
             cv2.circle(img, tuple(meanBox.center), r, green, -1)
 
     def __addToRange(self, frameInfo):

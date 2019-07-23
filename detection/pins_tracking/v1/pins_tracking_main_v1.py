@@ -19,7 +19,7 @@ class VideoHandler:
         cv2.setWindowTitle(self.winname, stateTitle)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
-        frameDetections = [d for d in self.framesDetections.get(framePos, []) if d[-1] >= .9]  # with score >= .9
+        frameDetections = [d for d in self.framesDetections.get(framePos, []) if d[-1] >= .85]  # with score >= someThresh
 
         self.techProcessTracker.track(frameDetections, framePos, framePosMsec, frame)
         self.techProcessTracker.draw(frame)
@@ -35,15 +35,19 @@ class VideoHandler:
 def files():
     yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
            DetectionsCSV.loadPickle('../../csv_cache/data/detections_video6.pcl'))
+    # yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
+    #        DetectionsCSV.loadPickle('../../csv_cache/data/detections_video2.pcl'))
 
 
 def main():
     for sourceVideoFile, framesDetections in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         handler = VideoHandler(framesDetections)
-        # framesRange = (9, 184)
+
+        # framesRange = (4500, None)
         framesRange = None
         videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
+
         videoPlayback.release()
     cv2.waitKey()
 

@@ -75,6 +75,8 @@ class VideoPlayback:
         if len(range) == 1:
             range = (range[0], math.inf)
         from_, to = range[:2]
+        from_ = from_ or 0
+        to = to or math.inf
         return from_, to
 
     def frames(self, range=None):

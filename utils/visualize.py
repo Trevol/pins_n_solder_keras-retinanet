@@ -8,7 +8,7 @@ from . import boxCenter
 def drawDetections(image, detections, drawCenters=False):  # visualize detections
     for box, label, score in detections:
         # color = label_color(label)
-        if score < 0.99:
+        if score < 0.96:
             color = (0, 0, 255)
         elif label == 1:  # solder
             color = (0, 255, 0)
@@ -20,9 +20,7 @@ def drawDetections(image, detections, drawCenters=False):  # visualize detection
             center = boxCenter(box, roundToInt=True)
             cv2.circle(image, tuple(center), 1, color)
 
-            # caption = f"{labels_to_names[label]} {score:.2f}"
-        # draw_caption(draw, b, caption)
-        if score < 1.0:
+        if score < .96:
             draw_caption(image, b, str(int(score * 100)), fontScale=0.7)
     return image
 
