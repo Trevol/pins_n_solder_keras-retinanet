@@ -6,7 +6,7 @@ from collections import deque
 # TODO: calc bounding box for stable Scene -
 class TechProcessTracker:
     def __init__(self):
-        self.__stableRanges = []
+        self.__stableScenes = []
         self.__currentScene = None
 
     def track(self, frameDetections, framePos, framePosMsec, frame):
@@ -32,15 +32,15 @@ class TechProcessTracker:
 
     def __addCurrentRangeAsStable(self):
         assert self.__currentScene.stable
-        assert self.__currentScene not in self.__stableRanges
+        assert self.__currentScene not in self.__stableScenes
 
-        self.__stableRanges.append(self.__currentScene)
+        self.__stableScenes.append(self.__currentScene)
         self.__logNewStableChanges()
 
     def __logNewStableChanges(self):
-        assert any(self.__stableRanges)
+        assert any(self.__stableScenes)
 
-        framePos, framePosMs, objectsCount = self.__stableRanges[-1].stats()
+        framePos, framePosMs, objectsCount = self.__stableScenes[-1].stats()
         print(f'{framePos}, {framePosMs:.0f}, {objectsCount}')
 
     def draw(self, img):
@@ -103,7 +103,7 @@ class StableScene:
     ####################################
     def __checkCloseToRange(self, boxes):
         assert any(self.__meanBoxes)
-        if len(boxes) < len(self.__meanBoxes):
+        if len(boxes) != len(self.__meanBoxes):
             return False, None
 
         # detection close to mean boxes

@@ -9,5 +9,14 @@ class KbdKeys:
     UP_ARROW = 82  # 2490368
     DOWN_ARROW = 84  # 2621440
 
+    w = ord('w')
+    W = ord('W')
+    d = ord('d')
+    D = ord('D')
+    s = ord('s')
+    S = ord('S')
+    a = ord('a')
+    A = ord('A')
+
     ESC = 27
     Q = ord('q')

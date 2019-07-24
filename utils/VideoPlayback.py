@@ -146,8 +146,12 @@ class VideoController:
 
     @staticmethod
     def waitKey(delay):
-        return cv2.waitKey(delay)
+        return cv2.waitKeyEx(delay)
 
+    BACKWARD_KEYS = {KbdKeys.L_ARROW_EX, KbdKeys.a, KbdKeys.A}
+    FORWARD_KEYS = {KbdKeys.R_ARROW_EX, KbdKeys.d, KbdKeys.D}
+    INCREASE_DELAY_KEYS = {KbdKeys.UP_ARROW_EX, KbdKeys.w, KbdKeys.W}
+    DECREASE_DELAY_KEYS = {KbdKeys.DOWN_ARROW_EX, KbdKeys.s, KbdKeys.S}
     def _handleManualPlay(self):
         assert self.videoPlayback.manualPlay
 
@@ -161,18 +165,18 @@ class VideoController:
         elif key == KbdKeys.ESC:
             read, stop, changed = False, True, False
 
-        elif key == KbdKeys.L_ARROW:
+        elif key in self.BACKWARD_KEYS:
             self.videoPlayback.backward()
             read, stop, changed = True, False, False
 
-        elif key == KbdKeys.R_ARROW:
+        elif key in self.FORWARD_KEYS:
             read, stop, changed = True, False, False
 
-        elif key == KbdKeys.UP_ARROW:
+        elif key in self.INCREASE_DELAY_KEYS:
             self.videoPlayback.changeFrameDelay(+1)
             read, stop, changed = False, False, True
 
-        elif key == KbdKeys.DOWN_ARROW:
+        elif key in self.DECREASE_DELAY_KEYS:
             self.videoPlayback.changeFrameDelay(-1)
             read, stop, changed = False, False, True
 
@@ -194,16 +198,16 @@ class VideoController:
             self.videoPlayback.manualPlay = True
             read, stop, changed = False, False, True
 
-        elif key == KbdKeys.L_ARROW:
+        elif key in self.BACKWARD_KEYS:
             self.videoPlayback.backward()
             self.videoPlayback.manualPlay = True
             read, stop, changed = True, False, True
 
-        elif key == KbdKeys.UP_ARROW:
+        elif key in self.INCREASE_DELAY_KEYS:
             self.videoPlayback.changeFrameDelay(+1)
             read, stop, changed = False, False, True
 
-        elif key == KbdKeys.DOWN_ARROW:
+        elif key in self.DECREASE_DELAY_KEYS:
             self.videoPlayback.changeFrameDelay(-1)
             read, stop, changed = False, False, True
 
