@@ -1,1 +1,3 @@
-740
+for stabilizationLength = 5:
+    160
+    740

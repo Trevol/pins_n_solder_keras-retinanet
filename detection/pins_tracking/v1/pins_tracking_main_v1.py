@@ -44,7 +44,7 @@ def main():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         handler = VideoHandler(framesDetections)
 
-        framesRange = (600, None)
+        framesRange = (0, None)
         # framesRange = None
         videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
 
