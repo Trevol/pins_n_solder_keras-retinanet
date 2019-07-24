@@ -19,12 +19,15 @@ class TechProcessTracker:
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
             return
 
-        currentSceneWasUnstable = not self.__currentScene.stable
+        if any(self.__stableScenes) and len(bboxes) < self.__stableScenes[-1].instanceCount:
+            # CHECK - currently stabilized scene should be superset of self.__stableScenes[-1]
+            self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
+            return
 
+        currentSceneWasUnstable = not self.__currentScene.stable
         closeToCurrentScene = self.__currentScene.addIfClose(bboxes, framePos, framePosMsec, frame)
 
         if currentSceneWasUnstable and self.__currentScene.stable:
-            #TODO: CHECK - currently stabilized scene should be superset of self.__stableScenes[-1]
             # add to stable scene IF this scene was unstable before addition new frame and become stable after
             self.__registerCurrentSceneAsStable()
 
@@ -67,13 +70,17 @@ class StableScene:
             return self.first is not None
 
     ##############################################
-    __stabilizationLength = 5  # count of frames to ensure scene stability
+    __stabilizationLength = 20  # count of frames to ensure scene stability
 
     def __init__(self, bboxes, framePos, framePosMsec, frame):
         self.__frames = self.Frames(self.__stabilizationLength)
         self.__instanceCount = None
         self.__meanBoxes = []
         self.addIfClose(bboxes, framePos, framePosMsec, frame)
+
+    @property
+    def instanceCount(self):
+        return self.__instanceCount
 
     def stats(self):
         assert self.stable
