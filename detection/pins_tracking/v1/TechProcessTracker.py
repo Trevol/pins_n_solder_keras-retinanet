@@ -1,3 +1,4 @@
+import numpy as np
 from detection.pins_tracking.v1.Box import Box
 import cv2
 from collections import deque
@@ -52,6 +53,11 @@ class TechProcessTracker:
             self.__currentScene.draw(img)
 
 
+ptX, ptY = 1073 / 0.7, 569 / 0.7  # cords taken from downsized image - so restore original coords
+pt = (ptX, ptY)
+meanColorBuffer = []
+
+
 class StableScene:
     class Frames:
         def __init__(self, stabilizationLenght):
@@ -95,12 +101,12 @@ class StableScene:
             return False  # skip empty detections
 
         if not any(self.__frames.recent):
-            self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame))
+            self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame), frame)
             return True  # first frame starts scene - so always belong to scene
 
         closeToScene, bboxes = self.__checkCloseToScene(bboxes)
         if closeToScene:
-            self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame))
+            self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame), frame)
         return closeToScene
 
     ####################################
@@ -125,18 +131,11 @@ class StableScene:
         return True, instanceOrderedBoxes
 
     #################################
-
-    def draw(self, img):
-        green = (0, 200, 0)
-        for meanBox in self.__meanBoxes:
-            r = int(min(*meanBox.size) // 4)  # min(w,h)/4
-            cv2.circle(img, tuple(meanBox.center), r, green, -1)
-
-    def __addToScene(self, frameInfo):
+    def __addToScene(self, frameInfo, frame):
         self.__frames.append(frameInfo)
-        self.__recalcStatistics()
+        self.__recalcStatistics(frame)
 
-    def __recalcStatistics(self):
+    def __recalcStatistics(self, frame):
         assert self.__frames.notEmpty()
 
         if len(self.__frames.recent) == 1:
@@ -149,6 +148,34 @@ class StableScene:
             instanceMeanBox = Box.meanBox(instanceBoxesAcrossFrames)
             self.__meanBoxes[instanceIndex] = instanceMeanBox
 
+        #DEBUG
+        boxOfIntereset = Box.boxByPoint(self.__meanBoxes, pt)
+        if boxOfIntereset is None:
+            print('boxOfInterest is None')
+        else:
+            # calc mean color x1073:y569
+            meanColor = self.__calcMeanColor(frame, boxOfIntereset)
+            meanColorBuffer.append(meanColor)
+
+    @staticmethod
+    def __calcMeanColor(frame, innerBox):
+        innerX0, innerY0, innerX1, innerY1 = innerBox.box
+        dW, dH = innerBox.size / 4
+
+        patch = frame[int(innerY0 - dH): int(innerY1 + dH + 1), int(innerX0 - dW): int(innerX1 + dW + 1)]
+        patch = patch.astype(np.float32)
+
+        # fill innerBox in path with NaN
+        innerW, innerH = innerBox.size
+        patch[int(dH):int(dH + innerH), int(dW):int(dW + innerW)] = np.NaN
+        return np.nanmean(patch, axis=(0, 1))
+
+    def draw(self, img):
+        green = (0, 200, 0)
+        for meanBox in self.__meanBoxes:
+            r = int(min(*meanBox.size) // 4)  # min(w,h)/4
+            cv2.circle(img, tuple(meanBox.center), r, green, -1)
+
 
 #################################################
 class FrameInfo:
@@ -157,3 +184,18 @@ class FrameInfo:
         self.posMsec = posMsec
         self.bboxes = bboxes
         # TODO: extract frame patches for bboxes
+        self.framePatch = self.__extractPatches(frame, bboxes)
+
+    def boxByPoint(self, pt):
+        return Box.boxByPoint(self.bboxes, pt)
+
+    @classmethod
+    def __extractPatches(cls, frame, bboxes):
+        return [cls.__extractPatch(frame, b) for b in bboxes]
+
+    @staticmethod
+    def __extractPatch(frame, bbox):
+        patchBox = np.ceil(bbox.box).astype(np.int32) + 2
+        x0, y0, x1, y1 = patchBox
+        patch = frame[y0:y1, x0:x1].copy()
+        return patch

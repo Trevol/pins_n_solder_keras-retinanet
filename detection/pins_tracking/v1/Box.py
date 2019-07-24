@@ -12,6 +12,14 @@ class Box:
         self.center = boxCenter(bbox)
         self.cityblockDiagonal = cityblockDistance(self.pt0, self.pt1)
 
+    def containsPoint(self, pt):
+        return self.pt0[0] < pt[0] < self.pt1[0] and self.pt0[1] < pt[1] < self.pt1[1]
+
+    @staticmethod
+    def boxByPoint(boxes, pt):
+        boxes = (b for b in boxes if b.containsPoint(pt))
+        return next(boxes, None)
+
     def distance(self, otherBox):
         # L1/Manhattan/cityblock distance for simplicity
         return cityblockDistance(self.center, otherBox.center)

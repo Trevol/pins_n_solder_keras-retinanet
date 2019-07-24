@@ -3,7 +3,7 @@ from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
 from utils import resize
 from utils.VideoPlayback import VideoPlayback
-from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
+from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker, meanColorBuffer
 
 
 class VideoHandler:
@@ -19,7 +19,8 @@ class VideoHandler:
         cv2.setWindowTitle(self.winname, stateTitle)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
-        frameDetections = [d for d in self.framesDetections.get(framePos, []) if d[-1] >= .85]  # with score >= someThresh
+        frameDetections = [d for d in self.framesDetections.get(framePos, []) if
+                           d[-1] >= .85]  # with score >= someThresh
 
         self.techProcessTracker.track(frameDetections, framePos, framePosMsec, frame)
         self.techProcessTracker.draw(frame)
@@ -47,8 +48,12 @@ def main():
         framesRange = (0, None)
         # framesRange = None
         videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
-
         videoPlayback.release()
+
+        assert len(meanColorBuffer)>20
+        import numpy as np
+        np.save('./meanColors.npy', np.array(meanColorBuffer, dtype=np.float32))
+
     cv2.waitKey()
 
 
