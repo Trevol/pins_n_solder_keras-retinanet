@@ -19,18 +19,18 @@ class TechProcessTracker:
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
             return
 
-        wasUnstable = not self.__currentScene.stable
+        currentSceneWasUnstable = not self.__currentScene.stable
 
-        closeToRange = self.__currentScene.addIfClose(bboxes, framePos, framePosMsec, frame)
+        closeToCurrentScene = self.__currentScene.addIfClose(bboxes, framePos, framePosMsec, frame)
 
-        if wasUnstable and self.__currentScene.stable:
-            # add to stable ranges IF range was unstable before addition new frame and become stable after
-            self.__addCurrentRangeAsStable()
+        if currentSceneWasUnstable and self.__currentScene.stable:
+            # add to stable scene IF this scene was unstable before addition new frame and become stable after
+            self.__registerCurrentSceneAsStable()
 
-        if not closeToRange:
+        if not closeToCurrentScene:
             self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
 
-    def __addCurrentRangeAsStable(self):
+    def __registerCurrentSceneAsStable(self):
         assert self.__currentScene.stable
         assert self.__currentScene not in self.__stableScenes
 
@@ -70,21 +70,16 @@ class StableScene:
 
     def __init__(self, bboxes, framePos, framePosMsec, frame):
         self.__frames = self.Frames(self.__stabilizationLength)
-        # self.__frames_old = []  # or collections.deque(maxlen = self.__stabilizationCount)
-
         self.__instanceCount = None
         self.__meanBoxes = []
         self.addIfClose(bboxes, framePos, framePosMsec, frame)
 
     def stats(self):
         assert self.stable
-        # first = self.__frames_old[0]
-        # objectsCount = len(self.__meanBoxes)
         return self.__frames.first.pos, self.__frames.first.posMsec, self.__instanceCount
 
     @property
     def stable(self):
-        # return len(self.__frames_old) >= self.__stabilizationLength
         return self.__frames.stabilized()
 
     def addIfClose(self, bboxes, framePos, framePosMsec, frame):
@@ -92,17 +87,17 @@ class StableScene:
             return False  # skip empty detections
 
         if not any(self.__frames.recent):
-            self.__addToRange(FrameInfo(bboxes, framePos, framePosMsec, frame))
+            self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame))
             return True  # first frame starts scene - so always belong to scene
 
-        closeToRange, bboxes = self.__checkCloseToRange(bboxes)
-        if closeToRange:
-            self.__addToRange(FrameInfo(bboxes, framePos, framePosMsec, frame))
-        return closeToRange
+        closeToScene, bboxes = self.__checkCloseToScene(bboxes)
+        if closeToScene:
+            self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame))
+        return closeToScene
 
     ####################################
-    def __checkCloseToRange(self, boxes):
-        assert any(self.__meanBoxes)
+    def __checkCloseToScene(self, boxes):
+        assert self.__frames.notEmpty()
         if len(boxes) != len(self.__meanBoxes):
             return False, None
 
@@ -129,8 +124,7 @@ class StableScene:
             r = int(min(*meanBox.size) // 4)  # min(w,h)/4
             cv2.circle(img, tuple(meanBox.center), r, green, -1)
 
-    def __addToRange(self, frameInfo):
-        # self.__frames_old.append(frameInfo)
+    def __addToScene(self, frameInfo):
         self.__frames.append(frameInfo)
         self.__recalcStatistics()
 
