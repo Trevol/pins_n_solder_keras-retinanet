@@ -24,6 +24,7 @@ class TechProcessTracker:
         closeToCurrentScene = self.__currentScene.addIfClose(bboxes, framePos, framePosMsec, frame)
 
         if currentSceneWasUnstable and self.__currentScene.stable:
+            #TODO: CHECK - currently stabilized scene should be superset of self.__stableScenes[-1]
             # add to stable scene IF this scene was unstable before addition new frame and become stable after
             self.__registerCurrentSceneAsStable()
 
