@@ -4,6 +4,21 @@ import cv2
 from collections import deque
 
 
+def pointOfInterest_6():
+    x, y = 1073 / 0.7, 569 / 0.7  # cords taken from downsized image - so restore original coords
+    return x, y
+
+
+def pointOfInterest_2():
+    x, y = 700, 247
+    # x, y = 759, 246
+    # x, y = 636, 350
+    return x, y
+
+
+meanColorBuffer = []
+
+
 # TODO: calc bounding box for stable Scene -
 class TechProcessTracker:
     def __init__(self):
@@ -51,11 +66,6 @@ class TechProcessTracker:
     def draw(self, img):
         if self.__currentScene and self.__currentScene.stable:
             self.__currentScene.draw(img)
-
-
-ptX, ptY = 1073 / 0.7, 569 / 0.7  # cords taken from downsized image - so restore original coords
-pt = (ptX, ptY)
-meanColorBuffer = []
 
 
 class StableScene:
@@ -148,17 +158,16 @@ class StableScene:
             instanceMeanBox = Box.meanBox(instanceBoxesAcrossFrames)
             self.__meanBoxes[instanceIndex] = instanceMeanBox
 
-        #DEBUG
-        boxOfIntereset = Box.boxByPoint(self.__meanBoxes, pt)
-        if boxOfIntereset is None:
-            print('boxOfInterest is None')
-        else:
-            # calc mean color x1073:y569
-            meanColor = self.__calcMeanColor(frame, boxOfIntereset)
-            meanColorBuffer.append(meanColor)
+        # DEBUG
+        # boxOfIntereset = Box.boxByPoint(self.__meanBoxes, pointOfInterest_2())
+        # if boxOfIntereset is None:
+        #     print('boxOfInterest is None')
+        # else:
+        #     meanColor, colorStd = self.__boxOuterColorStats(frame, boxOfIntereset)
+        #     meanColorBuffer.append(meanColor)
 
     @staticmethod
-    def __calcMeanColor(frame, innerBox):
+    def __boxOuterColorStats(frame, innerBox):
         innerX0, innerY0, innerX1, innerY1 = innerBox.box
         dW, dH = innerBox.size / 4
 
@@ -168,7 +177,8 @@ class StableScene:
         # fill innerBox in path with NaN
         innerW, innerH = innerBox.size
         patch[int(dH):int(dH + innerH), int(dW):int(dW + innerW)] = np.NaN
-        return np.nanmean(patch, axis=(0, 1))
+        axis = (0, 1)
+        return np.nanmean(patch, axis), np.nanstd(patch, axis)
 
     def draw(self, img):
         green = (0, 200, 0)
@@ -184,7 +194,7 @@ class FrameInfo:
         self.posMsec = posMsec
         self.bboxes = bboxes
         # TODO: extract frame patches for bboxes
-        self.framePatch = self.__extractPatches(frame, bboxes)
+        # self.framePatch = self.__extractPatches(frame, bboxes)
 
     def boxByPoint(self, pt):
         return Box.boxByPoint(self.bboxes, pt)
