@@ -4,21 +4,6 @@ import cv2
 from collections import deque
 
 
-def pointOfInterest_6():
-    x, y = 1073 / 0.7, 569 / 0.7  # cords taken from downsized image - so restore original coords
-    return x, y
-
-
-def pointOfInterest_2():
-    x, y = 700, 247
-    # x, y = 759, 246
-    # x, y = 636, 350
-    return x, y
-
-
-meanColorBuffer = []
-
-
 # TODO: calc bounding box for stable Scene -
 class TechProcessTracker:
     def __init__(self):
@@ -35,7 +20,7 @@ class TechProcessTracker:
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
             return
 
-        if any(self.__stableScenes) and len(bboxes) < self.__stableScenes[-1].instanceCount:
+        if any(self.__stableScenes) and len(bboxes) < self.__stableScenes[-1].pinsCount:
             # CHECK - currently stabilized scene should be superset of self.__stableScenes[-1]
             self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
             return
@@ -90,17 +75,16 @@ class StableScene:
 
     def __init__(self, bboxes, framePos, framePosMsec, frame):
         self.__frames = self.Frames(self.__stabilizationLength)
-        self.__instanceCount = None
-        self.__meanBoxes = []
+        self.__pins = []
         self.addIfClose(bboxes, framePos, framePosMsec, frame)
 
     @property
-    def instanceCount(self):
-        return self.__instanceCount
+    def pinsCount(self):
+        return len(self.__pins)
 
     def stats(self):
         assert self.stable
-        return self.__frames.first.pos, self.__frames.first.posMsec, self.__instanceCount
+        return self.__frames.first.pos, self.__frames.first.posMsec, self.pinsCount
 
     @property
     def stable(self):
@@ -122,23 +106,23 @@ class StableScene:
     ####################################
     def __checkCloseToScene(self, boxes):
         assert self.__frames.notEmpty()
-        if len(boxes) != len(self.__meanBoxes):
+        if len(boxes) != self.pinsCount:
             return False, None
 
         # detection close to mean boxes
-        instanceOrderedBoxes = []
-        for meanBox in self.__meanBoxes:
-            boxForMeanBox = None
-            maxDist = meanBox.cityblockDiagonal / 10  # TODO: make adaptive
+        pinOrderedBoxes = []
+        for pin in self.__pins:
+            boxForPin = None
+            maxDist = pin.box.cityblockDiagonal / 10  # TODO: make adaptive
             for box in boxes:
-                if box.withinDistance(meanBox, maxDist):
-                    boxForMeanBox = box
-                    instanceOrderedBoxes.append(boxForMeanBox)
+                if box.withinDistance(pin.box, maxDist):
+                    boxForPin = box
+                    pinOrderedBoxes.append(boxForPin)
                     break
 
-            if not boxForMeanBox:
+            if not boxForPin:
                 return False, None
-        return True, instanceOrderedBoxes
+        return True, pinOrderedBoxes
 
     #################################
     def __addToScene(self, frameInfo, frame):
@@ -149,14 +133,16 @@ class StableScene:
         assert self.__frames.notEmpty()
 
         if len(self.__frames.recent) == 1:
-            self.__meanBoxes = list(self.__frames.first.bboxes)
-            self.__instanceCount = len(self.__meanBoxes)
+            boxes = self.__frames.first.bboxes
+            colorStats = (self.__boxOuterColorStats(frame, b) for b in boxes)
+            self.__pins = [Pin(box, colorStat) for box, colorStat in zip(boxes, colorStats)]
             return
 
-        for instanceIndex in range(self.__instanceCount):
-            instanceBoxesAcrossFrames = [frameInfo.bboxes[instanceIndex] for frameInfo in self.__frames.recent]
-            instanceMeanBox = Box.meanBox(instanceBoxesAcrossFrames)
-            self.__meanBoxes[instanceIndex] = instanceMeanBox
+        for pinIndex in range(self.pinsCount):
+            pinBoxesAcrossFrames = [frameInfo.bboxes[pinIndex] for frameInfo in self.__frames.recent]
+            pinBox = Box.meanBox(pinBoxesAcrossFrames)
+            colorStat = self.__boxOuterColorStats(frame, pinBox)
+            self.__pins[pinIndex].update(pinBox, colorStat)
 
         # DEBUG
         # boxOfIntereset = Box.boxByPoint(self.__meanBoxes, pointOfInterest_2())
@@ -178,13 +164,40 @@ class StableScene:
         innerW, innerH = innerBox.size
         patch[int(dH):int(dH + innerH), int(dW):int(dW + innerW)] = np.NaN
         axis = (0, 1)
-        return np.nanmean(patch, axis), np.nanstd(patch, axis)
+        mean = np.nanmean(patch, axis)
+        std = np.nanstd(patch, axis)
+        return StatParams(mean, std)
 
     def draw(self, img):
-        green = (0, 200, 0)
-        for meanBox in self.__meanBoxes:
-            r = int(min(*meanBox.size) // 4)  # min(w,h)/4
-            cv2.circle(img, tuple(meanBox.center), r, green, -1)
+        for pin in self.__pins:
+            pin.draw(img)
+
+
+class StatParams:
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
+
+
+class Pin:
+    def __init__(self, box, colorStat):
+        self.box = box
+        self.colorStat = colorStat
+        self.withSolder = False
+
+    def update(self, box, colorStat):
+        self.box = box
+        self.colorStat = colorStat
+
+    def draw(self, img):
+        r = int(min(*self.box.size) // 4)  # min(w,h)/4
+        cv2.circle(img, tuple(self.box.center), r, Colors.yellow, -1)
+
+
+class Colors:
+    green = (0, 200, 0)
+    yellow = (0, 255, 255)
+    red = (0, 0, 200)
 
 
 #################################################

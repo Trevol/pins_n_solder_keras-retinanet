@@ -3,7 +3,7 @@ from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
 from utils import resize
 from utils.VideoPlayback import VideoPlayback
-from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker, meanColorBuffer
+from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
 
 
 class VideoHandler:
@@ -44,9 +44,9 @@ class VideoHandler:
 
 
 def files():
-    # yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
-    #        DetectionsCSV.loadPickle('../../csv_cache/data/detections_video6.pcl'),
-    #        (222 // 0.7, 70 // 0.7, 1162 // 0.7, 690 // 0.7))
+    yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
+           DetectionsCSV.loadPickle('../../csv_cache/data/detections_video6.pcl'),
+           (222 // 0.7, 70 // 0.7, 1162 // 0.7, 690 // 0.7))
     yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
            DetectionsCSV.loadPickle('../../csv_cache/data/detections_video2.pcl'),
            (147, 87, 1005, 669))
@@ -63,13 +63,6 @@ def main():
         videoPlayback.release()
 
     cv2.waitKey()
-
-
-def saveMeanColorBuffer():
-    # assert len(meanColorBuffer) > 20
-    # import numpy as np
-    # np.save('./meanColors_2_higher_contrast_700_247.npy', np.array(meanColorBuffer, dtype=np.float32))
-    pass
 
 
 if __name__ == '__main__':
