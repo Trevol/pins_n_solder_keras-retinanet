@@ -4,6 +4,169 @@ import cv2
 from collections import deque
 
 
+class StableScene:
+    class Frames:
+        def __init__(self, stabilizationLenght):
+            self.first = None
+            self.recent = deque(maxlen=stabilizationLenght)
+
+        def stabilized(self):
+            return len(self.recent) == self.recent.maxlen
+
+        def append(self, frameInfo):
+            if not self.first:
+                self.first = frameInfo
+            self.recent.append(frameInfo)
+
+        def notEmpty(self):
+            return self.first is not None
+
+    ##############################################
+    __stabilizationLength = 20  # count of frames to ensure scene stability
+
+    def __init__(self, bboxes, framePos, framePosMsec, frame):
+        self.__frames = self.Frames(self.__stabilizationLength)
+        self.__pins = []
+        self.addIfClose(bboxes, framePos, framePosMsec, frame)
+
+    @property
+    def pins(self):
+        return tuple(self.__pins)
+
+    @property
+    def pinsCount(self):
+        return len(self.__pins)
+
+    @property
+    def pinsWithSolderCount(self):
+        # TODO: how to count generated items without list creation
+        return len([p for p in self.__pins if p.withSolder])
+
+    @property
+    def firstFrame(self):
+        return self.__frames.first
+
+    # def stats(self):
+    #     assert self.stable
+    #     return self.__frames.first.pos, self.__frames.first.posMsec, self.pinsCount
+
+    @property
+    def stable(self):
+        return self.__frames.stabilized()
+
+    def detectSolder(self, prevScene):
+        assert self.pinsCount == prevScene.pinsCount
+        pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
+        assert pinsAreClose
+        for currentPin, prevPin in zip(self.__pins, prevPins):
+            if prevPin.withSolder:
+                currentPin.withSolder = prevPin.withSolder
+                continue
+            # TODO: compare color stat params
+            currentPin.withSolder = self.__colorsAreFromDifferentDistributions(currentPin.colorStat, prevPin.colorStat)
+
+    @staticmethod
+    def __colorsAreFromDifferentDistributions(colorStat1, colorStat2):
+        absdiff = np.abs(colorStat1.mean - colorStat2.mean)
+        thresh = colorStat1.std
+        colorsSoDifferent = np.any(absdiff > thresh)  # at least one component is outside of std deviation
+        return colorsSoDifferent
+
+    def addIfClose(self, bboxes, framePos, framePosMsec, frame):
+        if not any(bboxes):
+            return False  # skip empty detections
+
+        if not any(self.__frames.recent):
+            self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame), frame)
+            return True  # first frame starts scene - so always belong to scene
+
+        closeToScene, bboxes = self.__checkBoxesCloseToScene(bboxes)
+        if closeToScene:
+            self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame), frame)
+        return closeToScene
+
+    ####################################
+    def __checkPinsCloseToScene(self, pins):
+        assert self.__frames.notEmpty()
+        if len(pins) != self.pinsCount:
+            return False, None
+
+        # TODO: store boxes/pins in (x, y) order to avoid constant sorting
+        reorderedPins = []
+        for currentPin in self.__pins:
+            pinForCurrentPin = None
+            maxDist = currentPin.box.cityblockDiagonal / 10  # TODO: make adaptive
+            for pin in pins:
+                if pin.box.withinDistance(currentPin.box, maxDist):
+                    pinForCurrentPin = pin
+                    reorderedPins.append(pinForCurrentPin)
+                    break
+
+            if not pinForCurrentPin:
+                return False, None
+        return True, reorderedPins
+
+    def __checkBoxesCloseToScene(self, boxes):
+        assert self.__frames.notEmpty()
+        if len(boxes) != self.pinsCount:
+            return False, None
+
+        # TODO: store boxes/pins in (x, y) order to avoid constant sorting
+        pinOrderedBoxes = []
+        for pin in self.__pins:
+            boxForPin = None
+            maxDist = pin.box.cityblockDiagonal / 10  # TODO: make adaptive
+            for box in boxes:
+                if box.withinDistance(pin.box, maxDist):
+                    boxForPin = box
+                    pinOrderedBoxes.append(boxForPin)
+                    break
+
+            if not boxForPin:
+                return False, None
+        return True, pinOrderedBoxes
+
+    #################################
+    def __addToScene(self, frameInfo, frame):
+        self.__frames.append(frameInfo)
+        self.__updatePins(frame)
+
+    def __updatePins(self, frame):
+        assert self.__frames.notEmpty()
+
+        if len(self.__frames.recent) == 1:
+            boxes = self.__frames.first.bboxes
+            colorStats = (self.__boxOuterColorStats(frame, b) for b in boxes)
+            self.__pins = [Pin(box, colorStat) for box, colorStat in zip(boxes, colorStats)]
+            return
+
+        for pinIndex in range(self.pinsCount):
+            pinBoxesAcrossFrames = [frameInfo.bboxes[pinIndex] for frameInfo in self.__frames.recent]
+            pinBox = Box.meanBox(pinBoxesAcrossFrames)
+            colorStat = self.__boxOuterColorStats(frame, pinBox)
+            self.__pins[pinIndex].update(pinBox, colorStat)
+
+    @staticmethod
+    def __boxOuterColorStats(frame, innerBox):
+        innerX0, innerY0, innerX1, innerY1 = innerBox.box
+        dW, dH = innerBox.size / 4
+
+        patch = frame[int(innerY0 - dH): int(innerY1 + dH + 1), int(innerX0 - dW): int(innerX1 + dW + 1)]
+        patch = patch.astype(np.float32)
+
+        # fill innerBox in path with NaN
+        innerW, innerH = innerBox.size
+        patch[int(dH):int(dH + innerH), int(dW):int(dW + innerW)] = np.NaN
+        axis = (0, 1)
+        mean = np.nanmean(patch, axis)
+        std = np.nanstd(patch, axis)
+        return StatParams(mean, std)
+
+    def draw(self, img):
+        for pin in self.__pins:
+            pin.draw(img)
+
+
 # TODO: calc bounding box for stable Scene -
 class TechProcessTracker:
     def __init__(self):
@@ -39,138 +202,56 @@ class TechProcessTracker:
         assert self.__currentScene.stable
         assert self.__currentScene not in self.__stableScenes
 
+        prevScene = self.__stableScenes[-1] if any(self.__stableScenes) else None
+        changes = self.__registerSceneChanges(self.__currentScene, prevScene)
+        self.__logNewStableChanges(self.__currentScene, changes)
         self.__stableScenes.append(self.__currentScene)
-        self.__logNewStableChanges()
 
-    def __logNewStableChanges(self):
-        assert any(self.__stableScenes)
+    @staticmethod
+    def __registerSceneChanges(currentScene: StableScene, prevScene: StableScene):
+        assert currentScene.stable
+        if prevScene is None:
+            return SceneChanges(currentScene.pinsCount, 0)
 
-        framePos, framePosMs, objectsCount = self.__stableScenes[-1].stats()
-        print(f'{framePos}, {framePosMs:.0f}, {objectsCount}')
+        assert prevScene.stable
+        assert currentScene.pinsCount >= prevScene.pinsCount
+        # TODO: detect solder
+        if currentScene.pinsCount == prevScene.pinsCount:
+            currentScene.detectSolder(prevScene)
+        pinsAdded = currentScene.pinsCount - prevScene.pinsCount
+        solderAdded = currentScene.pinsWithSolderCount - prevScene.pinsWithSolderCount
+        return SceneChanges(pinsAdded, solderAdded)
+
+    @staticmethod
+    def __logNewStableChanges(currentScene, changes):
+        assert currentScene.stable
+        if changes.pinsAdded == 0 and changes.solderAdded == 0:  # no changes - no log
+            return
+        framePos = currentScene.firstFrame.pos
+        framePosMs = currentScene.firstFrame.posMsec
+        pinsCount = currentScene.pinsCount
+        pinsWithSolderCount = currentScene.pinsWithSolderCount
+        logRecord = f'{framePos},{framePosMs:.0f},{pinsCount},{changes.pinsAdded},{pinsWithSolderCount},{changes.solderAdded}'
+        print(logRecord)
 
     def draw(self, img):
         if self.__currentScene and self.__currentScene.stable:
             self.__currentScene.draw(img)
 
-
-class StableScene:
-    class Frames:
-        def __init__(self, stabilizationLenght):
-            self.first = None
-            self.recent = deque(maxlen=stabilizationLenght)
-
-        def stabilized(self):
-            return len(self.recent) == self.recent.maxlen
-
-        def append(self, frameInfo):
-            if not self.first:
-                self.first = frameInfo
-            self.recent.append(frameInfo)
-
-        def notEmpty(self):
-            return self.first is not None
-
-    ##############################################
-    __stabilizationLength = 20  # count of frames to ensure scene stability
-
-    def __init__(self, bboxes, framePos, framePosMsec, frame):
-        self.__frames = self.Frames(self.__stabilizationLength)
-        self.__pins = []
-        self.addIfClose(bboxes, framePos, framePosMsec, frame)
-
-    @property
-    def pinsCount(self):
-        return len(self.__pins)
-
-    def stats(self):
-        assert self.stable
-        return self.__frames.first.pos, self.__frames.first.posMsec, self.pinsCount
-
-    @property
-    def stable(self):
-        return self.__frames.stabilized()
-
-    def addIfClose(self, bboxes, framePos, framePosMsec, frame):
-        if not any(bboxes):
-            return False  # skip empty detections
-
-        if not any(self.__frames.recent):
-            self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame), frame)
-            return True  # first frame starts scene - so always belong to scene
-
-        closeToScene, bboxes = self.__checkCloseToScene(bboxes)
-        if closeToScene:
-            self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame), frame)
-        return closeToScene
-
-    ####################################
-    def __checkCloseToScene(self, boxes):
-        assert self.__frames.notEmpty()
-        if len(boxes) != self.pinsCount:
-            return False, None
-
-        # detection close to mean boxes
-        pinOrderedBoxes = []
-        for pin in self.__pins:
-            boxForPin = None
-            maxDist = pin.box.cityblockDiagonal / 10  # TODO: make adaptive
-            for box in boxes:
-                if box.withinDistance(pin.box, maxDist):
-                    boxForPin = box
-                    pinOrderedBoxes.append(boxForPin)
-                    break
-
-            if not boxForPin:
-                return False, None
-        return True, pinOrderedBoxes
-
-    #################################
-    def __addToScene(self, frameInfo, frame):
-        self.__frames.append(frameInfo)
-        self.__recalcStatistics(frame)
-
-    def __recalcStatistics(self, frame):
-        assert self.__frames.notEmpty()
-
-        if len(self.__frames.recent) == 1:
-            boxes = self.__frames.first.bboxes
-            colorStats = (self.__boxOuterColorStats(frame, b) for b in boxes)
-            self.__pins = [Pin(box, colorStat) for box, colorStat in zip(boxes, colorStats)]
+    def drawStats(self, frame):
+        if not self.__currentScene or not self.__currentScene.stable:
             return
+        red = (0, 0, 255)
+        text = f'Pins: {self.__currentScene.pinsCount}'
+        cv2.putText(frame, text, (10, 110), cv2.FONT_HERSHEY_COMPLEX, .7, red)
+        text = f'Solder: {self.__currentScene.pinsWithSolderCount}'
+        cv2.putText(frame, text, (10, 140), cv2.FONT_HERSHEY_COMPLEX, .7, red)
 
-        for pinIndex in range(self.pinsCount):
-            pinBoxesAcrossFrames = [frameInfo.bboxes[pinIndex] for frameInfo in self.__frames.recent]
-            pinBox = Box.meanBox(pinBoxesAcrossFrames)
-            colorStat = self.__boxOuterColorStats(frame, pinBox)
-            self.__pins[pinIndex].update(pinBox, colorStat)
 
-        # DEBUG
-        # boxOfIntereset = Box.boxByPoint(self.__meanBoxes, pointOfInterest_2())
-        # if boxOfIntereset is None:
-        #     print('boxOfInterest is None')
-        # else:
-        #     meanColor, colorStd = self.__boxOuterColorStats(frame, boxOfIntereset)
-        #     meanColorBuffer.append(meanColor)
-
-    @staticmethod
-    def __boxOuterColorStats(frame, innerBox):
-        innerX0, innerY0, innerX1, innerY1 = innerBox.box
-        dW, dH = innerBox.size / 4
-
-        patch = frame[int(innerY0 - dH): int(innerY1 + dH + 1), int(innerX0 - dW): int(innerX1 + dW + 1)]
-        patch = patch.astype(np.float32)
-
-        # fill innerBox in path with NaN
-        innerW, innerH = innerBox.size
-        patch[int(dH):int(dH + innerH), int(dW):int(dW + innerW)] = np.NaN
-        axis = (0, 1)
-        mean = np.nanmean(patch, axis)
-        std = np.nanstd(patch, axis)
-        return StatParams(mean, std)
-
-    def draw(self, img):
-        for pin in self.__pins:
-            pin.draw(img)
+class SceneChanges:
+    def __init__(self, pinsAdded, solderAdded):
+        self.pinsAdded = pinsAdded
+        self.solderAdded = solderAdded
 
 
 class StatParams:
@@ -190,8 +271,9 @@ class Pin:
         self.colorStat = colorStat
 
     def draw(self, img):
+        color = Colors.green if self.withSolder else Colors.yellow
         r = int(min(*self.box.size) // 4)  # min(w,h)/4
-        cv2.circle(img, tuple(self.box.center), r, Colors.yellow, -1)
+        cv2.circle(img, tuple(self.box.center), r, color, -1)
 
 
 class Colors:
