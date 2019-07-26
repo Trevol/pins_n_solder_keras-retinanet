@@ -4,8 +4,9 @@ from detection.tfSession import get_session
 from keras_retinanet import models
 from keras_retinanet.utils.image import read_image_bgr, preprocess_image, resize_image
 
-from detection.DetectionsCSV import DetectionsCSV
-import detection.visualize
+from detection.csv_cache.DetectionsCSV import DetectionsCSV
+import utils.visualize
+from utils import videoWriter
 
 import cv2
 import os
@@ -71,15 +72,6 @@ def predict_on_image(model, image, labels_to_names, scoreThresh):
                   if score >= scoreThresh]
 
     return detections
-
-
-def videoWriter(videoCapture: cv2.VideoCapture, videoPath):
-    cc = cv2.VideoWriter_fourcc(*'MP4V')  # 'XVID' ('M', 'J', 'P', 'G')
-    # videoOut = cv2.VideoWriter('/mnt/HDD/Rec_15_720_out_76.mp4', fourcc, videoIn.fps(), videoIn.resolution())
-    w = int(videoCapture.get(cv2.CAP_PROP_FRAME_WIDTH))
-    h = int(videoCapture.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    size = (w, h)
-    return cv2.VideoWriter(videoPath, cc, videoCapture.get(cv2.CAP_PROP_FPS), size)
 
 
 if __name__ == '__main__':

@@ -3,20 +3,15 @@ from detection.pins_tracking.v1.Box import Box
 import cv2
 from collections import deque
 
-# count of frames to ensure scene stability
-StabilizationLength = 20
-
-# DEBUG
-# PointOfInterest = (539 / 0.7, 173 / 0.7)
+#DEBUG
 # PointOfInterest = (288 / 0.7, 568 / 0.7)
-PointOfInterest = (539 / 0.7, 229 / 0.7)
-
+PointOfInterest = (539 / 0.7, 173 / 0.7)
 
 class StableScene:
     class Frames:
-        def __init__(self):
+        def __init__(self, stabilizationLenght):
             self.first = None
-            self.recent = deque(maxlen=StabilizationLength)
+            self.recent = deque(maxlen=stabilizationLenght)
 
         def stabilized(self):
             return len(self.recent) == self.recent.maxlen
@@ -30,9 +25,10 @@ class StableScene:
             return self.first is not None
 
     ##############################################
+    __stabilizationLength = 20  # count of frames to ensure scene stability
 
     def __init__(self, bboxes, framePos, framePosMsec, frame):
-        self.__frames = self.Frames()
+        self.__frames = self.Frames(self.__stabilizationLength)
         self.__pins = []
         self.addIfClose(bboxes, framePos, framePosMsec, frame)
 
@@ -53,10 +49,6 @@ class StableScene:
     def firstFrame(self):
         return self.__frames.first
 
-    @property
-    def lastFrame(self):
-        return self.__frames.recent[-1]
-
     # def stats(self):
     #     assert self.stable
     #     return self.__frames.first.pos, self.__frames.first.posMsec, self.pinsCount
@@ -65,46 +57,27 @@ class StableScene:
     def stable(self):
         return self.__frames.stabilized()
 
-    def detectSolder(self, prevScene, sldConfig):
+    def detectSolder(self, prevScene):
         assert self.pinsCount == prevScene.pinsCount
         pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
         assert pinsAreClose
         for currentPin, prevPin in zip(self.__pins, prevPins):
-
-
             # DEBUG
-            prevColorStat = prevPin.colorStat
-            currentColorStat = currentPin.colorStat
-
-            # if prevPin.box.containsPoint(PointOfInterest):
-            #     print(
-            #         f'Prev: {prevScene.firstFrame.pos} {prevColorStat.mean} {prevColorStat.std} {prevColorStat.median} Current: {self.firstFrame.pos} {currentColorStat.mean} '
-            #         f'{currentColorStat.std} {currentColorStat.median}')
+            if prevPin.box.containsPoint(PointOfInterest):
+                print(
+                    f'Prev: {prevScene.firstFrame.pos} {prevPin.colorStat.mean} {prevPin.colorStat.std} Current: {self.firstFrame.pos} {currentPin.colorStat.mean} {currentPin.colorStat.std}')
 
             if prevPin.withSolder:
                 currentPin.withSolder = prevPin.withSolder
                 continue
-
-            done = False
-            if sldConfig is not None and any(sldConfig):
-                for pt, shouldStabilizeAtPos in sldConfig:
-                    if currentPin.box.containsPoint(pt):
-                        if self.lastFrame.pos == shouldStabilizeAtPos:
-                            currentPin.withSolder = True
-                        done = True
-                        break
-            if done:
-                continue
-
             # TODO: compare color stat params
-            currentPin.withSolder = self.__colorsAreFromDifferentDistributions(currentColorStat, prevColorStat)
+            currentPin.withSolder = self.__colorsAreFromDifferentDistributions(currentPin.colorStat, prevPin.colorStat)
 
     @staticmethod
     def __colorsAreFromDifferentDistributions(colorStat1, colorStat2):
-        # absdiff = np.abs(colorStat1.mean - colorStat2.mean)
-        # thresh = colorStat1.std * 3
-        absdiff = np.abs(colorStat1.median - colorStat2.median)
-        colorsSoDifferent = np.any(absdiff > 14.5)  # at least one component is outside of std deviation
+        absdiff = np.abs(colorStat1.mean - colorStat2.mean)
+        thresh = colorStat1.std
+        colorsSoDifferent = np.any(absdiff > thresh)  # at least one component is outside of std deviation
         return colorsSoDifferent
 
     def addIfClose(self, bboxes, framePos, framePosMsec, frame):
@@ -171,18 +144,23 @@ class StableScene:
 
         if len(self.__frames.recent) == 1:
             boxes = self.__frames.first.bboxes
-            meanColors = (self.__boxOuterMeanColor(frame, b) for b in boxes)
-            self.__pins = [Pin(box, meanColor) for box, meanColor in zip(boxes, meanColors)]
+            colorStats = (self.__boxOuterColorStats(frame, b) for b in boxes)
+            self.__pins = [Pin(box, colorStat) for box, colorStat in zip(boxes, colorStats)]
             return
 
         for pinIndex in range(self.pinsCount):
             pinBoxesAcrossFrames = [frameInfo.bboxes[pinIndex] for frameInfo in self.__frames.recent]
             pinBox = Box.meanBox(pinBoxesAcrossFrames)
-            meanColor = self.__boxOuterMeanColor(frame, pinBox)
-            self.__pins[pinIndex].update(pinBox, meanColor)
+            colorStat = self.__boxOuterColorStats(frame, pinBox)
+
+            # DEBUG
+            if pinBox.containsPoint(PointOfInterest):
+                print(f'Frame: {self.firstFrame.pos} colorStat: {colorStat.mean} {colorStat.std}')
+
+            self.__pins[pinIndex].update(pinBox, colorStat)
 
     @staticmethod
-    def __boxOuterMeanColor(frame, innerBox):
+    def __boxOuterColorStats(frame, innerBox):
         innerX0, innerY0, innerX1, innerY1 = innerBox.box
         dW, dH = innerBox.size / 4
 
@@ -192,67 +170,21 @@ class StableScene:
         # fill innerBox in path with NaN
         innerW, innerH = innerBox.size
         patch[int(dH):int(dH + innerH), int(dW):int(dW + innerW)] = np.NaN
-        mean = np.nanmean(patch, (0, 1))
-        return mean
+        axis = (0, 1)
+        mean = np.nanmean(patch, axis)
+        std = np.nanstd(patch, axis)
+        return StatParams(mean, std)
 
     def draw(self, img):
         for pin in self.__pins:
             pin.draw(img)
 
-    def pinAtPoint(self, pt):
-        pinsFilter = (p for p in self.pins if p.box.containsPoint(pt))
-        return next(pinsFilter, None)
-
 
 # TODO: calc bounding box for stable Scene -
 class TechProcessTracker:
-    def __init__(self, sldConfig):
+    def __init__(self):
         self.__stableScenes = []
         self.__currentScene = None
-        self.sldConfig = sldConfig
-
-    def dumpPinStats(self, pt):
-        if not any(self.__stableScenes):
-            return
-        currentScene = self.__stableScenes[-1]
-        print((pt, currentScene.stabilizedAtPos))
-        return
-
-        if not any(self.__stableScenes):
-            return
-        currentScene = self.__stableScenes[-1]
-        pinAtCurrentScene = currentScene.pinAtPoint(pt)
-        if not pinAtCurrentScene:
-            return
-
-        pinAtPrevScene = None
-        if len(self.__stableScenes) >= 2:
-            prevScene = self.__stableScenes[-2]
-            pinAtPrevScene = prevScene.pinAtPoint(pt)
-        self.__dump(pinAtCurrentScene, pinAtPrevScene)
-
-    def __dump(self, pinAtCurrent, pinAtPrev):
-        assert pinAtCurrent
-
-        print('')
-        print('----------------------------------------------------')
-        if not pinAtPrev:
-            currentStat = pinAtCurrent.colorStat
-            print('CURRENT:')
-            print(f'mean:{np.round(currentStat.mean, 1)}')
-            print(f'std:{np.round(currentStat.std, 1)}')
-            print(f'median: {np.round(currentStat.median, 1)}')
-            for color in pinAtCurrent.meanColors:
-                print(' ', np.round(color, 1))
-        else:
-            currentStat = pinAtCurrent.colorStat
-            prevStat = pinAtPrev.colorStat
-            print('CURRENT/PREV:')
-            print(f'mean:{np.round(currentStat.mean, 1)} / {np.round(prevStat.mean, 1)}')
-            print(f'std:{np.round(currentStat.std, 1)} / {np.round(prevStat.std, 1)}')
-            print(f'median: {np.round(currentStat.median, 1)} / {np.round(prevStat.median, 1)}')
-            for currentColor, prevColor in zip(pinAtCurrent.meanColors, pinAtPrev.meanColors):
-                print(' ', np.round(currentColor, 1), np.round(prevColor, 1))
 
     def track(self, frameDetections, framePos, framePosMsec, frame):
         bboxes = [Box(d[0]) for d in frameDetections]
@@ -284,13 +216,12 @@ class TechProcessTracker:
         assert self.__currentScene not in self.__stableScenes
 
         prevScene = self.__stableScenes[-1] if any(self.__stableScenes) else None
-        changes = self.__registerSceneChanges(self.__currentScene, prevScene, self.sldConfig)
+        changes = self.__registerSceneChanges(self.__currentScene, prevScene)
         self.__logNewStableChanges(self.__currentScene, changes)
         self.__stableScenes.append(self.__currentScene)
-        self.__currentScene.stabilizedAtPos = self.__currentScene.lastFrame.pos
 
     @staticmethod
-    def __registerSceneChanges(currentScene: StableScene, prevScene: StableScene, sldConfig):
+    def __registerSceneChanges(currentScene: StableScene, prevScene: StableScene):
         assert currentScene.stable
         if prevScene is None:
             return SceneChanges(currentScene.pinsCount, 0)
@@ -299,7 +230,7 @@ class TechProcessTracker:
         assert currentScene.pinsCount >= prevScene.pinsCount
         # TODO: detect solder
         if currentScene.pinsCount == prevScene.pinsCount:
-            currentScene.detectSolder(prevScene, sldConfig)
+            currentScene.detectSolder(prevScene)
         pinsAdded = currentScene.pinsCount - prevScene.pinsCount
         solderAdded = currentScene.pinsWithSolderCount - prevScene.pinsWithSolderCount
         return SceneChanges(pinsAdded, solderAdded)
@@ -314,6 +245,8 @@ class TechProcessTracker:
         pinsCount = currentScene.pinsCount
         pinsWithSolderCount = currentScene.pinsWithSolderCount
         logRecord = f'{framePos},{framePosMs:.0f},{pinsCount},{changes.pinsAdded},{pinsWithSolderCount},{changes.solderAdded}'
+        # DEBUG:
+        return
         print(logRecord)
 
     def draw(self, img):
@@ -321,15 +254,12 @@ class TechProcessTracker:
             self.__currentScene.draw(img)
 
     def drawStats(self, frame):
-        # if not self.__currentScene or not self.__currentScene.stable:
-        #     return
-        if not any(self.__stableScenes):
+        if not self.__currentScene or not self.__currentScene.stable:
             return
-        lastStableScene = self.__stableScenes[-1]
         red = (0, 0, 255)
-        text = f'Pins: {lastStableScene.pinsCount}'
+        text = f'Pins: {self.__currentScene.pinsCount}'
         cv2.putText(frame, text, (10, 110), cv2.FONT_HERSHEY_COMPLEX, .7, red)
-        text = f'Solder: {lastStableScene.pinsWithSolderCount}'
+        text = f'Solder: {self.__currentScene.pinsWithSolderCount}'
         cv2.putText(frame, text, (10, 140), cv2.FONT_HERSHEY_COMPLEX, .7, red)
 
 
@@ -340,35 +270,20 @@ class SceneChanges:
 
 
 class StatParams:
-    def __init__(self, mean, std, median):
+    def __init__(self, mean, std):
         self.mean = mean
         self.std = std
-        self.median = median
 
 
 class Pin:
-    def __init__(self, box, meanColor):
+    def __init__(self, box, colorStat):
         self.box = box
-        self._meanColors = deque([meanColor], maxlen=StabilizationLength)
+        self.colorStat = colorStat
         self.withSolder = False
 
-    @property
-    def meanColors(self):
-        return self._meanColors
-
-    @property
-    def colorStat(self):
-        assert len(self._meanColors) == self._meanColors.maxlen
-        allColors = list(self._meanColors)
-        colors = allColors[10:]
-        mean = np.mean(colors, axis=0)
-        std = np.std(colors, axis=0)
-        median = np.median(allColors, axis=0)
-        return StatParams(mean, std, median)
-
-    def update(self, box, meanColor):
+    def update(self, box, colorStat):
         self.box = box
-        self._meanColors.append(meanColor)
+        self.colorStat = colorStat
 
     def draw(self, img):
         color = Colors.green if self.withSolder else Colors.yellow

@@ -34,3 +34,13 @@ def boxCenter(box, roundToInt=False):
 def cityblockDistance(pt1, pt2):
     x, y = np.abs(np.subtract(pt1, pt2))
     return x + y
+
+
+def videoWriter(videoCapture: cv2.VideoCapture, videoPath):
+    cc = cv2.VideoWriter_fourcc(*'MP4V')  # 'XVID' ('M', 'J', 'P', 'G')
+    # videoOut = cv2.VideoWriter('/mnt/HDD/Rec_15_720_out_76.mp4', fourcc, videoIn.fps(), videoIn.resolution())
+    fps = videoCapture.get(cv2.CAP_PROP_FPS)
+    w = int(videoCapture.get(cv2.CAP_PROP_FRAME_WIDTH))
+    h = int(videoCapture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    size = (w, h)
+    return cv2.VideoWriter(videoPath, cc, fps, size)

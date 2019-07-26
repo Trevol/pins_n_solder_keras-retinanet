@@ -3,16 +3,30 @@ from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
 from utils import resize
 from utils.VideoPlayback import VideoPlayback
-from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
+from utils import videoWriter
 
+from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
+from detection.pins_tracking.v1.VideoConfig import config
 
 class VideoHandler:
     winname = 'Video'
 
-    def __init__(self, framesDetections, workBox):
+    def __init__(self, framesDetections, workBox, cfg, writer):
+        self.writer = writer
         self.framesDetections = framesDetections
         self.workBox = workBox
-        self.techProcessTracker = TechProcessTracker()
+        self.techProcessTracker = TechProcessTracker(cfg)
+        cv2.namedWindow(self.winname)
+        cv2.setMouseCallback(self.winname, self.onMouse)
+
+    def release(self):
+        cv2.destroyWindow(self.winname)
+
+    def onMouse(self, evt, x, y, flags, param):
+        if evt != cv2.EVENT_LBUTTONUP:
+            return
+        pt = (int(round(x / .7)), int(round(y / .7)))
+        self.techProcessTracker.dumpPinStats(pt)
 
     def syncPlaybackState(self, frameDelay, autoPlay, framePos, framePosMsec, playback):
         autoplayLabel = 'ON' if autoPlay else 'OFF'
@@ -30,9 +44,11 @@ class VideoHandler:
         utils.visualize.putFramePos(frame, framePos, framePosMsec)
         self.techProcessTracker.drawStats(frame)
 
-        if frame.shape[1] >= 1900:  # fit view to screen
-            frame = resize(frame, 0.7)
-        cv2.imshow(self.winname, frame)
+        imshowFrame = frame
+        if imshowFrame.shape[1] >= 1900:  # fit view to screen
+            imshowFrame = resize(frame, 0.7)
+        cv2.imshow(self.winname, imshowFrame)
+        self.writer.write(frame)
 
     @staticmethod
     def inWorkBox(box, workBox):
@@ -45,23 +61,33 @@ class VideoHandler:
 
 
 def files():
+    # TODO: detect workBox automatically
     yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
+           '/HDD_DATA/Computer_Vision_Task/Video_6_result.mp4',
            DetectionsCSV.loadPickle('../../csv_cache/data/detections_video6.pcl'),
-           (222 // 0.7, 70 // 0.7, 1162 // 0.7, 690 // 0.7))
-    # yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
-    #        DetectionsCSV.loadPickle('../../csv_cache/data/detections_video2.pcl'),
-    #        (147, 87, 1005, 669))
+           (222 // 0.7, 70 // 0.7, 1162 // 0.7, 690 // 0.7),
+           config)
+
+    yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
+           '/HDD_DATA/Computer_Vision_Task/Video_2_result.mp4',
+           DetectionsCSV.loadPickle('../../csv_cache/data/detections_video2.pcl'),
+           (147, 87, 1005, 669), None)
 
 
 def main():
-    for sourceVideoFile, framesDetections, workBox in files():
+    for sourceVideoFile, resultVideo, framesDetections, workBox, cfg in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        handler = VideoHandler(framesDetections, workBox)
+        writer = videoWriter(videoPlayback.cap, resultVideo)
+        handler = VideoHandler(framesDetections, workBox, cfg, writer)
 
-        framesRange = (4150, None)
-        # framesRange = None
+        # framesRange = (4150, None)
+        # framesRange = (8100, None)
+        framesRange = None
         videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
         videoPlayback.release()
+        cv2.waitKey()
+        handler.release()
+        writer.release()
 
     cv2.waitKey()
 
