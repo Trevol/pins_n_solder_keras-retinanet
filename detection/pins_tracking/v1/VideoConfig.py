@@ -1,4 +1,4 @@
-# coords
+# coords for video_6
 config = [
     ((423, 706), 5359),
     ((470, 510), 5980),
