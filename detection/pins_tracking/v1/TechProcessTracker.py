@@ -63,32 +63,25 @@ class StableScene:
         assert pinsAreClose
         for currentPin, prevPin in zip(self.__pins, prevPins):
             if prevPin.withSolder:
-                withSolder = prevPin.withSolder
-            elif self.__pinHasSolderBySldConfig(currentPin, self.lastFrame.pos, sldConfig):
-                withSolder = True
-
-                # done = False
-                # if sldConfig is not None and any(sldConfig):
-                #     for pt, shouldStabilizeAtPos in sldConfig:
-                #         if currentPin.box.containsPoint(pt):
-                #             if self.lastFrame.pos == shouldStabilizeAtPos:
-                #                 currentPin.withSolder = True
-                #             done = True
-                #             break
-                # if done:
-                #     continue
+                currentPin.withSolder = prevPin.withSolder
+                continue
+            pinManagedBySldConfig, pinHasSolderBySldConfig = \
+                self.__pinHasSolderBySldConfig(currentPin, self.lastFrame.pos, sldConfig)
+            if pinManagedBySldConfig:
+                currentPin.withSolder = pinHasSolderBySldConfig
             else:
-                withSolder = self.__colorsAreFromDifferentDistributions(currentPin.colorStat, prevPin.colorStat)
-            currentPin.withSolder = withSolder
+                currentPin.withSolder = self.__colorsAreFromDifferentDistributions(currentPin.colorStat,
+                                                                                   prevPin.colorStat)
 
     @staticmethod
     def __pinHasSolderBySldConfig(pin, framePos, sldConfig):
+        # return pinManagedBySldConfig, pinHasSolderBySldConfig
         if sldConfig is None or not any(sldConfig):
-            return False
+            return False, False
         for pt, shouldAppearsAtPos in sldConfig:
             if pin.box.containsPoint(pt):
-                if framePos == shouldAppearsAtPos:
-                    return True
+                return True, framePos == shouldAppearsAtPos
+        return False, False
 
     @staticmethod
     def __colorsAreFromDifferentDistributions(colorStat1, colorStat2):

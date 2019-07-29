@@ -69,10 +69,10 @@ def files():
            (222 // 0.7, 70 // 0.7, 1162 // 0.7, 690 // 0.7),
            config)
 
-    yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
-           '/HDD_DATA/Computer_Vision_Task/Video_2_result.mp4',
-           DetectionsCSV.loadPickle('../../csv_cache/data/detections_video2.pcl'),
-           (147, 87, 1005, 669), None)
+    # yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
+    #        '/HDD_DATA/Computer_Vision_Task/Video_2_result.mp4',
+    #        DetectionsCSV.loadPickle('../../csv_cache/data/detections_video2.pcl'),
+    #        (147, 87, 1005, 669), None)
 
 
 def main():
@@ -81,9 +81,9 @@ def main():
         writer = None  # videoWriter(videoPlayback.cap, resultVideo)
         handler = VideoHandler(framesDetections, workBox, cfg, writer)
 
-        # framesRange = (4150, None)
+        framesRange = (4150, None)
         # framesRange = (8100, None)
-        framesRange = None
+        # framesRange = None
         videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
         videoPlayback.release()
         cv2.waitKey()
