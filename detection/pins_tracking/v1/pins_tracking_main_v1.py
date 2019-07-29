@@ -8,6 +8,7 @@ from utils import videoWriter
 from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
 from detection.pins_tracking.v1.VideoConfig import config
 
+
 class VideoHandler:
     winname = 'Video'
 
@@ -48,7 +49,7 @@ class VideoHandler:
         if imshowFrame.shape[1] >= 1900:  # fit view to screen
             imshowFrame = resize(frame, 0.7)
         cv2.imshow(self.winname, imshowFrame)
-        self.writer.write(frame)
+        self.writer and self.writer.write(frame)
 
     @staticmethod
     def inWorkBox(box, workBox):
@@ -77,7 +78,7 @@ def files():
 def main():
     for sourceVideoFile, resultVideo, framesDetections, workBox, cfg in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        writer = videoWriter(videoPlayback.cap, resultVideo)
+        writer = None  # videoWriter(videoPlayback.cap, resultVideo)
         handler = VideoHandler(framesDetections, workBox, cfg, writer)
 
         # framesRange = (4150, None)
@@ -87,7 +88,7 @@ def main():
         videoPlayback.release()
         cv2.waitKey()
         handler.release()
-        writer.release()
+        writer and writer.release()
 
     cv2.waitKey()
 
