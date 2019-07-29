@@ -6,7 +6,7 @@ from utils.VideoPlayback import VideoPlayback
 from utils import videoWriter
 
 from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
-from detection.pins_tracking.v1.VideoConfig import config
+from detection.pins_tracking.v1.VideoConfig import video6SolderConfig
 
 
 class VideoHandler:
@@ -67,7 +67,7 @@ def files():
            '/HDD_DATA/Computer_Vision_Task/Video_6_result.mp4',
            DetectionsCSV.loadPickle('../../csv_cache/data/detections_video6.pcl'),
            (222 // 0.7, 70 // 0.7, 1162 // 0.7, 690 // 0.7),
-           config)
+           video6SolderConfig)
 
     # yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
     #        '/HDD_DATA/Computer_Vision_Task/Video_2_result.mp4',

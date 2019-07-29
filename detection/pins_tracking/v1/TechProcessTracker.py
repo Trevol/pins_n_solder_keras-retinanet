@@ -73,15 +73,15 @@ class StableScene:
                 currentPin.withSolder = self.__colorsAreFromDifferentDistributions(currentPin.colorStat,
                                                                                    prevPin.colorStat)
 
-    @staticmethod
-    def __pinHasSolderBySldConfig(pin, framePos, sldConfig):
-        # return pinManagedBySldConfig, pinHasSolderBySldConfig
-        if sldConfig is None or not any(sldConfig):
-            return False, False
-        for pt, shouldAppearsAtPos in sldConfig:
-            if pin.box.containsPoint(pt):
-                return True, framePos == shouldAppearsAtPos
-        return False, False
+    # @staticmethod
+    # def __pinHasSolderBySldConfig(pin, framePos, sldConfig):
+    #     # return pinManagedBySldConfig, pinHasSolderBySldConfig
+    #     if sldConfig is None or not any(sldConfig):
+    #         return False, False
+    #     for pt, shouldAppearsAtPos in sldConfig:
+    #         if pin.box.containsPoint(pt):
+    #             return True, framePos == shouldAppearsAtPos
+    #     return False, False
 
     @staticmethod
     def __colorsAreFromDifferentDistributions(colorStat1, colorStat2):
