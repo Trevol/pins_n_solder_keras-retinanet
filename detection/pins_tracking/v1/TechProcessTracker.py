@@ -4,12 +4,8 @@ import cv2
 from collections import deque
 
 # count of frames to ensure scene stability
-StabilizationLength = 20
-
-# DEBUG
-# PointOfInterest = (539 / 0.7, 173 / 0.7)
-# PointOfInterest = (288 / 0.7, 568 / 0.7)
-PointOfInterest = (539 / 0.7, 229 / 0.7)
+from detection.pins_tracking.v1.Constants import StabilizationLength
+from detection.pins_tracking.v1.Pin import Pin
 
 
 class StableScene:
@@ -57,10 +53,6 @@ class StableScene:
     def lastFrame(self):
         return self.__frames.recent[-1]
 
-    # def stats(self):
-    #     assert self.stable
-    #     return self.__frames.first.pos, self.__frames.first.posMsec, self.pinsCount
-
     @property
     def stable(self):
         return self.__frames.stabilized()
@@ -70,16 +62,6 @@ class StableScene:
         pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
         assert pinsAreClose
         for currentPin, prevPin in zip(self.__pins, prevPins):
-
-
-            # DEBUG
-            prevColorStat = prevPin.colorStat
-            currentColorStat = currentPin.colorStat
-
-            # if prevPin.box.containsPoint(PointOfInterest):
-            #     print(
-            #         f'Prev: {prevScene.firstFrame.pos} {prevColorStat.mean} {prevColorStat.std} {prevColorStat.median} Current: {self.firstFrame.pos} {currentColorStat.mean} '
-            #         f'{currentColorStat.std} {currentColorStat.median}')
 
             if prevPin.withSolder:
                 currentPin.withSolder = prevPin.withSolder
@@ -96,8 +78,7 @@ class StableScene:
             if done:
                 continue
 
-            # TODO: compare color stat params
-            currentPin.withSolder = self.__colorsAreFromDifferentDistributions(currentColorStat, prevColorStat)
+            currentPin.withSolder = self.__colorsAreFromDifferentDistributions(currentPin.colorStat, prevPin.colorStat)
 
     @staticmethod
     def __colorsAreFromDifferentDistributions(colorStat1, colorStat2):
@@ -337,49 +318,6 @@ class SceneChanges:
     def __init__(self, pinsAdded, solderAdded):
         self.pinsAdded = pinsAdded
         self.solderAdded = solderAdded
-
-
-class StatParams:
-    def __init__(self, mean, std, median):
-        self.mean = mean
-        self.std = std
-        self.median = median
-
-
-class Pin:
-    def __init__(self, box, meanColor):
-        self.box = box
-        self._meanColors = deque([meanColor], maxlen=StabilizationLength)
-        self.withSolder = False
-
-    @property
-    def meanColors(self):
-        return self._meanColors
-
-    @property
-    def colorStat(self):
-        assert len(self._meanColors) == self._meanColors.maxlen
-        allColors = list(self._meanColors)
-        colors = allColors[10:]
-        mean = np.mean(colors, axis=0)
-        std = np.std(colors, axis=0)
-        median = np.median(allColors, axis=0)
-        return StatParams(mean, std, median)
-
-    def update(self, box, meanColor):
-        self.box = box
-        self._meanColors.append(meanColor)
-
-    def draw(self, img):
-        color = Colors.green if self.withSolder else Colors.yellow
-        r = int(min(*self.box.size) // 4)  # min(w,h)/4
-        cv2.circle(img, tuple(self.box.center), r, color, -1)
-
-
-class Colors:
-    green = (0, 200, 0)
-    yellow = (0, 255, 255)
-    red = (0, 0, 200)
 
 
 #################################################
