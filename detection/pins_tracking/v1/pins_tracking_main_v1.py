@@ -12,11 +12,11 @@ from detection.pins_tracking.v1.VideoConfig import video6SolderConfig
 class VideoHandler:
     winname = 'Video'
 
-    def __init__(self, framesDetections, workBox, cfg, writer):
-        self.writer = writer
+    def __init__(self, framesDetections, workBox, sldConfig, videoWriter):
+        self.videoWriter = videoWriter
         self.framesDetections = framesDetections
         self.workBox = workBox
-        self.techProcessTracker = TechProcessTracker(cfg)
+        self.techProcessTracker = TechProcessTracker(sldConfig)
         cv2.namedWindow(self.winname)
         cv2.setMouseCallback(self.winname, self.onMouse)
 
@@ -49,7 +49,7 @@ class VideoHandler:
         if imshowFrame.shape[1] >= 1900:  # fit view to screen
             imshowFrame = resize(frame, 0.7)
         cv2.imshow(self.winname, imshowFrame)
-        self.writer and self.writer.write(frame)
+        self.videoWriter and self.videoWriter.write(frame)
 
     @staticmethod
     def inWorkBox(box, workBox):
@@ -78,8 +78,8 @@ def files():
 def main():
     for sourceVideoFile, resultVideo, framesDetections, workBox, cfg in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        writer = None  # videoWriter(videoPlayback.cap, resultVideo)
-        handler = VideoHandler(framesDetections, workBox, cfg, writer)
+        videoWriter = None  # videoWriter(videoPlayback.cap, resultVideo)
+        handler = VideoHandler(framesDetections, workBox, cfg, videoWriter)
 
         framesRange = (4150, None)
         # framesRange = (8100, None)
@@ -88,7 +88,7 @@ def main():
         videoPlayback.release()
         cv2.waitKey()
         handler.release()
-        writer and writer.release()
+        videoWriter and videoWriter.release()
 
     cv2.waitKey()
 
