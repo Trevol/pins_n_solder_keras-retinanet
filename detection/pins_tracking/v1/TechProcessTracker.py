@@ -70,10 +70,10 @@ class TechProcessTracker:
             self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
             return
 
-        currentSceneWasUnstable = not self.__currentScene.stable
+        currentSceneWasUnstable = not self.__currentScene.stabilized
         closeToCurrentScene = self.__currentScene.addIfClose(bboxes, framePos, framePosMsec, frame)
 
-        if currentSceneWasUnstable and self.__currentScene.stable:
+        if currentSceneWasUnstable and self.__currentScene.stabilized:
             # add to stable scene IF this scene was unstable before addition new frame and become stable after
             self.__registerCurrentSceneAsStable()
 
@@ -81,7 +81,7 @@ class TechProcessTracker:
             self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
 
     def __registerCurrentSceneAsStable(self):
-        assert self.__currentScene.stable
+        assert self.__currentScene.stabilized
         assert self.__currentScene not in self.__stableScenes
 
         prevScene = utils.lastOrDefault(self.__stableScenes)
@@ -92,11 +92,11 @@ class TechProcessTracker:
 
     @staticmethod
     def __registerSceneChanges(currentScene: StableScene, prevScene: StableScene, sldConfig):
-        assert currentScene.stable
+        assert currentScene.stabilized
         if prevScene is None:
             return SceneChanges(currentScene.pinsCount, 0)
 
-        assert prevScene.stable
+        assert prevScene.stabilized
         assert currentScene.pinsCount >= prevScene.pinsCount
 
         if currentScene.pinsCount == prevScene.pinsCount:
@@ -107,7 +107,7 @@ class TechProcessTracker:
 
     @staticmethod
     def __logNewStableChanges(currentScene, changes):
-        assert currentScene.stable
+        assert currentScene.stabilized
         if changes.pinsAdded == 0 and changes.solderAdded == 0:  # no changes - no log
             return
         framePos = currentScene.firstFrame.pos
@@ -118,7 +118,7 @@ class TechProcessTracker:
         print(logRecord)
 
     def draw(self, img):
-        if self.__currentScene and self.__currentScene.stable:
+        if self.__currentScene and self.__currentScene.stabilized:
             self.__currentScene.draw(img)
 
     def drawStats(self, frame):

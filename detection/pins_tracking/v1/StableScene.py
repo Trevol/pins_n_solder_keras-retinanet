@@ -1,7 +1,5 @@
 from collections import deque
-
 import numpy as np
-
 from detection.pins_tracking.v1.Box import Box
 from detection.pins_tracking.v1.Constants import StabilizationLength
 from detection.pins_tracking.v1.Pin import Pin
@@ -54,7 +52,7 @@ class StableScene:
         return self.__frames.recent[-1]
 
     @property
-    def stable(self):
+    def stabilized(self):
         return self.__frames.stabilized()
 
     def detectSolder(self, prevScene, sldConfig):
