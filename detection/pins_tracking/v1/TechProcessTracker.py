@@ -1,12 +1,11 @@
 import numpy as np
-from detection.pins_tracking.v1.Box import Box
 import cv2
-
+import utils
+from detection.pins_tracking.v1.Box import Box
 from detection.pins_tracking.v1.SceneChanges import SceneChanges
 from detection.pins_tracking.v1.StableScene import StableScene
 
 
-# TODO: calc bounding box for stable Scene -
 class TechProcessTracker:
     def __init__(self, sldConfig):
         self.__stableScenes = []
@@ -85,7 +84,7 @@ class TechProcessTracker:
         assert self.__currentScene.stable
         assert self.__currentScene not in self.__stableScenes
 
-        prevScene = self.__stableScenes[-1] if any(self.__stableScenes) else None
+        prevScene = utils.lastOrDefault(self.__stableScenes)
         changes = self.__registerSceneChanges(self.__currentScene, prevScene, self.sldConfig)
         self.__logNewStableChanges(self.__currentScene, changes)
         self.__stableScenes.append(self.__currentScene)
@@ -99,7 +98,7 @@ class TechProcessTracker:
 
         assert prevScene.stable
         assert currentScene.pinsCount >= prevScene.pinsCount
-        # TODO: detect solder
+
         if currentScene.pinsCount == prevScene.pinsCount:
             currentScene.detectSolder(prevScene, sldConfig)
         pinsAdded = currentScene.pinsCount - prevScene.pinsCount
@@ -123,8 +122,6 @@ class TechProcessTracker:
             self.__currentScene.draw(img)
 
     def drawStats(self, frame):
-        # if not self.__currentScene or not self.__currentScene.stable:
-        #     return
         if not any(self.__stableScenes):
             return
         lastStableScene = self.__stableScenes[-1]

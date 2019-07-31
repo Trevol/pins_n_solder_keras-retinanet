@@ -38,9 +38,20 @@ def cityblockDistance(pt1, pt2):
 
 def videoWriter(videoCapture: cv2.VideoCapture, videoPath):
     cc = cv2.VideoWriter_fourcc(*'MP4V')  # 'XVID' ('M', 'J', 'P', 'G')
-    # videoOut = cv2.VideoWriter('/mnt/HDD/Rec_15_720_out_76.mp4', fourcc, videoIn.fps(), videoIn.resolution())
     fps = videoCapture.get(cv2.CAP_PROP_FPS)
     w = int(videoCapture.get(cv2.CAP_PROP_FRAME_WIDTH))
     h = int(videoCapture.get(cv2.CAP_PROP_FRAME_HEIGHT))
     size = (w, h)
     return cv2.VideoWriter(videoPath, cc, fps, size)
+
+
+def firstOrDefault(items, default=None):
+    if any(items):
+        return items[0]
+    return default
+
+
+def lastOrDefault(items, default=None):
+    if any(items):
+        return items[-1]
+    return default

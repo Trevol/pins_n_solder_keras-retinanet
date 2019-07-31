@@ -1,1 +1,10 @@
 - make frame denoising (gaussian or median blur)
+- потренировать NN (neural network) на кадрах video_6
+- TODO: calc bounding box for stable Scene -
+
+тут вопросы задают:
+ Какой промежуточный результат?
+
+   С т.з. фиксации алгоритма?
+   С т.з фиксации аппартаной части?
+   С т.з. пользовательской логики?
