@@ -152,6 +152,8 @@ class StableScene:
     def __measureWorkArea(pins):
         # L2-dist beetween pins
         # bounding box around pin array
+        # или четырехугольник (НЕ прямоугольник)???
+        #minX, minY
         pass
 
     @staticmethod
@@ -171,7 +173,7 @@ class StableScene:
     def draw(self, img):
         for pin in self.__pins:
             pin.draw(img)
-        #TODO: when draw work area
+        #TODO: when draw work area?
 
     def pinAtPoint(self, pt):
         pinsFilter = (p for p in self.pins if p.box.containsPoint(pt))
