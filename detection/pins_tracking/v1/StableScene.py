@@ -68,7 +68,7 @@ class StableScene:
             else:
                 currentPin.withSolder = currentPin.colorStat.areFromDifferentDistributions(prevPin.colorStat)
         #######################
-        self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recount pins with solder
+        self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recompute count of pins with solder
 
     def addIfClose(self, bboxes, framePos, framePosMsec, frame):
         if not any(bboxes):
@@ -84,6 +84,7 @@ class StableScene:
         return closeToScene
 
     ####################################
+    # TODO: refactor (remove code duplication) __checkPinsCloseToScene and __checkBoxesCloseToScene
     def __checkPinsCloseToScene(self, pins):
         assert self.__frames.notEmpty()
         if len(pins) != self.pinsCount:
@@ -144,6 +145,15 @@ class StableScene:
             meanColor = self.__boxOuterMeanColor(frame, pinBox)
             self.__pins[pinIndex].update(pinBox, meanColor)
 
+        if self.stabilized:
+            self.__measureWorkArea(self.__pins)
+
+    @staticmethod
+    def __measureWorkArea(pins):
+        # L2-dist beetween pins
+        # bounding box around pin array
+        pass
+
     @staticmethod
     def __boxOuterMeanColor(frame, innerBox):
         innerX0, innerY0, innerX1, innerY1 = innerBox.box
@@ -161,6 +171,7 @@ class StableScene:
     def draw(self, img):
         for pin in self.__pins:
             pin.draw(img)
+        #TODO: when draw work area
 
     def pinAtPoint(self, pt):
         pinsFilter = (p for p in self.pins if p.box.containsPoint(pt))
