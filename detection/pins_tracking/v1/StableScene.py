@@ -68,7 +68,7 @@ class StableScene:
             else:
                 currentPin.withSolder = currentPin.colorStat.areFromDifferentDistributions(prevPin.colorStat)
         #######################
-        self.__pinsWithSolderCount = ilen(p for p in self.__pins if p.withSolder)
+        self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recount pins with solder
 
     def addIfClose(self, bboxes, framePos, framePosMsec, frame):
         if not any(bboxes):
