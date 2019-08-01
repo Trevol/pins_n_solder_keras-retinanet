@@ -1,5 +1,6 @@
 from collections import deque
 import numpy as np
+from more_itertools import ilen
 from detection.pins_tracking.v1.Box import Box
 from detection.pins_tracking.v1.Constants import StabilizationLength
 from detection.pins_tracking.v1.Pin import Pin
@@ -28,6 +29,7 @@ class StableScene:
     def __init__(self, bboxes, framePos, framePosMsec, frame):
         self.__frames = self.Frames()
         self.__pins = []
+        self.__pinsWithSolderCount = 0
         self.addIfClose(bboxes, framePos, framePosMsec, frame)
 
     @property
@@ -40,8 +42,7 @@ class StableScene:
 
     @property
     def pinsWithSolderCount(self):
-        # TODO: how to count generated items without list creation
-        return len([p for p in self.__pins if p.withSolder])
+        return self.__pinsWithSolderCount  # len([p for p in self.__pins if p.withSolder])
 
     @property
     def firstFrame(self):
@@ -65,16 +66,9 @@ class StableScene:
             elif sldConfig and sldConfig.managePinSolder(currentPin, self.lastFrame.pos):
                 pass
             else:
-                currentPin.withSolder = self.__colorsAreFromDifferentDistributions(currentPin.colorStat,
-                                                                                   prevPin.colorStat)
-
-    @staticmethod
-    def __colorsAreFromDifferentDistributions(colorStat1, colorStat2):
-        # absdiff = np.abs(colorStat1.mean - colorStat2.mean)
-        # thresh = colorStat1.std * 3
-        absdiff = np.abs(colorStat1.median - colorStat2.median)
-        colorsSoDifferent = np.any(absdiff > 14.5)  # at least one component is outside of std deviation
-        return colorsSoDifferent
+                currentPin.withSolder = currentPin.colorStat.areFromDifferentDistributions(prevPin.colorStat)
+        #######################
+        self.__pinsWithSolderCount = ilen(p for p in self.__pins if p.withSolder)
 
     def addIfClose(self, bboxes, framePos, framePosMsec, frame):
         if not any(bboxes):
