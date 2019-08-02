@@ -1,8 +1,7 @@
-import numpy as np
 import cv2
-import math
 
 from detection.pins_tracking.v1.Colors import Colors
+from utils.Geometry2D import Geometry2D
 from utils.Timer import timeit
 from utils.VideoPlayback import readFrame
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
@@ -17,35 +16,12 @@ def frameInfo(framePos):
     return frame, boxes
 
 
-class Geo2D:
-    @staticmethod
-    def boxPoints(box):
-        x0 = math.floor(box[0])
-        y0 = math.floor(box[1])
-        x1 = math.ceil(box[2])
-        y1 = math.ceil(box[3])
-
-        topLeft = x0, y0
-        yield topLeft
-        bottomRight = x1, y1
-        yield bottomRight
-        bottomLeft = x0, y1
-        yield bottomLeft
-        topRight = x1, y0
-        yield topRight
-
-    @staticmethod
-    def convexHull(boxes):
-        pts = np.int32([pt for b in boxes for pt in Geo2D.boxPoints(b)])
-        return cv2.convexHull(pts)
-
-
 class App:
     winname = 'Frame'
 
     def __init__(self):
         self.frame, self.boxes = frameInfo(4150)
-        self.hull = Geo2D.convexHull(self.boxes)
+        self.hull = Geometry2D.convexHull(self.boxes)
         self.__draw_state()
         cv2.namedWindow(self.winname)
         cv2.setMouseCallback(self.winname, self.onMouseEvent)

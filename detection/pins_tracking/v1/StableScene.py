@@ -3,9 +3,11 @@ import numpy as np
 import cv2
 from more_itertools import ilen
 from detection.pins_tracking.v1.Box import Box
+from detection.pins_tracking.v1.Colors import Colors
 from detection.pins_tracking.v1.Constants import StabilizationLength
 from detection.pins_tracking.v1.Pin import Pin
 from detection.pins_tracking.v1.FrameInfo import FrameInfo
+from utils.Geometry2D import Geometry2D
 
 
 class StableScene:
@@ -30,6 +32,7 @@ class StableScene:
     def __init__(self, bboxes, framePos, framePosMsec, frame):
         self.__frames = self.Frames()
         self.__pins = []
+        self.__pinsContour = None
         self.__pinsWithSolderCount = 0
         self.addIfClose(bboxes, framePos, framePosMsec, frame)
 
@@ -147,18 +150,11 @@ class StableScene:
             self.__pins[pinIndex].update(pinBox, meanColor)
 
         if self.stabilized:
-            self.__measureWorkArea(self.__pins)
+            self.__measurePinsWorkArea()
 
-    @staticmethod
-    def __measureWorkArea(pins):
-        # L2-dist beetween pins
-        # bounding box around pin array
-        # или четырехугольник (НЕ прямоугольник)???
-        #minX, minY
-        # convexHull
-        points = []
-        pts = cv2.convexHull(points)
-        pass
+    def __measurePinsWorkArea(self):
+        boxes = [p.box.box for p in self.__pins]
+        self.__pinsContour = Geometry2D.convexHull(boxes)
 
     @staticmethod
     def __boxOuterMeanColor(frame, innerBox):
@@ -177,7 +173,9 @@ class StableScene:
     def draw(self, img):
         for pin in self.__pins:
             pin.draw(img)
-        #TODO: when draw work area?
+        # TODO: when draw work area?
+        if self.__pinsContour is not None:
+            cv2.drawContours(img, [self.__pinsContour], 0, Colors.green, 1)
 
     def pinAtPoint(self, pt):
         pinsFilter = (p for p in self.pins if p.box.containsPoint(pt))
