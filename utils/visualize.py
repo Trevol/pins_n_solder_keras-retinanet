@@ -25,6 +25,16 @@ def drawDetections(image, detections, drawCenters=False):  # visualize detection
     return image
 
 
+def drawBoxes(image, boxes, drawCenters=False, color=(200, 0, 0)):  # visualize detections
+    for box in boxes:
+        b = np.round(box, 0).astype(int)
+        draw_box(image, b, color=color, thickness=1)
+        if drawCenters:
+            center = boxCenter(box, roundToInt=True)
+            cv2.circle(image, tuple(center), 1, color)
+    return image
+
+
 def draw_caption(image, box, caption, fontScale=1):
     """ Draws a caption above the box in an image.
 

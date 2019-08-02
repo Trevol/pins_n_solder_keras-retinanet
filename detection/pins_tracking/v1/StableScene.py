@@ -1,5 +1,6 @@
 from collections import deque
 import numpy as np
+import cv2
 from more_itertools import ilen
 from detection.pins_tracking.v1.Box import Box
 from detection.pins_tracking.v1.Constants import StabilizationLength
@@ -154,6 +155,9 @@ class StableScene:
         # bounding box around pin array
         # или четырехугольник (НЕ прямоугольник)???
         #minX, minY
+        # convexHull
+        points = []
+        pts = cv2.convexHull(points)
         pass
 
     @staticmethod

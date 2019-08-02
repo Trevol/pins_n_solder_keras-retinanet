@@ -139,6 +139,15 @@ class VideoPlayback:
                     return
 
 
+def readFrame(videoFile, framePos):
+    pb = None
+    try:
+        pb = VideoPlayback(videoFile)
+        return pb.readFrame(framePos)
+    finally:
+        pb and pb.release()
+
+
 class VideoController:
     def __init__(self, videoPlayback):
         self.videoPlayback = videoPlayback
@@ -152,6 +161,7 @@ class VideoController:
     FORWARD_KEYS = {KbdKeys.R_ARROW_EX, KbdKeys.d, KbdKeys.D}
     INCREASE_DELAY_KEYS = {KbdKeys.UP_ARROW_EX, KbdKeys.w, KbdKeys.W}
     DECREASE_DELAY_KEYS = {KbdKeys.DOWN_ARROW_EX, KbdKeys.s, KbdKeys.S}
+
     def _handleManualPlay(self):
         assert self.videoPlayback.manualPlay
 
@@ -242,7 +252,7 @@ if __name__ == '__main__':
 
             # ---------------------------------------
             videoFile = '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
-            videoPlayback = VideoPlayback2(videoFile, 1000, autoplayInitially=False)
+            videoPlayback = VideoPlayback(videoFile, 1000, autoplayInitially=False)
 
             for pos, frame in videoPlayback.frames():
                 putFramePos(frame, pos)  # process frame
@@ -253,7 +263,7 @@ if __name__ == '__main__':
 
         def ex_2():
             videoFile = '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
-            videoPlayback = VideoPlayback2(videoFile, 1000, autoplayInitially=False)
+            videoPlayback = VideoPlayback(videoFile, 1000, autoplayInitially=False)
             videoPlayback.play(onFrameReady=None, onStateChange=None)
             videoPlayback.release()
 
@@ -270,6 +280,6 @@ if __name__ == '__main__':
                 cv2.imshow(winname, frame)
 
             videoFile = '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
-            videoPlayback = VideoPlayback2(videoFile, 1000, autoplayInitially=False)
+            videoPlayback = VideoPlayback(videoFile, 1000, autoplayInitially=False)
             videoPlayback.play(onFrameReady=frameReady, onStateChange=indicatePlaybackState)
             videoPlayback.release()

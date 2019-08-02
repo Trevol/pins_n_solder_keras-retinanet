@@ -18,7 +18,17 @@ class Timer:
             print(self.report())
 
     def report(self):
-        return f'{self.desc}: {self.duration}'
+        return f'{self.desc}: {self.duration:.7f}'
 
     def __repr__(self):
         return self.report()
+
+
+def timeit(desc='', autoreport=True):
+    return Timer(desc, autoreport).timeit()
+
+if __name__ == '__main__':
+    with timeit('timeit(sleep(1))'):
+        time.sleep(1)
+    with Timer('Timer().timeit(sleep(1))').timeit():
+        time.sleep(1)
