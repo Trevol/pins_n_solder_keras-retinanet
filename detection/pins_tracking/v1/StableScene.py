@@ -143,13 +143,16 @@ class StableScene:
             self.__pins = [Pin(box, meanColor) for box, meanColor in zip(boxes, meanColors)]
             return
 
+        boxes = []
         for pinIndex in range(self.pinsCount):
             pinBoxesAcrossFrames = [frameInfo.bboxes[pinIndex] for frameInfo in self.__frames.recent]
             pinBox = Box.meanBox(pinBoxesAcrossFrames)
+            boxes.append(boxes)
             meanColor = self.__boxOuterMeanColor(frame, pinBox)
             self.__pins[pinIndex].update(pinBox, meanColor)
-
+        # TODO: calc height/width mean box
         if self.stabilized:
+            self.__meanBoxSizeWH = Box.meanSize(boxes)
             self.__measurePinsWorkArea()
 
     def __measurePinsWorkArea(self):
