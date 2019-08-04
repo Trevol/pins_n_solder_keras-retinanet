@@ -12,10 +12,9 @@ from detection.pins_tracking.v1.VideoConfig import video6SolderConfig
 class VideoHandler:
     winname = 'Video'
 
-    def __init__(self, framesDetections, workBox, sldConfig, videoWriter):
+    def __init__(self, framesDetections, sldConfig, videoWriter):
         self.videoWriter = videoWriter
         self.framesDetections = framesDetections
-        self.workBox = workBox
         self.techProcessTracker = TechProcessTracker(sldConfig)
         cv2.namedWindow(self.winname)
         cv2.setMouseCallback(self.winname, self.onMouse)
@@ -35,10 +34,9 @@ class VideoHandler:
         cv2.setWindowTitle(self.winname, stateTitle)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
-        frameDetections = [d for d in self.framesDetections.get(framePos, []) if
-                           d[-1] >= .85 and self.inWorkBox(d[0], self.workBox)]  # with score >= someThresh
-
+        frameDetections = self.framesDetections.get(framePos, [])
         self.techProcessTracker.track(frameDetections, framePos, framePosMsec, frame)
+
         self.techProcessTracker.draw(frame)
 
         utils.visualize.drawDetections(frame, frameDetections)
@@ -51,18 +49,8 @@ class VideoHandler:
         cv2.imshow(self.winname, imshowFrame)
         self.videoWriter and self.videoWriter.write(frame)
 
-    @staticmethod
-    def inWorkBox(box, workBox):
-        wx0, wy0, wx1, wy1 = workBox
-        x0, y0, x1, y1 = box
-        cx = (x0 + x1) / 2
-        cy = (y0 + y1) / 2
-        # box center in workBox
-        return wx0 < cx < wx1 and wy0 < cy < wy1
-
 
 def files():
-    # TODO: detect workBox automatically
     yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
            '/HDD_DATA/Computer_Vision_Task/Video_6_result.mp4',
            DetectionsCSV.loadPickle('../../csv_cache/data/detections_video6.pcl'),
@@ -76,14 +64,14 @@ def files():
 
 
 def main():
-    for sourceVideoFile, resultVideo, framesDetections, workBox, cfg in files():
+    for sourceVideoFile, resultVideo, framesDetections, _, cfg in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         videoWriter = None  # videoWriter(videoPlayback.cap, resultVideo)
-        handler = VideoHandler(framesDetections, workBox, cfg, videoWriter)
+        handler = VideoHandler(framesDetections, cfg, videoWriter)
 
-        framesRange = (4150, None)
+        # framesRange = (4150, None)
         # framesRange = (8100, None)
-        # framesRange = None
+        framesRange = None
         videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
         videoPlayback.release()
         cv2.waitKey()

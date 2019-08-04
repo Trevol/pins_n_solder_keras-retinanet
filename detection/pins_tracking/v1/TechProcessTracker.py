@@ -55,8 +55,11 @@ class TechProcessTracker:
             for currentColor, prevColor in zip(pinAtCurrent.meanColors, pinAtPrev.meanColors):
                 print(' ', np.round(currentColor, 1), np.round(prevColor, 1))
 
+    def lastStableScene(self):
+        return utils.lastOrDefault(self.__stableScenes, None)
+
     def track(self, frameDetections, framePos, framePosMsec, frame):
-        bboxes = [Box(d[0]) for d in frameDetections]
+        bboxes = [Box(d[0]) for d in frameDetections if d[2] >= .85]
         self.__trackBoxes(bboxes, framePos, framePosMsec, frame)
 
     def __trackBoxes(self, bboxes, framePos, framePosMsec, frame):
@@ -65,10 +68,13 @@ class TechProcessTracker:
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
             return
 
-        if any(self.__stableScenes) and len(bboxes) < self.__stableScenes[-1].pinsCount:
-            # CHECK - currently stabilized scene should be superset of self.__stableScenes[-1]
-            self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
-            return
+        lastStableScene = self.lastStableScene()
+        if lastStableScene:
+            bboxes = lastStableScene.inWorkArea(bboxes)
+            if len(bboxes) < lastStableScene.pinsCount:
+                # CHECK - currently stabilized scene should be superset of lastStableScene
+                self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
+                return
 
         currentSceneWasUnstable = not self.__currentScene.stabilized
         closeToCurrentScene = self.__currentScene.addIfClose(bboxes, framePos, framePosMsec, frame)
