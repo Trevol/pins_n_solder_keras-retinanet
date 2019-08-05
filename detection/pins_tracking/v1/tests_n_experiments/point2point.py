@@ -4,10 +4,6 @@ import numpy as np
 from utils.Timer import timeit
 
 
-def my_combinations(pts):
-    pass
-
-
 def measure():
     pts = np.random.randint(0, 1920, [584, 2])
     with timeit():
