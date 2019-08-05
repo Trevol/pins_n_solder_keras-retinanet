@@ -46,3 +46,10 @@ class Box:
         meanPt1 = np.mean(pts1, axis=0)
         meanBox = np.hstack((meanPt0, meanPt1))
         return Box(meanBox)
+
+    @staticmethod
+    def meanSize(boxes):
+        raise NotImplementedError()
+        sizes = []
+        for box in boxes:
+            sizes.append(box.size)

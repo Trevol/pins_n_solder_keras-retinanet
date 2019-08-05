@@ -1,5 +1,6 @@
 import cv2
 
+from detection.pins_tracking.v1.Box import Box
 from detection.pins_tracking.v1.Colors import Colors
 from utils.Geometry2D import Geometry2D
 
@@ -13,15 +14,18 @@ class PinsWorkArea:
         cv2.drawContours(img, [self.__contour], 0, color, 1)
 
     def __measure(self, stableScenePins):
-        boxes = [p.box.box for p in stableScenePins]
-        self.__contour = Geometry2D.convexHull(boxes)
-        # self.__meanBoxSizeWH = Box.meanSize(boxes)
+        boxes = [p.box for p in stableScenePins]
+        rawBoxes = [p.box.box for p in stableScenePins]
+        self.__contour = Geometry2D.convexHull(rawBoxes)
+        self.__meanBoxSizeWH = Box.meanSize(boxes)
+        self.minPinsDistance = self.computeMinPinsDistance(stableScenePins)
 
     def filterOutsiderBoxes(self, boxes):
         # TODO: filter boxes which are to far to workArea
         pass
 
     def inWorkArea(self, boxes):
+
         return boxes
 
     @staticmethod
