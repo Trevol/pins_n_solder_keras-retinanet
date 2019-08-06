@@ -1,3 +1,4 @@
+import numpy as np
 import cv2
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
@@ -66,6 +67,7 @@ def files():
 
 
 def main():
+    np.seterr(all='raise')
     for sourceVideoFile, resultVideo, framesDetections, _, cfg in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         videoWriter = None  # videoWriter(videoPlayback.cap, resultVideo)

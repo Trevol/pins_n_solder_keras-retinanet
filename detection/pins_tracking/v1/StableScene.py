@@ -1,3 +1,4 @@
+import warnings
 from collections import deque
 import numpy as np
 import cv2
@@ -157,6 +158,8 @@ class StableScene:
     @staticmethod
     def __boxOuterMeanColor(frame, innerBox):
         innerX0, innerY0, innerX1, innerY1 = innerBox.box
+        # protect from boxes near frame edges
+        assert innerX0 > 0 and innerY0 > 0 and innerX1 < frame.shape[1] - 1 and innerY1 < frame.shape[0] - 1
         dW, dH = innerBox.size / 4
 
         patch = frame[int(innerY0 - dH): int(innerY1 + dH + 1), int(innerX0 - dW): int(innerX1 + dW + 1)]

@@ -59,8 +59,17 @@ class TechProcessTracker:
         return utils.lastOrDefault(self.__stableScenes, None)
 
     def track(self, frameDetections, framePos, framePosMsec, frame):
-        bboxes = [Box(d[0]) for d in frameDetections if d[2] >= .85]
+        boxes = (Box(d[0]) for d in self.__skipWeakDetections(frameDetections))
+        bboxes = self.__skipEdgeBoxes(boxes, frame.shape)
         self.__trackBoxes(bboxes, framePos, framePosMsec, frame)
+
+    @staticmethod
+    def __skipWeakDetections(detections):
+        return (d for d in detections if d[2] >= .85)
+
+    @staticmethod
+    def __skipEdgeBoxes(boxes, frameShape):
+        return [b for b in boxes if b.farFromFrameEdges(frameShape)]
 
     def __trackBoxes(self, bboxes, framePos, framePosMsec, frame):
         if not self.__currentScene:

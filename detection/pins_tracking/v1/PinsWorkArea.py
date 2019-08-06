@@ -15,14 +15,13 @@ class PinsWorkArea:
 
     def __measure(self, stableScenePins):
         # TODO: if we have 1 pin????
-        if len(stableScenePins) == 1:
+        if len(stableScenePins) == 1:  # TODO: if we have 1 pin????
             raise Exception('len(stableScenePins) == 1')
         boxes = [p.box for p in stableScenePins]
         rawBoxes = [p.box.box for p in stableScenePins]
         self.__contour = Geometry2D.convexHull(rawBoxes)
         self.__meanBoxSize = Box.meanSize(boxes)
         self.minPinsDistance = self.__computeMinPinsDistance(stableScenePins)
-        # print('size/dist', self.__meanBoxSize, self.minPinsDistance)
 
     @staticmethod
     def __computeMinPinsDistance(stableScenePins):
@@ -31,6 +30,7 @@ class PinsWorkArea:
         return minDist
 
     def inWorkArea(self, boxes):
+        centers = [tuple(b.center) for b in boxes]
         return boxes
 
     # @staticmethod

@@ -15,6 +15,16 @@ class Box:
     def containsPoint(self, pt):
         return self.pt0[0] < pt[0] < self.pt1[0] and self.pt0[1] < pt[1] < self.pt1[1]
 
+    def farFromFrameEdges(self, frameShape):
+        maxY = frameShape[0] - 1
+        maxX = frameShape[1] - 1
+        dw, dh = self.size / 4
+        x0 = self.pt0[0]
+        y0 = self.pt0[1]
+        x1 = self.pt1[0]
+        y1 = self.pt1[1]
+        return x0 - dw > 0 and y0 - dw > 0 and x1 + dw < maxX and y1 + dh < maxY
+
     @staticmethod
     def boxByPoint(boxes, pt):
         boxes = (b for b in boxes if b.containsPoint(pt))
