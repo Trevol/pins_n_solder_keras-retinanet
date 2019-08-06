@@ -49,7 +49,5 @@ class Box:
 
     @staticmethod
     def meanSize(boxes):
-        raise NotImplementedError()
-        sizes = []
-        for box in boxes:
-            sizes.append(box.size)
+        sizes = [b.size for b in boxes]
+        return np.mean(sizes, 0)

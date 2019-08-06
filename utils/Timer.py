@@ -20,9 +20,6 @@ class Timer:
     def report(self):
         return f'{self.desc}: {self.duration:.7f}'
 
-    def __repr__(self):
-        return self.report()
-
 
 def timeit(desc='', autoreport=True):
     return Timer(desc, autoreport).timeit()

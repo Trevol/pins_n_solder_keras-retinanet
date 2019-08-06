@@ -14,25 +14,30 @@ class PinsWorkArea:
         cv2.drawContours(img, [self.__contour], 0, color, 1)
 
     def __measure(self, stableScenePins):
+        # TODO: if we have 1 pin????
+        if len(stableScenePins) == 1:
+            raise Exception('len(stableScenePins) == 1')
         boxes = [p.box for p in stableScenePins]
         rawBoxes = [p.box.box for p in stableScenePins]
         self.__contour = Geometry2D.convexHull(rawBoxes)
-        self.__meanBoxSizeWH = Box.meanSize(boxes)
-        self.minPinsDistance = self.computeMinPinsDistance(stableScenePins)
-
-    def filterOutsiderBoxes(self, boxes):
-        # TODO: filter boxes which are to far to workArea
-        pass
-
-    def inWorkArea(self, boxes):
-
-        return boxes
+        self.__meanBoxSize = Box.meanSize(boxes)
+        self.minPinsDistance = self.__computeMinPinsDistance(stableScenePins)
+        # print('size/dist', self.__meanBoxSize, self.minPinsDistance)
 
     @staticmethod
-    def inWorkBox(box, workBox):
-        wx0, wy0, wx1, wy1 = workBox
-        x0, y0, x1, y1 = box
-        cx = (x0 + x1) / 2
-        cy = (y0 + y1) / 2
-        # box center in workBox
-        return wx0 < cx < wx1 and wy0 < cy < wy1
+    def __computeMinPinsDistance(stableScenePins):
+        centers = [p.box.center for p in stableScenePins]
+        minDist = Geometry2D.minL2Distance(centers)
+        return minDist
+
+    def inWorkArea(self, boxes):
+        return boxes
+
+    # @staticmethod
+    # def inWorkBox(box, workBox):
+    #     wx0, wy0, wx1, wy1 = workBox
+    #     x0, y0, x1, y1 = box
+    #     cx = (x0 + x1) / 2
+    #     cy = (y0 + y1) / 2
+    #     # box center in workBox
+    #     return wx0 < cx < wx1 and wy0 < cy < wy1
