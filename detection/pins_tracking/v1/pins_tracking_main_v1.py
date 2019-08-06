@@ -52,23 +52,20 @@ class VideoHandler:
 
 
 def files():
-    workArea6 = None  # (222 // 0.7, 70 // 0.7, 1162 // 0.7, 690 // 0.7)
-    workArea2 = None  # (147, 87, 1005, 669)
     yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
            '/HDD_DATA/Computer_Vision_Task/Video_6_result.mp4',
            DetectionsCSV.loadPickle('../../csv_cache/data/detections_video6.pcl'),
-           workArea6,
            video6SolderConfig)
 
     # yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
     #        '/HDD_DATA/Computer_Vision_Task/Video_2_result.mp4',
     #        DetectionsCSV.loadPickle('../../csv_cache/data/detections_video2.pcl'),
-    #        workArea2, None)
+    #        None)
 
 
 def main():
     np.seterr(all='raise')
-    for sourceVideoFile, resultVideo, framesDetections, _, cfg in files():
+    for sourceVideoFile, resultVideo, framesDetections, cfg in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         videoWriter = None  # videoWriter(videoPlayback.cap, resultVideo)
         handler = VideoHandler(framesDetections, cfg, videoWriter)
