@@ -3,6 +3,7 @@ import cv2
 from detection.pins_tracking.v1.Box import Box
 from detection.pins_tracking.v1.Colors import Colors
 from utils.Geometry2D import Geometry2D
+from utils.Timer import timeit
 
 
 class PinsWorkArea:
@@ -21,7 +22,8 @@ class PinsWorkArea:
         rawBoxes = [p.box.box for p in stableScenePins]
         self.__contour = Geometry2D.convexHull(rawBoxes)
         self.__meanBoxSize = Box.meanSize(boxes)
-        self.minPinsDistance = self.__computeMinPinsDistance(stableScenePins)
+        self.__minPinsDistance = self.__computeMinPinsDistance(stableScenePins)
+        self.__distToContour = self.__minPinsDistance * 1.5
 
     @staticmethod
     def __computeMinPinsDistance(stableScenePins):
@@ -30,8 +32,13 @@ class PinsWorkArea:
         return minDist
 
     def inWorkArea(self, boxes):
-        centers = [tuple(b.center) for b in boxes]
-        return boxes
+        with timeit('inWorkArea'):
+            boxesInArea = []
+            for b in boxes:
+                dist = cv2.pointPolygonTest(self.__contour, tuple(b.center), True)
+                if dist > -self.__distToContour:  # close then threshold or inside contour
+                    boxesInArea.append(b)
+            return boxesInArea
 
     # @staticmethod
     # def inWorkBox(box, workBox):

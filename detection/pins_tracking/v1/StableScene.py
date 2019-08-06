@@ -158,7 +158,7 @@ class StableScene:
     @staticmethod
     def __boxOuterMeanColor(frame, innerBox):
         innerX0, innerY0, innerX1, innerY1 = innerBox.box
-        # protect from boxes near frame edges
+        # protect against boxes near frame edges
         assert innerX0 > 0 and innerY0 > 0 and innerX1 < frame.shape[1] - 1 and innerY1 < frame.shape[0] - 1
         dW, dH = innerBox.size / 4
 
