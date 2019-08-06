@@ -23,7 +23,7 @@ class PinsWorkArea:
         self.__contour = Geometry2D.convexHull(rawBoxes)
         self.__meanBoxSize = Box.meanSize(boxes)
         self.__minPinsDistance = self.__computeMinPinsDistance(stableScenePins)
-        self.__distToContour = self.__minPinsDistance * 1.5
+        self.__distToAreaThreshold = self.__minPinsDistance * 1.5
 
     @staticmethod
     def __computeMinPinsDistance(stableScenePins):
@@ -32,19 +32,11 @@ class PinsWorkArea:
         return minDist
 
     def inWorkArea(self, boxes):
-        with timeit('inWorkArea'):
-            boxesInArea = []
-            for b in boxes:
-                dist = cv2.pointPolygonTest(self.__contour, tuple(b.center), True)
-                if dist > -self.__distToContour:  # close then threshold or inside contour
-                    boxesInArea.append(b)
-            return boxesInArea
+        boxesInArea = [b for b in boxes if self.__boxInWorkArea(b)]
+        return boxesInArea
 
-    # @staticmethod
-    # def inWorkBox(box, workBox):
-    #     wx0, wy0, wx1, wy1 = workBox
-    #     x0, y0, x1, y1 = box
-    #     cx = (x0 + x1) / 2
-    #     cy = (y0 + y1) / 2
-    #     # box center in workBox
-    #     return wx0 < cx < wx1 and wy0 < cy < wy1
+    def __distToArea(self, box):
+        return cv2.pointPolygonTest(self.__contour, tuple(box.center), True)
+
+    def __boxInWorkArea(self, box):
+        return self.__distToArea(box) > -self.__distToAreaThreshold
