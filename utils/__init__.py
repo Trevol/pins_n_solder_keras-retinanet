@@ -17,6 +17,8 @@ def leftClip(value, x1):
 
 
 def resize(img, factor, interpolation=cv2.INTER_AREA):
+    if factor == 1:
+        return img
     dsize = tuple(np.multiply(img.shape[1::-1], factor).astype(int))
     return cv2.resize(img, dsize, interpolation=interpolation)
 

@@ -31,6 +31,12 @@ class VideoPlayback:
             self.cap.release()
             self.cap = None
 
+    def frameSize(self):
+        assert self.cap
+        w = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        return (w, h)
+
     def __currentPos(self):
         assert self.cap
         return int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
