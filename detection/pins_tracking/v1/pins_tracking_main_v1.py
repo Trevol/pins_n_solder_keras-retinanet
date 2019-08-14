@@ -27,7 +27,8 @@ class VideoHandler:
         if evt != cv2.EVENT_LBUTTONUP:
             return
         pt = (int(round(x / .7)), int(round(y / .7)))
-        self.techProcessTracker.dumpPinStats(pt)
+        print(pt)
+        # self.techProcessTracker.dumpPinStats(pt)
 
     def syncPlaybackState(self, frameDelay, autoPlay, framePos, framePosMsec, playback):
         autoplayLabel = 'ON' if autoPlay else 'OFF'
@@ -68,7 +69,7 @@ def main():
     for sourceVideoFile, resultVideo, framesDetections, cfg in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         videoWriter = None  # videoWriter(videoPlayback.cap, resultVideo)
-        handler = VideoHandler(framesDetections, cfg, videoWriter)
+        handler = VideoHandler(framesDetections, None, videoWriter)
 
         # framesRange = (4150, None)
         # framesRange = (8100, None)
