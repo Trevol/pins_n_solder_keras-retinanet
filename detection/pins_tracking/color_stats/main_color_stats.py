@@ -35,7 +35,6 @@ class VideoHandler:
 
 def files():
     yield '/HDD_DATA/Computer_Vision_Task/Video_6.mp4'
-
     # yield '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
 
 
