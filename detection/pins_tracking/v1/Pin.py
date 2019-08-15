@@ -6,6 +6,7 @@ import numpy as np
 from detection.pins_tracking.v1.Colors import Colors
 from detection.pins_tracking.v1.Constants import StabilizationLength
 from detection.pins_tracking.v1.StatParams import StatParams
+from utils import roundPoint, roundToInt
 
 
 class Pin:
@@ -44,5 +45,5 @@ class Pin:
 
     def draw(self, img):
         color = Colors.green if self.withSolder else Colors.yellow
-        r = int(min(*self.box.size) // 4)  # min(w,h)/4
-        cv2.circle(img, tuple(self.box.center), r, color, -1)
+        r = roundToInt(min(self.box.size[0], self.box.size[1]) / 4)  # min(w,h)/4
+        cv2.circle(img, roundPoint(self.box.center), r, color, -1)

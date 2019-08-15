@@ -17,7 +17,7 @@ def drawDetections(image, detections, drawCenters=False):  # visualize detection
         b = np.round(box, 0).astype(int)
         draw_box(image, b, color=color, thickness=1)
         if drawCenters:
-            center = boxCenter(box, roundToInt=True)
+            center = boxCenter(box, roundPt=True)
             cv2.circle(image, tuple(center), 1, color)
 
         if score < .96:

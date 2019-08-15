@@ -2,8 +2,9 @@ import cv2
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
 from detection.pins_tracking.v1.Box import Box
-from utils import resize
+from utils import resize, roundToInt, roundPoint
 from utils.VideoPlayback import VideoPlayback
+from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 
 
 class BoxStats:
@@ -44,50 +45,39 @@ class BoxStats:
         green = (0, 200, 0)
         for b in self.meanBBoxes:
             cv2.rectangle(image, tuple(b.pt0), tuple(b.pt1), green)
-            cv2.circle(image, tuple(b.center), 1, green, -1)
+            cv2.circle(image, roundPoint(b.center), 1, green, -1)
 
 
-class VideoHandler:
-    winname = 'Video'
-
-    def __init__(self, framesDetections):
+class VideoHandler(VideoPlaybackHandlerBase):
+    def __init__(self, frameSize, framesDetections):
+        super(VideoHandler, self).__init__(frameSize)
         self.framesDetections = framesDetections
-        # self.techProcessTracker = TechProcessTracker()
         self.boxStats = BoxStats()
-
-    def syncPlaybackState(self, frameDelay, autoPlay, framePos, framePosMsec, playback):
-        autoplayLabel = 'ON' if autoPlay else 'OFF'
-        stateTitle = f'{self.winname} (FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
-        cv2.setWindowTitle(self.winname, stateTitle)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
         frameDetections = [d for d in self.framesDetections.get(framePos, []) if d[-1] >= .9]  # with score >= .9
 
-        # print??
         self.boxStats.update(frameDetections)
         meanOutput = frame.copy()
         self.boxStats.drawMeanBoxes(meanOutput)
-        if meanOutput.shape[1] >= 1900:  # fit view to screen
-            meanOutput = resize(meanOutput, 0.7)
+        meanOutput = resize(meanOutput, self._frameScaleFactor)
         cv2.imshow('Mean', meanOutput)
 
         utils.visualize.drawDetections(frame, frameDetections, drawCenters=True)
         utils.visualize.putFramePos(frame, framePos, framePosMsec)
 
-        if frame.shape[1] >= 1900:  # fit view to screen
-            frame = resize(frame, 0.7)
-        cv2.imshow(self.winname, frame)
+        super(VideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
 
 
 def files():
     yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
-           DetectionsCSV.loadPickle('../../csv_cache/data/detections_video6.pcl'))
+           DetectionsCSV.loadPickle('../../../csv_cache/data/detections_video6.pcl'))
 
 
 def main():
     for sourceVideoFile, framesDetections in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        handler = VideoHandler(framesDetections)
+        handler = VideoHandler(videoPlayback.frameSize(), framesDetections)
         videoPlayback.play(range=(56, 133), onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
         videoPlayback.release()
     cv2.waitKey()

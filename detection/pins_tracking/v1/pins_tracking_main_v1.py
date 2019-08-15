@@ -8,32 +8,15 @@ from utils import videoWriter
 
 from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
 from detection.pins_tracking.v1.VideoConfig import video6SolderConfig
+from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 
 
-class VideoHandler:
-    winname = 'Video'
-
-    def __init__(self, framesDetections, sldConfig, videoWriter):
+class TechProcessVideoHandler(VideoPlaybackHandlerBase):
+    def __init__(self, frameSize, framesDetections, sldConfig, videoWriter):
+        super(TechProcessVideoHandler, self).__init__(frameSize)
         self.videoWriter = videoWriter
         self.framesDetections = framesDetections
         self.techProcessTracker = TechProcessTracker(sldConfig)
-        cv2.namedWindow(self.winname)
-        cv2.setMouseCallback(self.winname, self.onMouse)
-
-    def release(self):
-        cv2.destroyWindow(self.winname)
-
-    def onMouse(self, evt, x, y, flags, param):
-        if evt != cv2.EVENT_LBUTTONUP:
-            return
-        pt = (int(round(x / .7)), int(round(y / .7)))
-        print(pt)
-        # self.techProcessTracker.dumpPinStats(pt)
-
-    def syncPlaybackState(self, frameDelay, autoPlay, framePos, framePosMsec, playback):
-        autoplayLabel = 'ON' if autoPlay else 'OFF'
-        stateTitle = f'{self.winname} (FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
-        cv2.setWindowTitle(self.winname, stateTitle)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
         frameDetections = self.framesDetections.get(framePos, [])
@@ -45,11 +28,9 @@ class VideoHandler:
         utils.visualize.putFramePos(frame, framePos, framePosMsec)
         self.techProcessTracker.drawStats(frame)
 
-        imshowFrame = frame
-        if imshowFrame.shape[1] >= 1900:  # fit view to screen
-            imshowFrame = resize(frame, 0.7)
-        cv2.imshow(self.winname, imshowFrame)
         self.videoWriter and self.videoWriter.write(frame)
+
+        super(TechProcessVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
 
 
 def files():
@@ -69,7 +50,7 @@ def main():
     for sourceVideoFile, resultVideo, framesDetections, cfg in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         videoWriter = None  # videoWriter(videoPlayback.cap, resultVideo)
-        handler = VideoHandler(framesDetections, None, videoWriter)
+        handler = TechProcessVideoHandler(videoPlayback.frameSize(), framesDetections, None, videoWriter)
 
         # framesRange = (4150, None)
         # framesRange = (8100, None)

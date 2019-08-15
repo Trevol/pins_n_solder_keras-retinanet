@@ -19,18 +19,30 @@ def leftClip(value, x1):
 def resize(img, factor, interpolation=cv2.INTER_AREA):
     if factor == 1:
         return img
-    dsize = tuple(np.multiply(img.shape[1::-1], factor).astype(int))
-    return cv2.resize(img, dsize, interpolation=interpolation)
+    w = img.shape[1]
+    h = img.shape[0]
+    newSize = int(w * factor), int(h * factor)
+    return cv2.resize(img, newSize, interpolation=interpolation)
 
 
-def boxCenter(box, roundToInt=False):
-    pt1 = np.float32([box[0], box[1]])
-    pt2 = [box[2], box[3]]
-    buffer = np.add(pt1, pt2, out=pt1)
-    result = np.divide(buffer, 2, out=buffer)
-    if roundToInt:
-        result = np.round(result, 0, out=result).astype(np.int32)
-    return result
+def boxCenter(box, roundPt=False):
+    x1 = box[0]
+    y1 = box[1]
+    x2 = box[2]
+    y2 = box[3]
+    cX = (x1 + x2) / 2
+    cY = (y1 + y2) / 2
+    if roundPt:
+        return roundToInt(cX), roundToInt(cY)
+    return cX, cY
+
+
+def roundToInt(value):
+    return int(round(value))
+
+
+def roundPoint(pt):
+    return roundToInt(pt[0]), roundToInt(pt[1])
 
 
 def cityblockDistance(pt1, pt2):
