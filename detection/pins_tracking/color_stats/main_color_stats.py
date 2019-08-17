@@ -1,13 +1,10 @@
 import numpy as np
 import cv2
+
+from utils import roundToInt
 from utils.VideoPlayback import VideoPlayback
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
-
-
-class MyVideoHandler(VideoPlaybackHandlerBase):
-    def __init__(self, frameSize):
-        super(MyVideoHandler, self).__init__(frameSize)
-        self._frameScaleFactor = 1
+import matplotlib.pyplot as plt
 
 
 def files():
@@ -15,10 +12,41 @@ def files():
     # yield '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
 
 
+class PlottingVideoHandler(VideoPlaybackHandlerBase):
+    def __init__(self, frameSize):
+        super(PlottingVideoHandler, self).__init__(frameSize)
+        self._frameScaleFactor = 1
+        self.point = None
+        self.ax = plt.figure().add_subplot()
+
+
+    def plotMeanColorAtPoint(self, framePos, frame):
+        if self.point is None:
+            return
+        plt.scatter(framePos, framePos, s=1)
+        plt.draw()
+        # if framePos % 100 == 0:
+        #     plt.pause(.01)
+
+    def frameReady(self, frame, framePos, framePosMsec, playback):
+        super(PlottingVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
+        self.plotMeanColorAtPoint(framePos, frame)
+
+    def onMouse(self, evt, displayFrameX, displayFrameY, flags, param):
+        if evt != cv2.EVENT_LBUTTONDOWN:
+            return
+        originalX = roundToInt(displayFrameX / self._frameScaleFactor)
+        originalY = roundToInt(displayFrameY / self._frameScaleFactor)
+        self.point = (originalX, originalY)
+        # clear ax - to clear prev plot
+        plt.show(block=False)
+        self.ax.clear()
+
+
 def main():
     for sourceVideoFile in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        handler = MyVideoHandler(videoPlayback.frameSize())
+        handler = PlottingVideoHandler(videoPlayback.frameSize())
 
         # framesRange = (4150, None)
         framesRange = None
