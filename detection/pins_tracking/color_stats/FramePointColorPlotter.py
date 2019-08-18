@@ -11,8 +11,9 @@ class FramePointColorPlotter:
     def __init__(self, dataQueueLen=300):
         self.point = None
 
-        self.posData = deque(maxlen=dataQueueLen)
-        self.colorData = deque(maxlen=300)
+        # self.posData = deque(maxlen=dataQueueLen)
+        # self.colorData = deque(maxlen=300)
+        self.data = deque(maxlen=dataQueueLen)
 
         fig, self.ax = plt.subplots()
         self.ax.set_ylim(0, 16777215)
@@ -20,9 +21,7 @@ class FramePointColorPlotter:
 
     def setPoint(self, point):
         self.point = point
-        # clear data and plot
-        self.posData.clear()
-        self.colorData.clear()
+        self.data.clear()
         self.ax.clear()
         self.ax.set_ylim(0, 16777215)
 
@@ -41,18 +40,19 @@ class FramePointColorPlotter:
         b = int(color[0])
         g = int(color[1])
         r = int(color[2])
-        return b + (g << 8) + (r << 16)
+        return b + (g << 8) + (r << 16), b, g, r
 
     def plotColor(self, pos, img):
         if self.point is None:
             return
-        self.posData.append(pos)
-        color24 = self.color24bit(img, self.point)
-        self.colorData.append(color24)
+        color24, b, g, r = self.color24bit(img, self.point)
+        self.data.append((pos, color24, b, g, r))
 
         with timeit():
+            dataAsArray = np.array(self.data)
             self.ax.clear()
             self.ax.set_ylim(0, 16777215)
-            self.ax.scatter(self.posData, self.colorData, s=1)
+            # todo: plot with self.ax.line
+            rrr = self.ax.scatter(dataAsArray[:, 0], dataAsArray[:, 1], s=1)
             # plt.pause(.01)
             plt.draw()
