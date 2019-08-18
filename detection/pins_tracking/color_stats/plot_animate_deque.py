@@ -1,11 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import cv2
-from collections import deque
 
+from detection.pins_tracking.color_stats.FramePointColorPlotter import FramePointColorPlotter
 from utils import roundToInt
-from utils.Timer import timeit
 
 
 class images:
@@ -36,53 +33,6 @@ class images:
             img = np.empty([400, 500, 3], np.uint8)
             img[:, :] = color
             yield img
-
-
-class FramePointColorPlotter:
-    def __init__(self):
-        self.point = None
-
-        self.posData = deque(maxlen=300)
-        self.colorData = deque(maxlen=300)
-
-        fig, self.ax = plt.subplots()
-        self.ax.set_ylim(0, 16777215)
-        plt.show(block=False)
-
-    def setPoint(self, point):
-        self.point = point
-        # clear data and plot
-        self.posData.clear()
-        self.colorData.clear()
-        self.ax.clear()
-        self.ax.set_ylim(0, 16777215)
-
-    def drawPoint(self, img):
-        if self.point is None:
-            return
-        x, y = self.point
-        color = img[y, x]
-        color = tuple(map(int, np.invert(color)))  # cant pass color as uint8 array...
-        cv2.circle(img, self.point, 2, color=color, thickness=-1)
-
-    @staticmethod
-    def color24bit(img, point):
-        x, y = point
-        b, g, r = img[y, x]
-        return int(b) + (int(g) << 8) + (int(r) << 16)
-
-    def plotColor(self, pos, img):
-        if self.point is None:
-            return
-        self.posData.append(pos)
-        color24 = self.color24bit(img, self.point)
-        self.colorData.append(color24)
-        with timeit():
-            self.ax.clear()
-            self.ax.set_ylim(0, 16777215)
-            self.ax.scatter(self.posData, self.colorData, s=1)
-            # plt.pause(.01)
-            plt.draw()
 
 
 def main():
