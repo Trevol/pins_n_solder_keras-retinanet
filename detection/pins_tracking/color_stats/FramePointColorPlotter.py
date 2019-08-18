@@ -53,6 +53,6 @@ class FramePointColorPlotter:
             self.ax.clear()
             self.ax.set_ylim(0, 16777215)
             # todo: plot with self.ax.line
-            rrr = self.ax.scatter(dataAsArray[:, 0], dataAsArray[:, 1], s=1)
+            l, = self.ax.plot(dataAsArray[:, 0], dataAsArray[:, 1], 'go-', markersize=2)
             # plt.pause(.01)
             plt.draw()
