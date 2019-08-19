@@ -48,8 +48,8 @@ def main():
     plotter = FramePointColorPlotter()
     imgGen = images()
     for pos, img in enumerate(imgGen()):
-        plotter.drawPoint(img)
         plotter.plotColor(pos, img)
+        plotter.drawPoint(img)
         cv2.imshow(winname, img)
         # click: new point - new plot
 

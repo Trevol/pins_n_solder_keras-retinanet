@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 
+from detection.pins_tracking.color_stats.FramePointColorPlotter import FramePointColorPlotter
 from utils import roundToInt
 from utils.VideoPlayback import VideoPlayback
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
@@ -13,11 +14,10 @@ def files():
 
 
 class PlottingVideoHandler(VideoPlaybackHandlerBase):
-    def __init__(self, frameSize):
+    def __init__(self, frameSize, framesCount):
         super(PlottingVideoHandler, self).__init__(frameSize)
         self._frameScaleFactor = 1
-        self.point = None
-        self.ax = plt.figure().add_subplot()
+        self.plotter = FramePointColorPlotter(framesCount)
 
 
     def plotMeanColorAtPoint(self, framePos, frame):
@@ -29,24 +29,22 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
         #     plt.pause(.01)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
+        self.plotter.plotColor(framePos, frame)
+        self.plotter.drawPoint(frame)
         super(PlottingVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
-        self.plotMeanColorAtPoint(framePos, frame)
 
     def onMouse(self, evt, displayFrameX, displayFrameY, flags, param):
         if evt != cv2.EVENT_LBUTTONDOWN:
             return
         originalX = roundToInt(displayFrameX / self._frameScaleFactor)
         originalY = roundToInt(displayFrameY / self._frameScaleFactor)
-        self.point = (originalX, originalY)
-        # clear ax - to clear prev plot
-        plt.show(block=False)
-        self.ax.clear()
+        self.plotter.setPoint((originalX, originalY))
 
 
 def main():
     for sourceVideoFile in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        handler = PlottingVideoHandler(videoPlayback.frameSize())
+        handler = PlottingVideoHandler(videoPlayback.frameSize(), videoPlayback.framesCount())
 
         # framesRange = (4150, None)
         framesRange = None
