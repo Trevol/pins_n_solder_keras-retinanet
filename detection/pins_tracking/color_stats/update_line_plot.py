@@ -8,20 +8,7 @@ def main():
     ax.set_ylim(0, 10)
     ax.set_xlim(0, 10)
 
-    line = Line2D([1, 2], [3, 4])
-    ax.add_line(line)
-    # ax.autoscale_view(scalex=True, scaley=True)
-
-    def onClick(event):
-        # line.set_xdata([1, 2])
-        line.set_ydata([2, 3])
-
-        # ax.autoscale_view(scalex=True, scaley=True)
-        fig.canvas.draw()
-
-    # fig.canvas.mpl_connect('button_press_event', onClick)
-
-
+    line = ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle=''))
 
     # line.set_color('g')
     # ax.autoscale_view(scalex=True, scaley=True)
@@ -30,9 +17,9 @@ def main():
     # plt.draw()
     # plt.pause(2)
     # plt.show()
-    plt.pause(3)
+    # plt.pause(3)
     line.set_data([2, 3, 5], [7, 8, 2])
-    plt.pause(3)
+    plt.pause(2)
 
 
 if __name__ == '__main__':

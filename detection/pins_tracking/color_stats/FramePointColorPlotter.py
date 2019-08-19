@@ -8,25 +8,31 @@ from utils.Timer import timeit
 
 
 class FramePointColorPlotter:
+    max24bit = 16777215
+
     def __init__(self, dataQueueLen=300):
         self.point = None
 
-        # self.posData = deque(maxlen=dataQueueLen)
-        # self.colorData = deque(maxlen=300)
         self.data = deque(maxlen=dataQueueLen)
 
         self.fig, self.ax = plt.subplots()
-        self.ax.set_ylim(0, 16777215)
-        # self.line = Line2D([1, 2], [1000000, 200000])
-        # self.ax.add_line(self.line)
-        self.line, = self.ax.plot([1, 2], [1000000, 200000], 'go-', linestyle='', markersize=1)
+        self.ax.set_ylim(0, self.max24bit)
+        self.ax.set_xlim(0, 300)
+
+        self.line = self.ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle=''))
+        cid = self.fig.canvas.mpl_connect('resize_event', self.pltTightLayout)
+
         plt.show(block=False)
+
+    @staticmethod
+    def pltTightLayout(e):
+        print(11)
+        plt.tight_layout()
 
     def setPoint(self, point):
         self.point = point
         self.data.clear()
         self.line.set_data([], [])
-        # self.ax.set_ylim(0, 16777215)
 
     def drawPoint(self, img):
         if self.point is None:
@@ -34,7 +40,7 @@ class FramePointColorPlotter:
         x, y = self.point
         color = img[y, x]
         color = tuple(map(int, np.invert(color)))  # cant pass color as uint8 array...
-        cv2.circle(img, self.point, 2, color=color, thickness=-1)
+        cv2.circle(img, self.point, 2, color, thickness=-1)
 
     @staticmethod
     def color24bit(img, point):
@@ -59,13 +65,4 @@ class FramePointColorPlotter:
             # l, = self.ax.plot(dataAsArray[:, 0], dataAsArray[:, 1], 'go-', linestyle='', markersize=1)
             # plt.pause(.01)
             self.line.set_data(dataAsArray[:, 0], dataAsArray[:, 1])
-            self.line.set_linestyle('')
-            self.line.set_color('g')
-            self.line.set_markersize(1)
-            # self.ax.set_ylim(0, 16777215)
-            # self.ax.draw(None)
-            # return
-            # plt.draw()
-            # self.ax.figure.canvas.draw()
-            self.ax.draw_artist(self.line)
-            self.fig.canvas.draw_idle()
+            self.fig.canvas.draw()
