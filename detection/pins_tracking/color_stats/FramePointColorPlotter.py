@@ -50,18 +50,22 @@ class FramePointColorPlotter:
         r = int(color[2])
         return b + (g << 8) + (r << 16), b, g, r
 
+    def setXlim(self, minPos, maxPos):
+        xMin, xMax = self.ax.get_xlim()
+        if maxPos > xMax - 10:
+            self.ax.set_xlim(minPos, maxPos + 100)
+
     def plotColor(self, pos, img):
         if self.point is None:
             return
         color24, b, g, r = self.color24bit(img, self.point)
         self.data.append((pos, color24, b, g, r))
 
-        with timeit():
-            dataAsArray = np.array(self.data)
-            # self.ax.clear()
-            # self.ax.set_ylim(0, 16777215)
-            # todo: plot with self.ax.line
-            # l, = self.ax.plot(dataAsArray[:, 0], dataAsArray[:, 1], 'go-', linestyle='', markersize=1)
-            # plt.pause(.01)
-            self.line.set_data(dataAsArray[:, 0], dataAsArray[:, 1])
-            self.fig.canvas.draw()
+        dataAsArray = np.array(self.data)
+        positions = dataAsArray[:, 0]
+        colors = dataAsArray[:, 1]
+        self.line.set_data(positions, colors)
+
+        self.setXlim(positions[0], positions[-1])
+        # self.fig.canvas.draw()
+        plt.draw()
