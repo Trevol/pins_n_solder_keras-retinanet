@@ -26,7 +26,6 @@ class FramePointColorPlotter:
 
     @staticmethod
     def pltTightLayout(e):
-        print(11)
         plt.tight_layout()
 
     def setPoint(self, point):
