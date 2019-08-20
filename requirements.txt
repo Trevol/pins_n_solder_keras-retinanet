@@ -1,0 +1,9 @@
+numpy
+opencv-python
+jupyter
+matplotlib
+pyqt5
+cython
+tensorflow-gpu
+keras
+keras_retinanet
