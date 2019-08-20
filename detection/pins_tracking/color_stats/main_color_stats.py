@@ -5,7 +5,6 @@ from detection.pins_tracking.color_stats.FramePointColorPlotter import FramePoin
 from utils import roundToInt
 from utils.VideoPlayback import VideoPlayback
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
-import matplotlib.pyplot as plt
 
 
 def files():
@@ -19,15 +18,6 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
         self._frameScaleFactor = 1
         self.plotter = FramePointColorPlotter(framesCount)
 
-
-    def plotMeanColorAtPoint(self, framePos, frame):
-        if self.point is None:
-            return
-        plt.scatter(framePos, framePos, s=1)
-        plt.draw()
-        # if framePos % 100 == 0:
-        #     plt.pause(.01)
-
     def frameReady(self, frame, framePos, framePosMsec, playback):
         self.plotter.plotColor(framePos, frame)
         self.plotter.drawPoint(frame)
@@ -39,6 +29,10 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
         originalX = roundToInt(displayFrameX / self._frameScaleFactor)
         originalY = roundToInt(displayFrameY / self._frameScaleFactor)
         self.plotter.setPoint((originalX, originalY))
+
+    def release(self):
+        super(PlottingVideoHandler, self).release()
+        self.plotter.release()
 
 
 def main():

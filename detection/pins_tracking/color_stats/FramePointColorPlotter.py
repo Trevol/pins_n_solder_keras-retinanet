@@ -20,9 +20,12 @@ class FramePointColorPlotter:
         self.ax.set_xlim(0, 300)
 
         self.line = self.ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle=''))
-        cid = self.fig.canvas.mpl_connect('resize_event', self.pltTightLayout)
+        self._connectionId = self.fig.canvas.mpl_connect('resize_event', self.pltTightLayout)
 
         plt.show(block=False)
+
+    def release(self):
+        self.fig.canvas.mpl_disconnect(self._connectionId)
 
     @staticmethod
     def pltTightLayout(e):
@@ -61,11 +64,12 @@ class FramePointColorPlotter:
         color24, b, g, r = self.color24bit(img, self.point)
         self.data.append((pos, color24, b, g, r))
 
-        dataAsArray = np.array(self.data)
-        positions = dataAsArray[:, 0]
-        colors = dataAsArray[:, 1]
-        self.line.set_data(positions, colors)
+        with timeit():
+            dataAsArray = np.array(self.data)
+            positions = dataAsArray[:, 0]
+            colors = dataAsArray[:, 1]
+            self.line.set_data(positions, colors)
 
-        self.setXlim(positions[0], positions[-1])
-        # self.fig.canvas.draw()
-        plt.draw()
+            self.setXlim(positions[0], positions[-1])
+            # self.fig.canvas.draw()
+            plt.draw()

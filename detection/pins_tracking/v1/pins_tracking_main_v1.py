@@ -32,6 +32,9 @@ class TechProcessVideoHandler(VideoPlaybackHandlerBase):
 
         super(TechProcessVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
 
+    def release(self):
+        super(TechProcessVideoHandler, self).release()
+
 
 def files():
     yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
