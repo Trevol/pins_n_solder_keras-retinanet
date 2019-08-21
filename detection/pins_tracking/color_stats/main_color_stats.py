@@ -50,7 +50,6 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
         self.plotter.plot(self._framePos, color24)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
-        frame = cv2.GaussianBlur(frame, (5, 5), 0)
         super(PlottingVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
         if self.framePoint:
             self.__plotFrameValue()
