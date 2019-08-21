@@ -29,6 +29,9 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
         originalX = roundToInt(displayFrameX / self._frameScaleFactor)
         originalY = roundToInt(displayFrameY / self._frameScaleFactor)
         self.plotter.setPoint((originalX, originalY))
+        if self._frame is not None:
+            self.plotter.drawPoint(self._frame)
+            self.showFrame()
 
     def release(self):
         super(PlottingVideoHandler, self).release()
@@ -48,26 +51,6 @@ def main():
         handler.release()
 
     cv2.waitKey()
-
-
-def save_frame_colors_at_point():
-    def flipXY(*points):
-        return [p[::-1] for p in points]
-
-    list_yxOfInterest = flipXY((951, 186), (1233, 196), (1333, 186))
-    frameColorsAtPoint = [[] for _ in list_yxOfInterest]
-
-    for sourceVideoFile in files():
-        videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-
-        for pos, frame, _ in videoPlayback.frames():
-            for index, yxOfInterest in enumerate(list_yxOfInterest):
-                row = [pos, *frame[yxOfInterest]]
-                frameColorsAtPoint[index].append(row)
-
-        for yxOfInterest, colors in zip(list_yxOfInterest, frameColorsAtPoint):
-            np.save(f'frame_colors_{yxOfInterest[1]}_{yxOfInterest[0]}.npy', colors)
-        videoPlayback.release()
 
 
 np.seterr(all='raise')

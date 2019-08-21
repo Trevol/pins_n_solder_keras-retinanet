@@ -24,7 +24,8 @@ class VideoPlaybackHandlerBase:
                 originalX = roundToInt(displayFrameX / self._frameScaleFactor)
                 originalY = roundToInt(displayFrameY / self._frameScaleFactor)
                 color = self._frame[originalY, originalX]
-                print('Original Coords:', (originalX, originalY), 'Color:', color, 'Display Coords:', (displayFrameX, displayFrameY))
+                print('Original Coords:', (originalX, originalY), 'Color:', color, 'Display Coords:',
+                      (displayFrameX, displayFrameY))
 
     def syncPlaybackState(self, frameDelay, autoPlay, framePos, framePosMsec, playback):
         autoplayLabel = 'ON' if autoPlay else 'OFF'
@@ -33,5 +34,8 @@ class VideoPlaybackHandlerBase:
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
         self._frame = frame
-        self._displayFrame = resize(frame, self._frameScaleFactor)
+        self.showFrame()
+
+    def showFrame(self):
+        self._displayFrame = resize(self._frame, self._frameScaleFactor)
         cv2.imshow(self.winname, self._displayFrame)
