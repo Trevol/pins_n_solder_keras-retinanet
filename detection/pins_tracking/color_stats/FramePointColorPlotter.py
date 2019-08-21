@@ -39,11 +39,11 @@ class FramePointColorPlotter:
 
         self.data.append((framePos, value))
 
-        with timeit():
-            dataAsArray = np.array(self.data)
-            positions = dataAsArray[:, 0]
-            values = dataAsArray[:, 1]
-            self.line.set_data(positions, values)
+        # with timeit():
+        dataAsArray = np.array(self.data)
+        positions = dataAsArray[:, 0]
+        values = dataAsArray[:, 1]
+        self.line.set_data(positions, values)
 
-            self.__setXlim(positions[0], positions[-1])
-            plt.draw()
+        self.__setXlim(positions[0], positions[-1])
+        plt.draw()

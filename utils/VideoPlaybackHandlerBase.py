@@ -7,7 +7,8 @@ class VideoPlaybackHandlerBase:
     winname = 'Video'
 
     def __init__(self, frameSize):
-        self._displayFrame = None
+        self.__displayFrame0 = None
+        self.__displayFrame = None
         self._frame = None
         self._framePos = None
         cv2.namedWindow(self.winname)
@@ -36,11 +37,19 @@ class VideoPlaybackHandlerBase:
     def frameReady(self, frame, framePos, framePosMsec, playback):
         self._frame = frame
         self._framePos = framePos
-        self._displayFrame = self.getDisplayFrame()
-        self.showFrame()
+        self.__displayFrame0 = self.createDisplayFrame()
+        self.refreshDisplayFrame()
 
-    def getDisplayFrame(self):
+    def __showFrame(self):
+        cv2.imshow(self.winname, self.__displayFrame)
+
+    def refreshDisplayFrame(self):
+        self.__displayFrame = self.processDisplayFrame(self.__displayFrame0)
+        self.__showFrame()
+
+    def createDisplayFrame(self):
         return resize(self._frame, self._frameScaleFactor)
 
-    def showFrame(self):
-        cv2.imshow(self.winname, self._displayFrame)
+    def processDisplayFrame(self, displayFrame0):
+        # override this method to draw in display frame
+        return displayFrame0
