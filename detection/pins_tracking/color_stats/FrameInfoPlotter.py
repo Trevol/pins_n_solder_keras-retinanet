@@ -7,7 +7,7 @@ from matplotlib.lines import Line2D
 from utils.Timer import timeit
 
 
-class FramePointColorPlotter:
+class FrameInfoPlotter:
     def __init__(self, ylim, dataQueueLen=300):
         self.data = deque(maxlen=dataQueueLen)
 

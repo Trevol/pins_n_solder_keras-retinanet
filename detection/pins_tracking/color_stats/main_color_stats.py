@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-from detection.pins_tracking.color_stats.FramePointColorPlotter import FramePointColorPlotter
+from detection.pins_tracking.color_stats.FrameInfoPlotter import FrameInfoPlotter
 from utils import roundToInt
 from utils.VideoPlayback import VideoPlayback
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
@@ -12,7 +12,7 @@ def files():
     # yield '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
 
 
-class u:
+class u:  # u - utils
     @staticmethod
     def drawPoint(point, img):
         x, y = point
@@ -35,8 +35,8 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
 
     def __init__(self, frameSize, framesCount):
         super(PlottingVideoHandler, self).__init__(frameSize)
-        self._frameScaleFactor = 1
-        self.plotter = FramePointColorPlotter(self.max24bit, framesCount)
+        # self._frameScaleFactor = 1
+        self.plotter = FrameInfoPlotter(self.max24bit, framesCount)
         self.framePoint = None
         self.displayFramePoint = None
 

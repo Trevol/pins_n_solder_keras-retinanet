@@ -1,2 +1,16 @@
 - гистограмма по цветовым каналам (RGB/HSV)
 - outliers???
+
+- select rect area (pt0-pt1)
+
+- plot mean color
+   - 4 points
+   - 8 points
+- multi-plot support in plotter
+- plot multiple:
+    - RGB values
+    - HSV values
+
+
+- diff between stable scenes (viewOfPrevScene - viewOfCurrentScene)
+    - nonmaximum suppression
