@@ -30,7 +30,99 @@ class u:  # u - utils
         return b + (g << 8) + (r << 16)
 
 
+class RectSelection:
+    def __init__(self, displayScale):
+        self.displayScale = displayScale
+        self.pt1 = self.pt2 = None
+
+    def hasDrawing(self):
+        return self.pt1 is not None or self.pt2 is not None
+
+    def displayPt(self, pt):
+        x = roundToInt(pt[0] * self.displayScale)
+        y = roundToInt(pt[1] * self.displayScale)
+        return (x, y)
+
+    def draw(self, img):
+        if not self.hasDrawing():
+            return img
+        color = (0, 0, 200)
+        thickness = 1
+        if self.pt1 == self.pt2:
+            thickness = 3
+        return cv2.rectangle(img, self.displayPt(self.pt1), self.displayPt(self.pt2), color, thickness)
+
+    def addDisplayPoint(self, displayX, displayY):
+        originalX = roundToInt(displayX / self.displayScale)
+        originalY = roundToInt(displayY / self.displayScale)
+        pt = (originalX, originalY)
+        if self.pt1 is None and self.pt2 is None:
+            self.pt1 = self.pt2 = pt
+        elif self.pt1 is not None and self.pt2 != self.pt1:
+            self.pt1 = self.pt2 = None
+        elif self.pt1 is not None and self.pt2 == self.pt1:
+            self.pt2 = pt
+
+
 class PlottingVideoHandler(VideoPlaybackHandlerBase):
+    max24bit = 16777215
+
+    def __init__(self, frameSize, framesCount):
+        super(PlottingVideoHandler, self).__init__(frameSize)
+        # self._frameScaleFactor = 1
+        self.plotter = FrameInfoPlotter(self.max24bit, framesCount)
+        self.rectSelection = RectSelection(self._frameScaleFactor)
+
+    def processDisplayFrame(self, displayFrame0):
+        if self.rectSelection.hasDrawing():
+            return self.rectSelection.draw(displayFrame0.copy())
+        return super(PlottingVideoHandler, self).processDisplayFrame(displayFrame0)
+
+    def __plotFrameValue(self):
+        # if self.framePoint:
+        #     color24 = u.color24bit(self._frame, self.framePoint)
+        #     self.plotter.plot(self._framePos, color24)
+        pass
+
+    def frameReady(self, frame, framePos, framePosMsec, playback):
+        super(PlottingVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
+        self.__plotFrameValue()
+
+    def onMouse(self, evt, displayFrameX, displayFrameY, flags, param):
+        if evt != cv2.EVENT_LBUTTONDOWN or self._frame is None:
+            return
+        self.rectSelection.addDisplayPoint(displayFrameX, displayFrameY)
+
+        self.plotter.clear()
+        self.__plotFrameValue()
+        self.refreshDisplayFrame()
+
+    def release(self):
+        super(PlottingVideoHandler, self).release()
+        self.plotter.release()
+
+
+def main():
+    for sourceVideoFile in files():
+        videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
+        handler = PlottingVideoHandler(videoPlayback.frameSize(), videoPlayback.framesCount())
+
+        # framesRange = (4150, None)
+        framesRange = None
+        videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
+        videoPlayback.release()
+        cv2.waitKey()
+        handler.release()
+
+    cv2.waitKey()
+
+
+np.seterr(all='raise')
+if __name__ == '__main__':
+    main()
+
+
+class PlottingVideoHandler_OLD(VideoPlaybackHandlerBase):
     max24bit = 16777215
 
     def __init__(self, frameSize, framesCount):
@@ -70,24 +162,3 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
     def release(self):
         super(PlottingVideoHandler, self).release()
         self.plotter.release()
-
-
-def main():
-    for sourceVideoFile in files():
-        videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        handler = PlottingVideoHandler(videoPlayback.frameSize(), videoPlayback.framesCount())
-
-        # framesRange = (4150, None)
-        framesRange = None
-        videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
-        videoPlayback.release()
-        cv2.waitKey()
-        handler.release()
-
-    cv2.waitKey()
-
-
-np.seterr(all='raise')
-if __name__ == '__main__':
-    main()
-    # save_frame_colors_at_point()
