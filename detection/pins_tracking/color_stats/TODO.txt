@@ -1,13 +1,13 @@
 - гистограмма по цветовым каналам (RGB/HSV)
 - outliers???
 
-- select rect area (pt0-pt1)
-
+DONE: select rect area (pt0-pt1)
+- multi-plot support in plotter
 - plot mean color
    - 4 points
    - 8 points
 - multi-point selection
-- multi-plot support in plotter
+
 - plot multiple:
     - RGB values
     - HSV values
