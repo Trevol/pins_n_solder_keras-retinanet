@@ -49,7 +49,7 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
 
         x1, y1 = self.rectSelection.pt1
         x2, y2 = self.rectSelection.pt2
-        slice = self._frame[y1:y2+1, x1:x2+1]
+        slice = self._frame[y1:y2 + 1, x1:x2 + 1]
         meanColor = np.mean(slice, axis=(0, 1))
         color24 = u.color24bit(meanColor)
         self.plotter.plot(self._framePos, color24)
@@ -91,45 +91,3 @@ def main():
 np.seterr(all='raise')
 if __name__ == '__main__':
     main()
-
-
-class PlottingVideoHandler_OLD(VideoPlaybackHandlerBase):
-    max24bit = 16777215
-
-    def __init__(self, frameSize, framesCount):
-        super(PlottingVideoHandler, self).__init__(frameSize)
-        # self._frameScaleFactor = 1
-        self.plotter = FrameInfoPlotter(self.max24bit, framesCount)
-        self.framePoint = None
-        self.displayFramePoint = None
-
-    def processDisplayFrame(self, displayFrame0):
-        if self.framePoint:
-            return u.drawPoint(self.displayFramePoint, displayFrame0.copy())
-        return super(PlottingVideoHandler, self).processDisplayFrame(displayFrame0)
-
-    def __plotFrameValue(self):
-        color24 = u.color24bit(self._frame, self.framePoint)
-        self.plotter.plot(self._framePos, color24)
-
-    def frameReady(self, frame, framePos, framePosMsec, playback):
-        super(PlottingVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
-        if self.framePoint:
-            self.__plotFrameValue()
-
-    def onMouse(self, evt, displayFrameX, displayFrameY, flags, param):
-        if self._frame is None:
-            return
-        if evt != cv2.EVENT_LBUTTONDOWN:
-            return
-        originalX = roundToInt(displayFrameX / self._frameScaleFactor)
-        originalY = roundToInt(displayFrameY / self._frameScaleFactor)
-        self.framePoint = (originalX, originalY)
-        self.displayFramePoint = (displayFrameX, displayFrameY)
-        self.plotter.clear()
-        self.__plotFrameValue()
-        self.refreshDisplayFrame()
-
-    def release(self):
-        super(PlottingVideoHandler, self).release()
-        self.plotter.release()
