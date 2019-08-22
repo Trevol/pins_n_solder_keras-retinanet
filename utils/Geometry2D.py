@@ -42,3 +42,13 @@ class Geometry2D:
     @classmethod
     def minL2Distance(cls, pts):
         return cls.pairwiseL2Distances(pts).min()
+
+    @staticmethod
+    def squaredL2Distance(pt1, pt2):
+        x1 = pt1[0]
+        y1 = pt1[1]
+        x2 = pt2[0]
+        y2 = pt2[1]
+        dx = x1 - x2
+        dy = y1 - y2
+        return dx * dx + dy * dy
