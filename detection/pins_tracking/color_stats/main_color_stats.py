@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 
 from detection.pins_tracking.color_stats.FrameInfoPlotter import FrameInfoPlotter
+from detection.pins_tracking.color_stats.RectSelection import RectSelection
 from utils import roundToInt
 from utils.VideoPlayback import VideoPlayback
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
@@ -21,47 +22,11 @@ class u:  # u - utils
         return cv2.circle(img, point, 2, color, thickness=-1)
 
     @staticmethod
-    def color24bit(img, point):
-        x, y = point
-        color = img[y, x]
-        b = int(color[0])
-        g = int(color[1])
-        r = int(color[2])
+    def color24bit(bgr):
+        b = int(bgr[0])
+        g = int(bgr[1])
+        r = int(bgr[2])
         return b + (g << 8) + (r << 16)
-
-
-class RectSelection:
-    def __init__(self, displayScale):
-        self.displayScale = displayScale
-        self.pt1 = self.pt2 = None
-
-    def hasDrawing(self):
-        return self.pt1 is not None or self.pt2 is not None
-
-    def displayPt(self, pt):
-        x = roundToInt(pt[0] * self.displayScale)
-        y = roundToInt(pt[1] * self.displayScale)
-        return (x, y)
-
-    def draw(self, img):
-        if not self.hasDrawing():
-            return img
-        color = (0, 0, 200)
-        thickness = 1
-        if self.pt1 == self.pt2:
-            thickness = 3
-        return cv2.rectangle(img, self.displayPt(self.pt1), self.displayPt(self.pt2), color, thickness)
-
-    def addDisplayPoint(self, displayX, displayY):
-        originalX = roundToInt(displayX / self.displayScale)
-        originalY = roundToInt(displayY / self.displayScale)
-        pt = (originalX, originalY)
-        if self.pt1 is None and self.pt2 is None:
-            self.pt1 = self.pt2 = pt
-        elif self.pt1 is not None and self.pt2 != self.pt1:
-            self.pt1 = self.pt2 = None
-        elif self.pt1 is not None and self.pt2 == self.pt1:
-            self.pt2 = pt
 
 
 class PlottingVideoHandler(VideoPlaybackHandlerBase):
@@ -74,14 +39,20 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
         self.rectSelection = RectSelection(self._frameScaleFactor)
 
     def processDisplayFrame(self, displayFrame0):
-        if self.rectSelection.hasDrawing():
+        if self.rectSelection.selected():
             return self.rectSelection.draw(displayFrame0.copy())
         return super(PlottingVideoHandler, self).processDisplayFrame(displayFrame0)
 
     def __plotFrameValue(self):
-        # if self.framePoint:
-        #     color24 = u.color24bit(self._frame, self.framePoint)
-        #     self.plotter.plot(self._framePos, color24)
+        if not self.rectSelection.selected():
+            return
+
+        x1, y1 = self.rectSelection.pt1
+        x2, y2 = self.rectSelection.pt2
+        slice = self._frame[y1:y2+1, x1:x2+1]
+        meanColor = np.mean(slice, axis=(0, 1))
+        color24 = u.color24bit(meanColor)
+        self.plotter.plot(self._framePos, color24)
         pass
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
