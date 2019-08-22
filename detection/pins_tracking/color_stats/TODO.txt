@@ -6,6 +6,7 @@
 - plot mean color
    - 4 points
    - 8 points
+- multi-point selection
 - multi-plot support in plotter
 - plot multiple:
     - RGB values

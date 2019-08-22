@@ -69,3 +69,10 @@ def lastOrDefault(items, default=None):
     if any(items):
         return items[-1]
     return default
+
+
+def colorChannelsTo24bit(bgr):
+    b = int(bgr[0])
+    g = int(bgr[1])
+    r = int(bgr[2])
+    return b + (g << 8) + (r << 16)

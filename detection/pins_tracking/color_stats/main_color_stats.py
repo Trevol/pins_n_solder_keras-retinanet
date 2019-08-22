@@ -3,7 +3,7 @@ import cv2
 
 from detection.pins_tracking.color_stats.FrameInfoPlotter import FrameInfoPlotter
 from detection.pins_tracking.color_stats.RectSelection import RectSelection
-from utils import roundToInt
+from utils import colorChannelsTo24bit
 from utils.VideoPlayback import VideoPlayback
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 
@@ -13,20 +13,23 @@ def files():
     # yield '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
 
 
-class u:  # u - utils
+class ColorExtraction:
     @staticmethod
-    def drawPoint(point, img):
-        x, y = point
-        color = img[y, x]
-        color = tuple(map(int, np.invert(color)))  # cant pass color as uint8 array...
-        return cv2.circle(img, point, 2, color, thickness=-1)
+    def areaMeanColor24(img, rectSelection):
+        x1, y1 = rectSelection.pt1
+        x2, y2 = rectSelection.pt2
+        area = img[y1:y2 + 1, x1:x2 + 1]
+        meanColor = np.mean(area, axis=(0, 1))
+        return colorChannelsTo24bit(meanColor)
 
     @staticmethod
-    def color24bit(bgr):
-        b = int(bgr[0])
-        g = int(bgr[1])
-        r = int(bgr[2])
-        return b + (g << 8) + (r << 16)
+    def cornersMeanColor24(img, rectSelection):
+        b24 = colorChannelsTo24bit
+        x1, y1 = rectSelection.pt1
+        x2, y2 = rectSelection.pt2
+        x3, y3 = x1, y2
+        x4, y4 = x2, y1
+        return (b24(img[y1, x1]) + b24(img[y2, x2]) + b24(img[y3, x3]) + b24(img[y4, x4])) // 4
 
 
 class PlottingVideoHandler(VideoPlaybackHandlerBase):
@@ -46,12 +49,8 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
     def __plotFrameValue(self):
         if not self.rectSelection.selected():
             return
-
-        x1, y1 = self.rectSelection.pt1
-        x2, y2 = self.rectSelection.pt2
-        slice = self._frame[y1:y2 + 1, x1:x2 + 1]
-        meanColor = np.mean(slice, axis=(0, 1))
-        color24 = u.color24bit(meanColor)
+        # color24 = ColorExtraction.areaMeanColor24(self._frame, self.rectSelection)
+        color24 = ColorExtraction.cornersMeanColor24(self._frame, self.rectSelection)
         self.plotter.plot(self._framePos, color24)
         pass
 

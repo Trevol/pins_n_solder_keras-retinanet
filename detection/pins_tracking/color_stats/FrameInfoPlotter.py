@@ -20,8 +20,12 @@ class FrameInfoPlotter:
 
         self.__plot_shown = False
 
+    def __maximizeFigureWindow(self):
+        self.fig.canvas.manager.window.showMaximized()
+
     def release(self):
         self.fig.canvas.mpl_disconnect(self._eventId)
+        plt.close(self.fig)
 
     def clear(self):
         self.data.clear()
