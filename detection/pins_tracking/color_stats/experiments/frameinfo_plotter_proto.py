@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 
-def createLines():
+def configureLines():
     fig = plt.figure()
     ax = fig.subplots()
     ax.set_ylim(0, 255)
@@ -19,7 +19,7 @@ def createLines():
 
 def main():
     hw = 400, 500
-    plotter = FrameInfoPlotter(createLines())
+    plotter = FrameInfoPlotter(configureLines())
 
     for i, frame in enumerate(random_images()(hw)):
         cv2.imshow('frame', frame)

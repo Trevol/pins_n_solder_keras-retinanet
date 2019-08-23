@@ -1,5 +1,7 @@
 import numpy as np
 import cv2
+from matplotlib.lines import Line2D
+import matplotlib.pyplot as plt
 
 from detection.pins_tracking.color_stats.ColorExtraction import ColorExtraction
 from detection.pins_tracking.color_stats.FrameInfoPlotter import FrameInfoPlotter
@@ -16,10 +18,22 @@ def files():
 class PlottingVideoHandler(VideoPlaybackHandlerBase):
     max24bit = 16777215
 
+    @staticmethod
+    def configureLines():
+        fig = plt.figure()
+        ax = fig.subplots()
+        ax.set_ylim(0, 255)
+        ax.set_xlim(0, 300)  # initial limit
+
+        bLine = ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='b'))
+        gLine = ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='g'))
+        rLine = ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='r'))
+        return bLine, gLine, rLine
+
     def __init__(self, frameSize, framesCount):
         super(PlottingVideoHandler, self).__init__(frameSize)
-        # self._frameScaleFactor = 1
-        self.plotter = FrameInfoPlotter(self.max24bit, framesCount)
+        self._frameScaleFactor = 1
+        self.plotter = FrameInfoPlotter(self.configureLines(), framesCount)
         self.rectSelection = RectSelection(self._frameScaleFactor)
 
     def processDisplayFrame(self, displayFrame0):
