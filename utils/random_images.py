@@ -24,10 +24,10 @@ class random_images:
             yield roundToInt(current)
             current, direction = next_(current, direction, step)
 
-    def __call__(self):
+    def __call__(self, hw):
         channel = self.rndIntensities
         colors = zip(channel(), channel(), channel())
         for color in colors:
-            img = np.empty([400, 500, 3], np.uint8)
+            img = np.empty([*hw[:2], 3], np.uint8)
             img[:, :] = color
             yield img
