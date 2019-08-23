@@ -20,7 +20,7 @@ def createLines():
 def main():
     hw = 400, 500
     plotter = FrameInfoPlotter(createLines())
-    cv2.setMouseCallback('frame')
+
     for i, frame in enumerate(random_images()(hw)):
         cv2.imshow('frame', frame)
         plotter.plot(i, frame[0, 0])

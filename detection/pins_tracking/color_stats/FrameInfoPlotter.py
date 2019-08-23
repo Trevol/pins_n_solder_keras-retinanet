@@ -9,18 +9,26 @@ from utils.Timer import timeit
 
 class FrameInfoPlotter:
     def __init__(self, lines, dataQueueLen=300):
-        self.data = deque(maxlen=dataQueueLen)
+        self.framesPositions = deque(maxlen=dataQueueLen)
+        self.linesData = [deque(maxlen=dataQueueLen) for l in lines]
         self.lines = lines
-        self.__eventConnections = []
-
-        for canvas in {l.figure.canvas for l in lines}:
-            eventId = canvas.mpl_connect('resize_event', lambda e: e.canvas.figure.tight_layout())
-            self.__eventConnections.append((eventId, canvas))
-
+        self.setOfAxes = list(set(l.axes for l in self.lines))
+        self.__eventConnections = self.__autoTightLayout(lines)
         self.__plot_shown = False
 
+    @staticmethod
+    def __autoTightLayout(lines):
+        eventConnections = []
+        canvasSet = {l.figure.canvas for l in lines}
+        for canvas in canvasSet:
+            eventId = canvas.mpl_connect('resize_event', lambda e: e.canvas.figure.tight_layout())
+            eventConnections.append((eventId, canvas))
+        return eventConnections
+
     def __maximizeFigureWindow(self):
-        self.fig.canvas.manager.window.showMaximized()
+        figures = {l.figure.canvas for l in self.lines}
+        for figure in figures:
+            figure.canvas.manager.window.showMaximized()
 
     def release(self):
         self.clear()
@@ -29,16 +37,32 @@ class FrameInfoPlotter:
             plt.close(canvas.figure)
 
     def clear(self):
-        # clear all lines and datas
-        self.data.clear()
-        self.line.set_data([], [])
+        self.framesPositions.clear()
+        for data, line in zip(self.linesData, self.lines):
+            line.set_data([], [])
+            data.clear()
 
     def __setXlim(self, minPos, maxPos):
-        xMin, xMax = self.ax.get_xlim()
-        if maxPos > xMax - 10:
-            self.ax.set_xlim(minPos, maxPos + 100)
+        xMin, xMax = self.setOfAxes[0].get_xlim()
+        if maxPos < xMax - 10:  # no need to reset limit
+            return
+        for ax in self.setOfAxes:
+            ax.set_xlim(minPos, maxPos + 100)
 
     def plot(self, framePos, values):
+        if not self.__plot_shown:
+            plt.show(block=False)
+            self.__plot_shown = True
+
+        self.framesPositions.append(framePos)
+        for line, lineData, value in zip(self.lines, self.linesData, values):
+            lineData.append(value)
+            line.set_data(self.framesPositions, lineData)
+
+        self.__setXlim(self.framesPositions[0], framePos)
+        plt.draw()
+
+    def plot___OLD(self, framePos, values):
         if not self.__plot_shown:
             plt.show(block=False)
             self.__plot_shown = True
