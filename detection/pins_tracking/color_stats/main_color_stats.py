@@ -48,7 +48,7 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
     def __plotFrameValue(self):
         if not self.selection.selected():
             return
-        meanBgr = ColorExtraction.rectSelectionAreaMeanColor(self._frame, self.selection)
+        meanBgr = ColorExtraction.multiPointSelectionMeanColor(self._frame, self.selection)
         self.plotter.plot(self._framePos, meanBgr)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):

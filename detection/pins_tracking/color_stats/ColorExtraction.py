@@ -25,3 +25,8 @@ class ColorExtraction:
         x2, y2 = rectSelection.pt2
         area = img[y1:y2 + 1, x1:x2 + 1]
         return np.mean(area, axis=(0, 1))
+
+    @staticmethod
+    def multiPointSelectionMeanColor(img, multiPointSelection):
+        # TODO
+        return [12, 13, 15]
