@@ -2,11 +2,9 @@
 - outliers???
 
 DONE: select rect area (pt0-pt1)
-- multi-plot support in plotter
-- plot mean color
-   - 4 points
-   - 8 points
-- multi-point selection
+DONE: multi-plot support in plotter
+
++++ multi-point selection
 
 - plot multiple:
     - RGB values
@@ -15,3 +13,8 @@ DONE: select rect area (pt0-pt1)
 
 - diff between stable scenes (viewOfPrevScene - viewOfCurrentScene)
     - nonmaximum suppression
+
+- Как выбрать области/точки для отслеживания появления припоя:
+    1) отбрасывать близкие к белому (255, 255, 255) - счатать такие бликами от источника света
+    2) ближайший ДАЛЕКИЙ от белого (НЕ входит в область п1) - часть/цвет объекта
+       - floodfill отметит часть контакта (до границы)?

@@ -8,6 +8,7 @@ from detection.pins_tracking.color_stats.FrameInfoPlotter import FrameInfoPlotte
 from detection.pins_tracking.color_stats.RectSelection import RectSelection
 from utils.VideoPlayback import VideoPlayback
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
+import utils.visualize
 
 
 def files():
@@ -37,6 +38,7 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
         self.rectSelection = RectSelection(self._frameScaleFactor)
 
     def processDisplayFrame(self, displayFrame0):
+        utils.visualize.putFramePos(displayFrame0, self._framePos, None)
         if self.rectSelection.selected():
             return self.rectSelection.draw(displayFrame0.copy())
         return super(PlottingVideoHandler, self).processDisplayFrame(displayFrame0)
