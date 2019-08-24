@@ -5,6 +5,7 @@ DONE: select rect area (pt0-pt1)
 DONE: multi-plot support in plotter
 
 +++ multi-point selection
+    - DO DO DO
 
 - plot multiple:
     - RGB values
