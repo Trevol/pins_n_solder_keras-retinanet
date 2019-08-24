@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 from detection.pins_tracking.color_stats.ColorExtraction import ColorExtraction
 from detection.pins_tracking.color_stats.FrameInfoPlotter import FrameInfoPlotter
+from detection.pins_tracking.color_stats.MultiPointSelection import MultiPointSelection
 from detection.pins_tracking.color_stats.RectSelection import RectSelection
 from utils.VideoPlayback import VideoPlayback
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
@@ -35,18 +36,19 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
         super(PlottingVideoHandler, self).__init__(frameSize)
         self._frameScaleFactor = 1
         self.plotter = FrameInfoPlotter(self.configureLines(), framesCount)
-        self.rectSelection = RectSelection(self._frameScaleFactor)
+        # self.selection = RectSelection(self._frameScaleFactor)
+        self.selection = MultiPointSelection(self._frameScaleFactor)
 
     def processDisplayFrame(self, displayFrame0):
         utils.visualize.putFramePos(displayFrame0, self._framePos, None)
-        if self.rectSelection.selected():
-            return self.rectSelection.draw(displayFrame0.copy())
+        if self.selection.selected():
+            return self.selection.draw(displayFrame0.copy())
         return super(PlottingVideoHandler, self).processDisplayFrame(displayFrame0)
 
     def __plotFrameValue(self):
-        if not self.rectSelection.selected():
+        if not self.selection.selected():
             return
-        meanBgr = ColorExtraction.areaMeanColor(self._frame, self.rectSelection)
+        meanBgr = ColorExtraction.rectSelectionAreaMeanColor(self._frame, self.selection)
         self.plotter.plot(self._framePos, meanBgr)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
@@ -56,7 +58,7 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
     def onMouse(self, evt, displayX, displayY, flags, param):
         if self._frame is None:
             return
-        stateChanged = self.rectSelection.mouseEvent(evt, displayX, displayY, flags, param)
+        stateChanged = self.selection.mouseEvent(evt, displayX, displayY, flags, param)
         if stateChanged:
             self.plotter.clear()
             self.__plotFrameValue()

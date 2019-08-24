@@ -9,13 +9,13 @@ class RectSelection:
         self.displayScale = displayScale
         self.pt1 = self.pt2 = None
 
-    def isPoint(self):
+    def __isPoint(self):
         return self.pt1 is not None and self.pt1 == self.pt2
 
     def selected(self):
         return self.pt1 is not None or self.pt2 is not None
 
-    def displayPt(self, pt):
+    def __toDisplayPoint(self, pt):
         x = roundToInt(pt[0] * self.displayScale)
         y = roundToInt(pt[1] * self.displayScale)
         return (x, y)
@@ -25,9 +25,9 @@ class RectSelection:
             return img
         color = (0, 0, 200)
         thickness = 1
-        if self.isPoint():
+        if self.__isPoint():
             thickness = 3
-        return cv2.rectangle(img, self.displayPt(self.pt1), self.displayPt(self.pt2), color, thickness)
+        return cv2.rectangle(img, self.__toDisplayPoint(self.pt1), self.__toDisplayPoint(self.pt2), color, thickness)
 
     def __normalizePoints(self):
         x1, y1 = self.pt1
