@@ -28,5 +28,5 @@ class ColorExtraction:
 
     @staticmethod
     def multiPointSelectionMeanColor(img, multiPointSelection):
-        # TODO
-        return [12, 13, 15]
+        colors = [img[p[1], p[0]] for p in multiPointSelection.points]
+        return np.mean(colors, axis=0)

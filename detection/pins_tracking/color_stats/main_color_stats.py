@@ -23,14 +23,22 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
     @staticmethod
     def configureLines():
         fig = plt.figure()
-        ax = fig.subplots()
-        ax.set_ylim(0, 255)
-        ax.set_xlim(0, 300)  # initial limit
+        bgrAx, hsvAx = fig.subplots(2, 1, sharex=True)
+        bgrAx.set_ylim(0, 255)
+        bgrAx.set_xlim(0, 300)  # initial limit
 
-        bLine = ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='b'))
-        gLine = ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='g'))
-        rLine = ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='r'))
-        return bLine, gLine, rLine
+        bLine = bgrAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='b'))
+        gLine = bgrAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='g'))
+        rLine = bgrAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='r'))
+
+        # hsvAx = fig.subplots(sharex=bgrAx)
+        hsvAx.set_ylim(0, 255)
+        hsvAx.set_xlim(0, 300)
+        hLine = hsvAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='#808000'))  # olive
+        sLine = hsvAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='#808080'))  # gray
+        vLine = hsvAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='#800080'))  # Purple
+
+        return bLine, gLine, rLine, hLine, sLine, vLine
 
     def __init__(self, frameSize, framesCount):
         super(PlottingVideoHandler, self).__init__(frameSize)
@@ -49,7 +57,9 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
         if not self.selection.selected():
             return
         meanBgr = ColorExtraction.multiPointSelectionMeanColor(self._frame, self.selection)
-        self.plotter.plot(self._framePos, meanBgr)
+        meanBgr = np.round(meanBgr).astype(np.uint8)
+        meanHSV = cv2.cvtColor(np.uint8([[meanBgr]]), cv2.COLOR_BGR2HSV)[0, 0]
+        self.plotter.plot(self._framePos, np.append(meanBgr, meanHSV))
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
         super(PlottingVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)

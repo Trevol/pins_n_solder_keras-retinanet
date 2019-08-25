@@ -39,7 +39,7 @@ class MultiPointSelection:
             self.points.append(eventPt)
             return True
         nearestPt, nearestPtIndex, squaredDistance = self.__findNearestPoint(eventPt)
-        if squaredDistance <= 144:
+        if squaredDistance <= 100:
             del self.points[nearestPtIndex]
         else:
             self.points.append(eventPt)
