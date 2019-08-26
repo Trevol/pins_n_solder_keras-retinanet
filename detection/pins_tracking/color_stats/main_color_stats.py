@@ -1,7 +1,10 @@
+import math
+
 import numpy as np
 import cv2
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 
 from detection.pins_tracking.color_stats.ColorExtraction import ColorExtraction
 from detection.pins_tracking.color_stats.FrameInfoPlotter import FrameInfoPlotter
@@ -21,29 +24,35 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
     max24bit = 16777215
 
     @staticmethod
-    def configureLines():
+    def configureLines(selectedPoints):
+        assert any(selectedPoints)
+
+        nCols = 2
+        nRows = math.ceil(len(selectedPoints) / nCols)
+
+        grid = gridspec.GridSpec(nRows, nCols)
         fig = plt.figure()
-        bgrAx, hsvAx = fig.subplots(2, 1, sharex=True)
-        bgrAx.set_ylim(0, 255)
-        bgrAx.set_xlim(0, 300)  # initial limit
+        lines = []
+        for i in range(len(selectedPoints)):
+            nRow = i // nCols
+            nCol = i % nCols
+            subplotSpec = grid[nRow, nCol]
+            ax = fig.add_subplot(subplotSpec)
+            ax.set_ylim(0, 255)
+            ax.set_xlim(0, 300)  # initial limit
+            hLine = ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='#808000'))  # olive
+            sLine = ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='#808080'))  # gray
+            vLine = ax.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='#800080'))  # Purple
+            lines.extend([hLine, sLine, vLine])
 
-        bLine = bgrAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='b'))
-        gLine = bgrAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='g'))
-        rLine = bgrAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='r'))
-
-        # hsvAx = fig.subplots(sharex=bgrAx)
-        hsvAx.set_ylim(0, 255)
-        hsvAx.set_xlim(0, 300)
-        hLine = hsvAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='#808000'))  # olive
-        sLine = hsvAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='#808080'))  # gray
-        vLine = hsvAx.add_line(Line2D([], [], markersize='1', marker='o', linestyle='', color='#800080'))  # Purple
-
-        return bLine, gLine, rLine, hLine, sLine, vLine
+        return lines
 
     def __init__(self, frameSize, framesCount):
         super(PlottingVideoHandler, self).__init__(frameSize)
         self._frameScaleFactor = 1
-        self.plotter = FrameInfoPlotter(self.configureLines(), framesCount)
+        self.framesCount = framesCount
+        self.plotter = None
+        # self.plotter = FrameInfoPlotter(self.configureLines(), framesCount)
         # self.selection = RectSelection(self._frameScaleFactor)
         self.selection = MultiPointSelection(self._frameScaleFactor)
 
@@ -56,12 +65,12 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
     def __plotFrameValue(self):
         if not self.selection.selected():
             return
-        meanBgr = ColorExtraction.multiPointSelectionMeanColor(self._frame, self.selection)
-        meanBgr = np.round(meanBgr).astype(np.uint8)
-        meanHSV = cv2.cvtColor(np.uint8([[meanBgr]]), cv2.COLOR_BGR2HSV)[0, 0]
-        self.plotter.plot(self._framePos, np.append(meanBgr, meanHSV))
+        hsvColors = ColorExtraction.multiPointSelectionHsvColors(self._frame, self.selection)
+        hsvChannels = [ch for hsv in hsvColors for ch in hsv ]
+        self.plotter.plot(self._framePos, hsvChannels)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
+        frame = cv2.GaussianBlur(frame, (3, 3), 0)
         super(PlottingVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
         self.__plotFrameValue()
 
@@ -70,13 +79,17 @@ class PlottingVideoHandler(VideoPlaybackHandlerBase):
             return
         stateChanged = self.selection.mouseEvent(evt, displayX, displayY, flags, param)
         if stateChanged:
-            self.plotter.clear()
-            self.__plotFrameValue()
+            if self.plotter:
+                self.plotter.release()
+            if self.selection.selected():
+                self.plotter = FrameInfoPlotter(self.configureLines(self.selection.points), self.framesCount)
+                self.__plotFrameValue()
             self.refreshDisplayFrame()
 
     def release(self):
         super(PlottingVideoHandler, self).release()
-        self.plotter.release()
+        if self.plotter:
+            self.plotter.release()
 
 
 def main():

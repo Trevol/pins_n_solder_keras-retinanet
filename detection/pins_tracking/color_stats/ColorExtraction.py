@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 
 from utils import colorChannelsTo24bit
@@ -30,3 +31,13 @@ class ColorExtraction:
     def multiPointSelectionMeanColor(img, multiPointSelection):
         colors = [img[p[1], p[0]] for p in multiPointSelection.points]
         return np.mean(colors, axis=0)
+
+    @staticmethod
+    def multiPointSelectionHsvColors(img, multiPointSelection):
+        bgrColors = [img[p[1], p[0]] for p in multiPointSelection.points]
+
+        return [ColorExtraction.bgrTohsv(bgr) for bgr in bgrColors]
+
+    @staticmethod
+    def bgrTohsv(bgr):
+        return cv2.cvtColor(np.uint8([[bgr]]), cv2.COLOR_BGR2HSV)[0, 0]
