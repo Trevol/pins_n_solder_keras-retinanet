@@ -10,7 +10,10 @@ DONE: multi-plot support in plotter
 - plot multiple:
     - RGB values
     - HSV values
-
+- HSV plots for points
+  - threshold (cv2.inRange)
+- H and V histograms??
+- Histogramm backprojection? OpenCV tutorial
 
 - diff between stable scenes (viewOfPrevScene - viewOfCurrentScene)
     - nonmaximum suppression
