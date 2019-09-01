@@ -4,36 +4,11 @@ import numpy as np
 from utils import resize
 from utils.Timer import timeit
 from utils.VideoPlayback import VideoPlayback
-from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
-import utils.visualize
 
 
-def playVideo():
-    def files():
-        yield '/HDD_DATA/Computer_Vision_Task/Video_6.mp4'
-        # yield '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
 
-    class VideoHandler(VideoPlaybackHandlerBase):
-        def __init__(self, frameSize):
-            super(VideoHandler, self).__init__(frameSize)
-            self._frameScaleFactor = .85
 
-        def processDisplayFrame(self, displayFrame0):
-            return utils.visualize.putFramePos(displayFrame0, self._framePos, None)
 
-    ################################################################
-    for sourceVideoFile in files():
-        videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        handler = VideoHandler(videoPlayback.frameSize())
-
-        # framesRange = (4150, None)
-        framesRange = None
-        videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
-        cv2.waitKey()
-        videoPlayback.release()
-        handler.release()
-
-    cv2.waitKey()
 
 
 def getConsequentFrames():

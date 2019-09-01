@@ -19,16 +19,18 @@ def getGrayDiff(blur=True):
 def floodFill(grayDiff):
     mask = np.zeros(shape=(grayDiff.shape[0] + 2, grayDiff.shape[1] + 2), dtype='uint8')
     seedPoint = 886, 77
-    loDiff = 9
-    upDiff = 87
+    loDiff = 10
+    upDiff = 255  # 87
     cv2.floodFill(grayDiff, mask, seedPoint, 255, loDiff, upDiff, 8)
     return grayDiff
+
 
 def refine(filled):
     refined = cv2.threshold(filled, 254, 255, cv2.THRESH_BINARY)[1]
     contours, _ = cv2.findContours(refined, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     cv2.fillPoly(refined, contours, 255)
     return refined
+
 
 def main():
     grayDiff = getGrayDiff()
@@ -40,8 +42,6 @@ def main():
     cv2.imshow('filled', filled)
     cv2.imshow('refined', refined)
     cv2.waitKey()
-
-
 
 
 main()
