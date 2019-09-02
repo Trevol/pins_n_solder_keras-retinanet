@@ -1,5 +1,12 @@
+import os
+import time
+
 import numpy as np
 import cv2
+import resource
+
+import psutil
+
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
 from utils import resize
@@ -48,17 +55,30 @@ def files():
     #        None)
 
 
+def printMemoryUsage():
+    print(psutil.Process().memory_info())  # in bytes
+
+
 def main():
+    printMemoryUsage()
+
+    def getFramesRange():
+        # framesRange = (4150, None)
+        # framesRange = (8100, None)
+        framesRange = None
+        return framesRange
+
     np.seterr(all='raise')
     for sourceVideoFile, resultVideo, framesDetections, cfg in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         videoWriter = None  # videoWriter(videoPlayback.cap, resultVideo)
         handler = TechProcessVideoHandler(videoPlayback.frameSize(), framesDetections, videoWriter)
 
-        framesRange = (4150, None)
-        # framesRange = (8100, None)
-        # framesRange = None
-        videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
+        videoPlayback.play(range=getFramesRange(), onFrameReady=handler.frameReady,
+                           onStateChange=handler.syncPlaybackState)
+
+        printMemoryUsage()
+
         videoPlayback.release()
         cv2.waitKey()
         handler.release()

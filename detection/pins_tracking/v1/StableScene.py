@@ -62,21 +62,6 @@ class StableScene:
     def stabilized(self):
         return self.__frames.stabilized()
 
-    def detectSolder(self, prevScene):
-        # TODO: implement it using pins masks and analyzing differences between stable scenes
-        # assert self.pinsCount == prevScene.pinsCount
-        # pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
-        # assert pinsAreClose
-        #
-        # for currentPin, prevPin in zip(self.__pins, prevPins):
-        #     if prevPin.withSolder:
-        #         currentPin.withSolder = prevPin.withSolder
-        #     else:
-        #         currentPin.withSolder = currentPin.colorStat.areFromDifferentDistributions(prevPin.colorStat)
-        #
-        # self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recompute count of pins with solder
-        pass
-
     def addIfClose(self, bboxes, framePos, framePosMsec, frame):
         if not any(bboxes):
             return False  # skip empty detections
@@ -138,22 +123,6 @@ class StableScene:
         if self.stabilized:
             self.__pinsWorkArea = PinsWorkArea(self.__pins)
 
-    @staticmethod
-    def __boxOuterMeanColor(frame, innerBox):
-        innerX0, innerY0, innerX1, innerY1 = innerBox.box
-        # protect against boxes near frame edges
-        assert innerX0 > 0 and innerY0 > 0 and innerX1 < frame.shape[1] - 1 and innerY1 < frame.shape[0] - 1
-        dW, dH = innerBox.size / 4
-
-        patch = frame[int(innerY0 - dH): int(innerY1 + dH + 1), int(innerX0 - dW): int(innerX1 + dW + 1)]
-        patch = patch.astype(np.float32)
-
-        # fill innerBox in path with NaN
-        innerW, innerH = innerBox.size
-        patch[int(dH):int(dH + innerH), int(dW):int(dW + innerW)] = np.NaN
-        mean = np.nanmean(patch, (0, 1))
-        return mean
-
     def inWorkArea(self, boxes):
         assert self.__pinsWorkArea
         return self.__pinsWorkArea.inWorkArea(boxes)
@@ -167,3 +136,34 @@ class StableScene:
     def pinAtPoint(self, pt):
         pinsFilter = (p for p in self.pins if p.box.containsPoint(pt))
         return next(pinsFilter, None)
+
+    def detectSolder(self, prevScene):
+        # TODO: implement it using pins masks and analyzing differences between stable scenes
+        # assert self.pinsCount == prevScene.pinsCount
+        # pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
+        # assert pinsAreClose
+        #
+        # for currentPin, prevPin in zip(self.__pins, prevPins):
+        #     if prevPin.withSolder:
+        #         currentPin.withSolder = prevPin.withSolder
+        #     else:
+        #         currentPin.withSolder = currentPin.colorStat.areFromDifferentDistributions(prevPin.colorStat)
+        #
+        # self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recompute count of pins with solder
+        pass
+
+# @staticmethod
+# def __boxOuterMeanColor(frame, innerBox):
+#     innerX0, innerY0, innerX1, innerY1 = innerBox.box
+#     # protect against boxes near frame edges
+#     assert innerX0 > 0 and innerY0 > 0 and innerX1 < frame.shape[1] - 1 and innerY1 < frame.shape[0] - 1
+#     dW, dH = innerBox.size / 4
+#
+#     patch = frame[int(innerY0 - dH): int(innerY1 + dH + 1), int(innerX0 - dW): int(innerX1 + dW + 1)]
+#     patch = patch.astype(np.float32)
+#
+#     # fill innerBox in path with NaN
+#     innerW, innerH = innerBox.size
+#     patch[int(dH):int(dH + innerH), int(dW):int(dW + innerW)] = np.NaN
+#     mean = np.nanmean(patch, (0, 1))
+#     return mean
