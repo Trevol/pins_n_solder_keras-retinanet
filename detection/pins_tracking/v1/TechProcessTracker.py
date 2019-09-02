@@ -8,10 +8,9 @@ from detection.pins_tracking.v1.TechProcessLogger import TechProcessLogger
 
 
 class TechProcessTracker:
-    def __init__(self, sldConfig):
+    def __init__(self):
         self.__stableScenes = []
         self.__currentScene = None
-        self.sldConfig = sldConfig
 
     def dumpPinStats(self, pt):
         if not any(self.__stableScenes):
@@ -101,13 +100,13 @@ class TechProcessTracker:
         assert self.__currentScene not in self.__stableScenes
 
         prevScene = utils.lastOrDefault(self.__stableScenes)
-        sceneChanges = self.__registerSceneChanges(self.__currentScene, prevScene, self.sldConfig)
+        sceneChanges = self.__registerSceneChanges(self.__currentScene, prevScene)
         TechProcessLogger.logChanges(self.__currentScene, sceneChanges)
         self.__stableScenes.append(self.__currentScene)
         self.__currentScene.stabilizedAtPos = self.__currentScene.lastFrame.pos
 
     @staticmethod
-    def __registerSceneChanges(currentScene: StableScene, prevScene: StableScene, sldConfig):
+    def __registerSceneChanges(currentScene: StableScene, prevScene: StableScene):
         assert currentScene.stabilized
         if prevScene is None:
             return SceneChanges(currentScene.pinsCount, 0)
@@ -116,7 +115,7 @@ class TechProcessTracker:
         assert currentScene.pinsCount >= prevScene.pinsCount
 
         if currentScene.pinsCount == prevScene.pinsCount:
-            currentScene.detectSolder(prevScene, sldConfig)
+            currentScene.detectSolder(prevScene)
         pinsAdded = currentScene.pinsCount - prevScene.pinsCount
         solderAdded = currentScene.pinsWithSolderCount - prevScene.pinsWithSolderCount
         return SceneChanges(pinsAdded, solderAdded)

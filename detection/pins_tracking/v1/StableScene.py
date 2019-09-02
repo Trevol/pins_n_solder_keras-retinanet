@@ -62,15 +62,15 @@ class StableScene:
     def stabilized(self):
         return self.__frames.stabilized()
 
-    def detectSolder(self, prevScene, sldConfig):
+    def detectSolder(self, prevScene):
+        # TODO: implement it using pins masks and analyzing differences between stable scenes
+        # return
         assert self.pinsCount == prevScene.pinsCount
         pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
         assert pinsAreClose
         for currentPin, prevPin in zip(self.__pins, prevPins):
             if prevPin.withSolder:
                 currentPin.withSolder = prevPin.withSolder
-            elif sldConfig and sldConfig.managePinSolder(currentPin, self.lastFrame.pos):
-                pass
             else:
                 currentPin.withSolder = currentPin.colorStat.areFromDifferentDistributions(prevPin.colorStat)
         #######################
@@ -89,49 +89,33 @@ class StableScene:
             self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame), frame)
         return closeToScene
 
-    ####################################
-    # TODO: refactor (remove code duplication) __checkPinsCloseToScene and __checkBoxesCloseToScene
     def __checkPinsCloseToScene(self, pins):
-        assert self.__frames.notEmpty()
-        if len(pins) != self.pinsCount:
-            return False, None
+        boxes = [p.box for p in pins]
+        return self.__checkBoxesCloseToScene(boxes, pins)
 
-        # TODO: store boxes/pins in (x, y) order to avoid constant sorting
-        reorderedPins = []
-        for currentPin in self.__pins:
-            pinForCurrentPin = None
-            maxDist = currentPin.box.cityblockDiagonal / 10  # TODO: make adaptive
-            for pin in pins:
-                if pin.box.withinDistance(currentPin.box, maxDist):
-                    pinForCurrentPin = pin
-                    reorderedPins.append(pinForCurrentPin)
-                    break
-
-            if not pinForCurrentPin:
-                return False, None
-        return True, reorderedPins
-
-    def __checkBoxesCloseToScene(self, boxes):
+    def __checkBoxesCloseToScene(self, boxes, boxedObjects=None):
         assert self.__frames.notEmpty()
         if len(boxes) != self.pinsCount:
             return False, None
 
-        # TODO: store boxes/pins in (x, y) order to avoid constant sorting
-        pinOrderedBoxes = []
-        for pin in self.__pins:
-            boxForPin = None
-            maxDist = pin.box.cityblockDiagonal / 10  # TODO: make adaptive
-            for box in boxes:
-                if box.withinDistance(pin.box, maxDist):
-                    boxForPin = box
-                    pinOrderedBoxes.append(boxForPin)
+        # TODO: store boxes/pins in (x, y)-order to avoid constant sorting
+        if boxedObjects is None:
+            boxedObjects = boxes
+
+        pinOrderedBoxedObjects = []
+        for currentPin in self.__pins:
+            boxedObjectsCloseToCurrentPin = None
+            maxDist = currentPin.box.cityblockDiagonal / 10  # TODO: make adaptive
+            for box, boxedObject in zip(boxes, boxedObjects):
+                if box.withinDistance(currentPin.box, maxDist):
+                    boxedObjectsCloseToCurrentPin = boxedObject
+                    pinOrderedBoxedObjects.append(boxedObjectsCloseToCurrentPin)
                     break
 
-            if not boxForPin:
+            if not boxedObjectsCloseToCurrentPin:
                 return False, None
-        return True, pinOrderedBoxes
+        return True, pinOrderedBoxedObjects
 
-    #################################
     def __addToScene(self, frameInfo, frame):
         self.__frames.append(frameInfo)
         self.__updatePins(frame)
@@ -141,6 +125,7 @@ class StableScene:
 
         if len(self.__frames.recent) == 1:
             boxes = self.__frames.first.bboxes
+
             meanColors = (self.__boxOuterMeanColor(frame, b) for b in boxes)
             self.__pins = [Pin(box, meanColor) for box, meanColor in zip(boxes, meanColors)]
             return

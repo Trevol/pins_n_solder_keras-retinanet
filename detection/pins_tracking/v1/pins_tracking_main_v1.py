@@ -12,11 +12,11 @@ from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 
 
 class TechProcessVideoHandler(VideoPlaybackHandlerBase):
-    def __init__(self, frameSize, framesDetections, sldConfig, videoWriter):
+    def __init__(self, frameSize, framesDetections, videoWriter):
         super(TechProcessVideoHandler, self).__init__(frameSize)
         self.videoWriter = videoWriter
         self.framesDetections = framesDetections
-        self.techProcessTracker = TechProcessTracker(sldConfig)
+        self.techProcessTracker = TechProcessTracker()
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
         frameDetections = self.framesDetections.get(framePos, [])
@@ -53,11 +53,11 @@ def main():
     for sourceVideoFile, resultVideo, framesDetections, cfg in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         videoWriter = None  # videoWriter(videoPlayback.cap, resultVideo)
-        handler = TechProcessVideoHandler(videoPlayback.frameSize(), framesDetections, None, videoWriter)
+        handler = TechProcessVideoHandler(videoPlayback.frameSize(), framesDetections, videoWriter)
 
-        # framesRange = (4150, None)
+        framesRange = (4150, None)
         # framesRange = (8100, None)
-        framesRange = None
+        # framesRange = None
         videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
         videoPlayback.release()
         cv2.waitKey()

@@ -1,6 +1,6 @@
 collect_stable_frames:
      - throw away current solder detection
-     -
+     ++ refactor (remove code duplication) __checkPinsCloseToScene and __checkBoxesCloseToScene
      - np.array buffer for stable scene frames (with length=StabilizationLength)
 
 - make frame denoising (gaussian or median blur)
