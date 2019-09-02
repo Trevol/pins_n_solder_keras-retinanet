@@ -1,3 +1,8 @@
+collect_stable_frames:
+     - throw away current solder detection
+     -
+     - np.array buffer for stable scene frames (with length=StabilizationLength)
+
 - make frame denoising (gaussian or median blur)
 - потренировать NN (neural network) на кадрах video_6
 - TODO: calc bounding box for stable Scene -

@@ -4,6 +4,7 @@ import utils
 from detection.pins_tracking.v1.Box import Box
 from detection.pins_tracking.v1.SceneChanges import SceneChanges
 from detection.pins_tracking.v1.StableScene import StableScene
+from detection.pins_tracking.v1.TechProcessLogger import TechProcessLogger
 
 
 class TechProcessTracker:
@@ -100,8 +101,8 @@ class TechProcessTracker:
         assert self.__currentScene not in self.__stableScenes
 
         prevScene = utils.lastOrDefault(self.__stableScenes)
-        changes = self.__registerSceneChanges(self.__currentScene, prevScene, self.sldConfig)
-        self.__logNewStableChanges(self.__currentScene, changes)
+        sceneChanges = self.__registerSceneChanges(self.__currentScene, prevScene, self.sldConfig)
+        TechProcessLogger.logChanges(self.__currentScene, sceneChanges)
         self.__stableScenes.append(self.__currentScene)
         self.__currentScene.stabilizedAtPos = self.__currentScene.lastFrame.pos
 
@@ -119,18 +120,6 @@ class TechProcessTracker:
         pinsAdded = currentScene.pinsCount - prevScene.pinsCount
         solderAdded = currentScene.pinsWithSolderCount - prevScene.pinsWithSolderCount
         return SceneChanges(pinsAdded, solderAdded)
-
-    @staticmethod
-    def __logNewStableChanges(currentScene, changes):
-        assert currentScene.stabilized
-        if changes.pinsAdded == 0 and changes.solderAdded == 0:  # no changes - no log
-            return
-        framePos = currentScene.firstFrame.pos
-        framePosMs = currentScene.firstFrame.posMsec
-        pinsCount = currentScene.pinsCount
-        pinsWithSolderCount = currentScene.pinsWithSolderCount
-        logRecord = f'{framePos},{framePosMs:.0f},{pinsCount},{changes.pinsAdded},{pinsWithSolderCount},{changes.solderAdded}'
-        print(logRecord)
 
     def draw(self, img):
         if self.__currentScene and self.__currentScene.stabilized:
