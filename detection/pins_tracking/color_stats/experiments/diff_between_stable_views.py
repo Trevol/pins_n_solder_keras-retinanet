@@ -6,11 +6,6 @@ from utils.Timer import timeit
 from utils.VideoPlayback import VideoPlayback
 
 
-
-
-
-
-
 def getConsequentFrames():
     frames = 3667, 3716
     # frames = 2436, 2633
