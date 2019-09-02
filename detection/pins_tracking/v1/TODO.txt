@@ -1,10 +1,14 @@
 collect_stable_frames:
      ++ throw away current solder detection (meanColor computation and comparison)
      ++ refactor (remove code duplication) __checkPinsCloseToScene and __checkBoxesCloseToScene
-     - np.array (or deque) buffer for stable scene frames (with length=StabilizationLength)
-        - clear buffer then scene is released (as unstable/temporary)
+     ++ np.array (or deque) buffer for stable scene frames (with length=StabilizationLength)
+        ++ clear buffer then scene is released/thrown-away (as unstable/temporary)
+        - compute average (aggregated) frame at last frame of stable scene
+                - and clear frames queue after aggregation
         - store only workarea of scene!!!
         - how to handle scene with one pin
+
+- no need to store all stable scenes!!!
 
 - make frame denoising (gaussian or median blur)
 - потренировать NN (neural network) на кадрах video_6

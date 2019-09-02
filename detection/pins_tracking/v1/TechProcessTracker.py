@@ -80,8 +80,8 @@ class TechProcessTracker:
         lastStableScene = self.lastStableScene()
         if lastStableScene:
             bboxes = lastStableScene.inWorkArea(bboxes)
-            if len(bboxes) < lastStableScene.pinsCount:
-                # CHECK - currently stabilized scene should be superset of lastStableScene
+            if len(bboxes) < lastStableScene.pinsCount:  # CHECK - currently stabilized scene should be superset of lastStableScene
+                self.__currentScene.release()
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
                 return
 
@@ -93,6 +93,7 @@ class TechProcessTracker:
             self.__registerCurrentSceneAsStable()
 
         if not closeToCurrentScene:
+            self.__currentScene.release()
             self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
 
     def __registerCurrentSceneAsStable(self):

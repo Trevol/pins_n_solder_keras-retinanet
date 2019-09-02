@@ -11,9 +11,11 @@ from detection.pins_tracking.v1.FrameInfo import FrameInfo
 from detection.pins_tracking.v1.PinsWorkArea import PinsWorkArea
 from utils.Geometry2D import Geometry2D
 
+framesCounter = 0
+
 
 class StableScene:
-    class Frames:
+    class FrameInfosQueue:
         def __init__(self):
             self.first = None
             self.recent = deque(maxlen=StabilizationLength)
@@ -32,11 +34,17 @@ class StableScene:
     ##############################################
 
     def __init__(self, bboxes, framePos, framePosMsec, frame):
-        self.__frames = self.Frames()
+        self.__frameInfos = self.FrameInfosQueue()
+        self.__frames = deque(maxlen=StabilizationLength)
+        # self.__frames.append(frame)
         self.__pins = []
         self.__pinsWorkArea = None
         self.__pinsWithSolderCount = 0
         self.addIfClose(bboxes, framePos, framePosMsec, frame)
+
+    def release(self):
+        self.__frames.clear()
+        self.__frames = None
 
     @property
     def pins(self):
@@ -52,21 +60,21 @@ class StableScene:
 
     @property
     def firstFrame(self):
-        return self.__frames.first
+        return self.__frameInfos.first
 
     @property
     def lastFrame(self):
-        return self.__frames.recent[-1]
+        return self.__frameInfos.recent[-1]
 
     @property
     def stabilized(self):
-        return self.__frames.stabilized()
+        return self.__frameInfos.stabilized()
 
     def addIfClose(self, bboxes, framePos, framePosMsec, frame):
         if not any(bboxes):
             return False  # skip empty detections
 
-        if not any(self.__frames.recent):
+        if not any(self.__frameInfos.recent):
             self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame), frame)
             return True  # first frame starts scene - so always belong to scene
 
@@ -80,7 +88,7 @@ class StableScene:
         return self.__checkBoxesCloseToScene(boxes, pins)
 
     def __checkBoxesCloseToScene(self, boxes, boxedObjects=None):
-        assert self.__frames.notEmpty()
+        assert self.__frameInfos.notEmpty()
         if len(boxes) != self.pinsCount:
             return False, None
 
@@ -103,20 +111,21 @@ class StableScene:
         return True, pinOrderedBoxedObjects
 
     def __addToScene(self, frameInfo, frame):
-        self.__frames.append(frameInfo)
+        self.__frameInfos.append(frameInfo)
+        # self.__frames.append(frame)
         self.__updatePins(frame)
 
     def __updatePins(self, frame):
-        assert self.__frames.notEmpty()
+        assert self.__frameInfos.notEmpty()
 
-        if len(self.__frames.recent) == 1:
-            boxes = self.__frames.first.bboxes
+        if len(self.__frameInfos.recent) == 1:
+            boxes = self.__frameInfos.first.bboxes
             self.__pins = [Pin(box) for box in boxes]
             return
 
         boxes = []
         for pinIndex in range(self.pinsCount):
-            pinBoxesAcrossFrames = [frameInfo.bboxes[pinIndex] for frameInfo in self.__frames.recent]
+            pinBoxesAcrossFrames = [frameInfo.bboxes[pinIndex] for frameInfo in self.__frameInfos.recent]
             pinBox = Box.meanBox(pinBoxesAcrossFrames)
             boxes.append(boxes)
             self.__pins[pinIndex].update(pinBox)
