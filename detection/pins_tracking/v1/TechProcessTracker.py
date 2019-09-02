@@ -55,9 +55,6 @@ class TechProcessTracker:
             for currentColor, prevColor in zip(pinAtCurrent.meanColors, pinAtPrev.meanColors):
                 print(' ', np.round(currentColor, 1), np.round(prevColor, 1))
 
-    def lastStableScene(self):
-        return utils.lastOrDefault(self.__stableScenes, None)
-
     def track(self, frameDetections, framePos, framePosMsec, frame):
         boxes = (Box(d[0]) for d in self.__skipWeakDetections(frameDetections))
         bboxes = self.__skipEdgeBoxes(boxes, frame.shape)
@@ -77,10 +74,13 @@ class TechProcessTracker:
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
             return
 
-        lastStableScene = self.lastStableScene()
+        raise NotImplementedError('call scene.commitScene')
+
+        lastStableScene = utils.lastOrDefault(self.__stableScenes, None)
         if lastStableScene:
             bboxes = lastStableScene.inWorkArea(bboxes)
-            if len(bboxes) < lastStableScene.pinsCount:  # CHECK - currently stabilized scene should be superset of lastStableScene
+            if len(bboxes) < lastStableScene.pinsCount:
+                # CHECK - currently stabilized scene should be superset of lastStableScene
                 self.__currentScene.release()
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
                 return

@@ -85,9 +85,10 @@ class StableScene:
         return closeToScene
 
     def commitScene(self):
-        assert self.stabilized
+        assert self.stabilized and self.__frames is not None
         self.__aggregatedFrame = np.mean(self.__frames, axis=0, dtype=np.uint8)
         self.__frames.clear()
+        self.__frames = None
 
     def __checkPinsCloseToScene(self, pins):
         boxes = [p.box for p in pins]
