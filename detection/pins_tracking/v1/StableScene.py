@@ -36,7 +36,8 @@ class StableScene:
     def __init__(self, bboxes, framePos, framePosMsec, frame):
         self.__frameInfos = self.FrameInfosQueue()
         self.__frames = deque(maxlen=StabilizationLength)
-        # self.__frames.append(frame)
+        self.__frames.append(frame)
+        self.__aggregatedFrame = None
         self.__pins = []
         self.__pinsWorkArea = None
         self.__pinsWithSolderCount = 0
@@ -83,6 +84,11 @@ class StableScene:
             self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame), frame)
         return closeToScene
 
+    def commitScene(self):
+        assert self.stabilized
+        self.__aggregatedFrame = np.mean(self.__frames, axis=0, dtype=np.uint8)
+        self.__frames.clear()
+
     def __checkPinsCloseToScene(self, pins):
         boxes = [p.box for p in pins]
         return self.__checkBoxesCloseToScene(boxes, pins)
@@ -112,7 +118,7 @@ class StableScene:
 
     def __addToScene(self, frameInfo, frame):
         self.__frameInfos.append(frameInfo)
-        # self.__frames.append(frame)
+        self.__frames.append(frame)
         self.__updatePins(frame)
 
     def __updatePins(self, frame):
