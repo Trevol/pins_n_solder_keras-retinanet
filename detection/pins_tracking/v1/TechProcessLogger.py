@@ -2,6 +2,7 @@ class TechProcessLogger:
     @staticmethod
     def logChanges(currentScene, sceneChanges):
         assert currentScene.stabilized
+        return
         if sceneChanges.pinsAdded == 0 and sceneChanges.solderAdded == 0:  # no changes - no log
             return
         framePos = currentScene.firstFrame.pos
