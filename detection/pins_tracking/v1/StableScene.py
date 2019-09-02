@@ -64,17 +64,18 @@ class StableScene:
 
     def detectSolder(self, prevScene):
         # TODO: implement it using pins masks and analyzing differences between stable scenes
-        # return
-        assert self.pinsCount == prevScene.pinsCount
-        pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
-        assert pinsAreClose
-        for currentPin, prevPin in zip(self.__pins, prevPins):
-            if prevPin.withSolder:
-                currentPin.withSolder = prevPin.withSolder
-            else:
-                currentPin.withSolder = currentPin.colorStat.areFromDifferentDistributions(prevPin.colorStat)
-        #######################
-        self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recompute count of pins with solder
+        # assert self.pinsCount == prevScene.pinsCount
+        # pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
+        # assert pinsAreClose
+        #
+        # for currentPin, prevPin in zip(self.__pins, prevPins):
+        #     if prevPin.withSolder:
+        #         currentPin.withSolder = prevPin.withSolder
+        #     else:
+        #         currentPin.withSolder = currentPin.colorStat.areFromDifferentDistributions(prevPin.colorStat)
+        #
+        # self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recompute count of pins with solder
+        pass
 
     def addIfClose(self, bboxes, framePos, framePosMsec, frame):
         if not any(bboxes):
@@ -125,9 +126,7 @@ class StableScene:
 
         if len(self.__frames.recent) == 1:
             boxes = self.__frames.first.bboxes
-
-            meanColors = (self.__boxOuterMeanColor(frame, b) for b in boxes)
-            self.__pins = [Pin(box, meanColor) for box, meanColor in zip(boxes, meanColors)]
+            self.__pins = [Pin(box) for box in boxes]
             return
 
         boxes = []
@@ -135,8 +134,7 @@ class StableScene:
             pinBoxesAcrossFrames = [frameInfo.bboxes[pinIndex] for frameInfo in self.__frames.recent]
             pinBox = Box.meanBox(pinBoxesAcrossFrames)
             boxes.append(boxes)
-            meanColor = self.__boxOuterMeanColor(frame, pinBox)
-            self.__pins[pinIndex].update(pinBox, meanColor)
+            self.__pins[pinIndex].update(pinBox)
         if self.stabilized:
             self.__pinsWorkArea = PinsWorkArea(self.__pins)
 
