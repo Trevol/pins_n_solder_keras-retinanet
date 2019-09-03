@@ -3,8 +3,8 @@ collect_stable_frames:
      ++ refactor (remove code duplication) __checkPinsCloseToScene and __checkBoxesCloseToScene
      ++ np.array (or deque) buffer for stable scene frames (with length=StabilizationLength)
         ++ clear buffer then scene is released/thrown-away (as unstable/temporary)
-        - compute average (aggregated) frame at last frame of stable scene
-                - and clear frames queue after aggregation
+        ++ compute average (aggregated) frame at last frame of stable scene
+                ++ and clear frames queue after aggregation
         - store only workarea of scene!!!
         - how to handle scene with one pin
 
