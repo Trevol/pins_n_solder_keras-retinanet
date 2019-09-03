@@ -13,8 +13,6 @@ def manualMeanFrame(framesBuffer):
     pass
 
 
-
-
 def cvMeanFrame(framesBuffer):
     framesBuffer = list(framesBuffer)
 
@@ -24,9 +22,9 @@ def cvMeanFrame(framesBuffer):
     mean = np.divide(accum, len(framesBuffer), out=accum)
     return mean
 
+
 def cvMeanFrame2(framesBuffer):
     framesBuffer = list(framesBuffer)
-
 
     accum = np.zeros_like(framesBuffer[0], dtype=np.float32)
 
@@ -39,43 +37,33 @@ def cvMeanFrame2(framesBuffer):
 def npMeanFrame(framesBuffer):
     np.mean(framesBuffer, axis=0, dtype=np.float32)
 
+def npMeadianFrame(framesBuffer):
+    np.median(framesBuffer, axis=0)
+
 
 def main():
     maxlen = 20
     framesBuffer = deque((makeFrame() for _ in range(maxlen)), maxlen)
 
-    # with timeit('empty func'):
-    #     for _ in range(100):
-    #         manualMeanFrame(framesBuffer)
-    # with timeit('numpy.mean'):
-    #     for _ in range(1):
-    #         m = npMeanFrame(framesBuffer)
-    # with timeit('cvMeanFrame'):
-    #     for _ in range(1):
-    #         m = cvMeanFrame(framesBuffer)
-    # with timeit('cvMeanFrame2'):
-    #     for _ in range(1):
-    #         m = cvMeanFrame2(framesBuffer)
-
-
-    with timeit():
+    with timeit('empty func'):
         for _ in range(100):
-            a = np.zeros([1080, 1920, 3], np.float32)
+            manualMeanFrame(framesBuffer)
 
-    with timeit():
-        for _ in range(100):
-            a.fill(0)
+    with timeit('numpy.mean'):
+        for _ in range(1):
+            m = npMeanFrame(framesBuffer)
 
-    with timeit():
-        for _ in range(100):
-            a[:] = 0
+    with timeit('npMeadianFrame'):
+        for _ in range(1):
+            m = npMeadianFrame(framesBuffer)
 
-    with timeit():
-        for _ in range(100):
-            a[:, :, :] = 0
-    with timeit():
-        for _ in range(100):
-            a[..., :] = 0
+    with timeit('cvMeanFrame'):
+        for _ in range(1):
+            m = cvMeanFrame(framesBuffer)
+
+    with timeit('cvMeanFrame2'):
+        for _ in range(1):
+            m = cvMeanFrame2(framesBuffer)
 
 
 main()
