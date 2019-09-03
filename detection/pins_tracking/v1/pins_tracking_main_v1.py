@@ -24,20 +24,22 @@ class TechProcessVideoHandler(VideoPlaybackHandlerBase):
         self.videoWriter = videoWriter
         self.framesDetections = framesDetections
         self.techProcessTracker = TechProcessTracker()
+        self.frameDetections = None
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
-        frameDetections = self.framesDetections.get(framePos, [])
-        self.techProcessTracker.track(frameDetections, framePos, framePosMsec, frame)
-
-        self.techProcessTracker.draw(frame)
-
-        utils.visualize.drawDetections(frame, frameDetections)
-        utils.visualize.putFramePos(frame, framePos, framePosMsec)
-        self.techProcessTracker.drawStats(frame)
-
-        self.videoWriter and self.videoWriter.write(frame)
-
+        self.frameDetections = self.framesDetections.get(framePos, [])
+        self.techProcessTracker.track(self.frameDetections, framePos, framePosMsec, frame)
         super(TechProcessVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
+
+    def processDisplayFrame(self, displayFrame0):
+        self.techProcessTracker.draw(displayFrame0)
+
+        utils.visualize.drawDetections(displayFrame0, self.frameDetections)
+        utils.visualize.putFramePos(displayFrame0, self._framePos, self._framePosMsec)
+        self.techProcessTracker.drawStats(displayFrame0)
+
+        self.videoWriter and self.videoWriter.write(displayFrame0)
+        return displayFrame0
 
     def release(self):
         super(TechProcessVideoHandler, self).release()

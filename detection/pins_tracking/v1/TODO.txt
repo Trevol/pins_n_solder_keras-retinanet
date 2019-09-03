@@ -9,6 +9,14 @@ collect_stable_frames:
         - how to handle scene with one pin
 
 - no need to store all stable scenes!!!
+- GrabCut segmentation
+- histogramm backprojection
+    - cv2.meanShift()
+    - cv2.CamShift()
+    - cv2.calcBackProject()
+
+- ПОПРОБОВАТЬ:
+    - расчет оптического потока между стабильными сценами (для определия перемещений объектов)
 
 - make frame denoising (gaussian or median blur)
 - потренировать NN (neural network) на кадрах video_6

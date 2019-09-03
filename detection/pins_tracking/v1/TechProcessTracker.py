@@ -5,6 +5,7 @@ from detection.pins_tracking.v1.Box import Box
 from detection.pins_tracking.v1.SceneChanges import SceneChanges
 from detection.pins_tracking.v1.StableScene import StableScene
 from detection.pins_tracking.v1.TechProcessLogger import TechProcessLogger
+from utils.Timer import timeit
 
 
 class TechProcessTracker:
@@ -68,20 +69,21 @@ class TechProcessTracker:
     def __skipEdgeBoxes(boxes, frameShape):
         return [b for b in boxes if b.farFromFrameEdges(frameShape)]
 
+    #####################################################################
     def __trackBoxes(self, bboxes, framePos, framePosMsec, frame):
         if not self.__currentScene:
             if any(bboxes):
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
             return
 
-        raise NotImplementedError('call scene.commitScene')
+        # raise NotImplementedError('call scene.commitScene')
 
         lastStableScene = utils.lastOrDefault(self.__stableScenes, None)
-        if lastStableScene:
+        if lastStableScene:  # stable scene define workarea (cluster of pins)
             bboxes = lastStableScene.inWorkArea(bboxes)
             if len(bboxes) < lastStableScene.pinsCount:
                 # CHECK - currently stabilized scene should be superset of lastStableScene
-                self.__currentScene.release()
+                self.__currentScene.finalize()
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
                 return
 
@@ -93,9 +95,10 @@ class TechProcessTracker:
             self.__registerCurrentSceneAsStable()
 
         if not closeToCurrentScene:
-            self.__currentScene.release()
+            self.__currentScene.finalize()
             self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
 
+    ##############################################################################
     def __registerCurrentSceneAsStable(self):
         assert self.__currentScene.stabilized
         assert self.__currentScene not in self.__stableScenes
@@ -104,7 +107,6 @@ class TechProcessTracker:
         sceneChanges = self.__registerSceneChanges(self.__currentScene, prevScene)
         TechProcessLogger.logChanges(self.__currentScene, sceneChanges)
         self.__stableScenes.append(self.__currentScene)
-        self.__currentScene.stabilizedAtPos = self.__currentScene.lastFrame.pos
 
     @staticmethod
     def __registerSceneChanges(currentScene: StableScene, prevScene: StableScene):

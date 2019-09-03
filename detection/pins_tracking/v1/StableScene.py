@@ -35,17 +35,15 @@ class StableScene:
 
     def __init__(self, bboxes, framePos, framePosMsec, frame):
         self.__frameInfos = self.FrameInfosQueue()
-        self.__frames = deque(maxlen=StabilizationLength)
-        self.__frames.append(frame)
-        self.__aggregatedFrame = None
+        self.__framesBuffer = deque(maxlen=StabilizationLength)
+        self.__framesBuffer.append(frame)
+        self.__aggregatedFrame_F32 = None
+        self.__aggregatedAtFramePos = None
         self.__pins = []
         self.__pinsWorkArea = None
         self.__pinsWithSolderCount = 0
+        self.stabilizedAtPos = None
         self.addIfClose(bboxes, framePos, framePosMsec, frame)
-
-    def release(self):
-        self.__frames.clear()
-        self.__frames = None
 
     @property
     def pins(self):
@@ -60,11 +58,11 @@ class StableScene:
         return self.__pinsWithSolderCount  # len([p for p in self.__pins if p.withSolder])
 
     @property
-    def firstFrame(self):
+    def firstFrameInfo(self):
         return self.__frameInfos.first
 
     @property
-    def lastFrame(self):
+    def lastFrameInfo(self):
         return self.__frameInfos.recent[-1]
 
     @property
@@ -84,11 +82,29 @@ class StableScene:
             self.__addToScene(FrameInfo(bboxes, framePos, framePosMsec, frame), frame)
         return closeToScene
 
-    def commitScene(self):
-        assert self.stabilized and self.__frames is not None
-        self.__aggregatedFrame = np.mean(self.__frames, axis=0, dtype=np.uint8)
-        self.__frames.clear()
-        self.__frames = None
+    def finalize(self):
+        if self.stabilized:
+            self.__aggregateFrames()
+        self.__framesBuffer.clear()
+        self.__framesBuffer = None
+
+    def __aggregateFrames(self):
+        assert self.stabilized
+        currentFramePos = self.lastFrameInfo.pos
+        if self.__aggregatedAtFramePos == currentFramePos:
+            return
+        bufferLen = len(self.__framesBuffer)
+        framesBuffer = list(self.__framesBuffer)[bufferLen // 2:]
+        self.__aggregatedFrame_F32 = self.cvMeanFrame(framesBuffer)
+        self.__aggregatedAtFramePos = currentFramePos
+
+    @staticmethod
+    def cvMeanFrame(framesBuffer):
+        accum = np.float32(framesBuffer[0])
+        for frame in framesBuffer[1:]:
+            cv2.accumulate(frame, accum)
+        mean = np.divide(accum, len(framesBuffer), out=accum)
+        return mean
 
     def __checkPinsCloseToScene(self, pins):
         boxes = [p.box for p in pins]
@@ -119,7 +135,10 @@ class StableScene:
 
     def __addToScene(self, frameInfo, frame):
         self.__frameInfos.append(frameInfo)
-        self.__frames.append(frame)
+        self.__framesBuffer.append(frame)
+        if self.stabilized and self.stabilizedAtPos is None:
+            self.__aggregateFrames()
+            self.stabilizedAtPos = frameInfo.pos
         self.__updatePins(frame)
 
     def __updatePins(self, frame):

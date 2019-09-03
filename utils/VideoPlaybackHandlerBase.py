@@ -12,6 +12,7 @@ class VideoPlaybackHandlerBase:
         self.__displayFrame = None
         self._frame = None
         self._framePos = None
+        self._framePosMsec = None
         cv2.namedWindow(self.winname)
         cv2.setMouseCallback(self.winname, self.onMouse)
         self._frameScaleFactor = 0.7 if frameSize[0] >= 1900 else 1
@@ -38,6 +39,7 @@ class VideoPlaybackHandlerBase:
     def frameReady(self, frame, framePos, framePosMsec, playback):
         self._frame = frame
         self._framePos = framePos
+        self._framePosMsec = framePosMsec
         self.__displayFrame0 = self.createDisplayFrame()
         self.refreshDisplayFrame()
 
