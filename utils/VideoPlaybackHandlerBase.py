@@ -33,7 +33,7 @@ class VideoPlaybackHandlerBase:
 
     def syncPlaybackState(self, frameDelay, autoPlay, framePos, framePosMsec, playback):
         autoplayLabel = 'ON' if autoPlay else 'OFF'
-        stateTitle = f'{self.winname} (FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
+        stateTitle = f'Video (Pos: {framePos}/{framePosMsec:.1f}ms, FrameDelay: {frameDelay}, Autoplay: {autoplayLabel})'
         cv2.setWindowTitle(self.winname, stateTitle)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):

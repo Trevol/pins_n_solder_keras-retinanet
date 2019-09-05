@@ -76,13 +76,13 @@ def main():
         videoWriter = None  # videoWriter(videoPlayback.cap, resultVideo)
         handler = TechProcessVideoHandler(videoPlayback.frameSize(), framesDetections, videoWriter)
 
-        videoPlayback.play(range=getFramesRange(), onFrameReady=handler.frameReady,
-                           onStateChange=handler.syncPlaybackState)
+        videoPlayback.playWithHandler(handler, range=getFramesRange())
 
         printMemoryUsage()
 
-        videoPlayback.release()
         cv2.waitKey()
+
+        videoPlayback.release()
         handler.release()
         videoWriter and videoWriter.release()
 

@@ -2,6 +2,7 @@ import cv2
 import math
 from utils import leftClip
 from utils.KbdKeys import KbdKeys
+from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 from utils.visualize import putFramePos
 
 
@@ -143,6 +144,9 @@ class VideoPlayback:
                     break
                 if stop:
                     return
+
+    def playWithHandler(self, handler: VideoPlaybackHandlerBase, range=None):
+        self.play(range, handler.frameReady, handler.syncPlaybackState)
 
 
 def readFrame(videoFile, framePos):

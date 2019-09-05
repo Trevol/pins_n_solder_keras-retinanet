@@ -99,7 +99,7 @@ def main():
 
         # framesRange = (4150, None)
         framesRange = None
-        videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
+        videoPlayback.playWithHandler(handler, framesRange)
         videoPlayback.release()
         cv2.waitKey()
         handler.release()

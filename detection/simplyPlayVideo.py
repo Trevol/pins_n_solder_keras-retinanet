@@ -24,7 +24,7 @@ def playVideo():
 
         # framesRange = (4150, None)
         framesRange = None
-        videoPlayback.play(range=framesRange, onFrameReady=handler.frameReady, onStateChange=handler.syncPlaybackState)
+        videoPlayback.playWithHandler(handler, framesRange)
         cv2.waitKey()
         videoPlayback.release()
         handler.release()
