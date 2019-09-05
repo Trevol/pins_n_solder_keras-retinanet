@@ -47,11 +47,13 @@ class VideoPlaybackHandlerBase:
         cv2.imshow(self.winname, self.__displayFrame)
 
     def refreshDisplayFrame(self):
-        self.__displayFrame = self.processDisplayFrame(self.__displayFrame0)
+        displayFrame = self.processDisplayFrame(self.__displayFrame0)
+        self.__displayFrame = resize(displayFrame, self._frameScaleFactor)
         self.__showFrame()
 
     def createDisplayFrame(self):
-        return resize(self._frame, self._frameScaleFactor)
+        # separate original frame from drawings
+        return self._frame.copy()
 
     def processDisplayFrame(self, displayFrame0):
         # override this method to draw in display frame

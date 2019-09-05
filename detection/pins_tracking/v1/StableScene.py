@@ -3,6 +3,8 @@ from collections import deque
 import numpy as np
 import cv2
 from more_itertools import ilen
+
+from detection.pins_tracking.v1 import DEBUG
 from detection.pins_tracking.v1.Box import Box
 from detection.pins_tracking.v1.Colors import Colors
 from detection.pins_tracking.v1.Constants import StabilizationLength
@@ -33,11 +35,12 @@ class StableScene:
 
     ##############################################
 
-    def __init__(self, bboxes, framePos, framePosMsec, frame):
+    def __init__(self, bboxes, framePos, framePosMsec, frame, sceneId):
+        self.__sceneId = sceneId
         self.__frameInfos = self.FrameInfosQueue()
         self.__framesBuffer = deque(maxlen=StabilizationLength)
         self.__framesBuffer.append(frame)
-        self.__aggregatedFrame_F32 = None
+        self.aggregatedFrame_F32 = None
         self.__aggregatedAtFramePos = None
         self.__pins = []
         self.__pinsWorkArea = None
@@ -94,12 +97,14 @@ class StableScene:
         if self.__aggregatedAtFramePos == currentFramePos:
             return
         bufferLen = len(self.__framesBuffer)
-        framesBuffer = list(self.__framesBuffer)[bufferLen // 2:]
-        self.__aggregatedFrame_F32 = self.cvMeanFrame(framesBuffer)
+        # извлекаем поливину буфера из его середины
+        framesBuffer = list(self.__framesBuffer)[bufferLen // 4:3 * (bufferLen // 4)]
+        self.aggregatedFrame_F32 = self.__meanFrame(framesBuffer)
         self.__aggregatedAtFramePos = currentFramePos
+        DEBUG.imshow(f'aggregatedFrame {self.__sceneId}', self.aggregatedFrame_F32.astype(np.uint8))
 
     @staticmethod
-    def cvMeanFrame(framesBuffer):
+    def __meanFrame(framesBuffer):
         accum = np.float32(framesBuffer[0])
         for frame in framesBuffer[1:]:
             cv2.accumulate(frame, accum)

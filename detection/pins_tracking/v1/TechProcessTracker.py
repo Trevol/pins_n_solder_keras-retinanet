@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import utils
+from detection.pins_tracking.v1 import DEBUG
 from detection.pins_tracking.v1.Box import Box
 from detection.pins_tracking.v1.SceneChanges import SceneChanges
 from detection.pins_tracking.v1.StableScene import StableScene
@@ -12,6 +13,11 @@ class TechProcessTracker:
     def __init__(self):
         self.__stableScenes = []
         self.__currentScene = None
+        self.sceneId = -1
+
+    def nextSceneId(self):
+        self.sceneId += 1
+        return self.sceneId
 
     def dumpPinStats(self, pt):
         if not any(self.__stableScenes):
@@ -73,10 +79,11 @@ class TechProcessTracker:
     def __trackBoxes(self, bboxes, framePos, framePosMsec, frame):
         if not self.__currentScene:
             if any(bboxes):
-                self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
+                self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame, self.nextSceneId())
+            else:
+                # TODO:  collect background without pins and arms
+                pass
             return
-
-        # raise NotImplementedError('call scene.commitScene')
 
         lastStableScene = utils.lastOrDefault(self.__stableScenes, None)
         if lastStableScene:  # stable scene define workarea (cluster of pins)
@@ -84,7 +91,7 @@ class TechProcessTracker:
             if len(bboxes) < lastStableScene.pinsCount:
                 # CHECK - currently stabilized scene should be superset of lastStableScene
                 self.__currentScene.finalize()
-                self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
+                self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame, self.nextSceneId())
                 return
 
         currentSceneWasUnstable = not self.__currentScene.stabilized
@@ -96,17 +103,32 @@ class TechProcessTracker:
 
         if not closeToCurrentScene:
             self.__currentScene.finalize()
-            self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame)
+            self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame, self.nextSceneId())
 
     ##############################################################################
     def __registerCurrentSceneAsStable(self):
         assert self.__currentScene.stabilized
         assert self.__currentScene not in self.__stableScenes
 
+        currentScene = self.__currentScene
         prevScene = utils.lastOrDefault(self.__stableScenes)
-        sceneChanges = self.__registerSceneChanges(self.__currentScene, prevScene)
-        TechProcessLogger.logChanges(self.__currentScene, sceneChanges)
-        self.__stableScenes.append(self.__currentScene)
+        sceneChanges = self.__registerSceneChanges(currentScene, prevScene)
+        TechProcessLogger.logChanges(currentScene, sceneChanges)
+        self.__stableScenes.append(currentScene)
+
+        if prevScene:
+            self.DEBUG_show_diff_map(prevScene.aggregatedFrame_F32, currentScene.aggregatedFrame_F32)
+        else:
+            # TODO: show diff with background
+            pass
+
+    @staticmethod
+    def DEBUG_show_diff_map(prevFrame_F32, currentFrame_F32):
+        prev = cv2.cvtColor(prevFrame_F32, cv2.COLOR_BGR2GRAY)
+        current = cv2.cvtColor(currentFrame_F32, cv2.COLOR_BGR2GRAY)
+        diff = cv2.subtract(np.uint8(current), np.uint8(prev))
+        DEBUG.imshow('scenes diff', np.uint8(diff))
+
 
     @staticmethod
     def __registerSceneChanges(currentScene: StableScene, prevScene: StableScene):

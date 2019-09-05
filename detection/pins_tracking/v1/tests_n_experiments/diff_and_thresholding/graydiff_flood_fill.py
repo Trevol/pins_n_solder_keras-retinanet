@@ -38,16 +38,15 @@ def refine(filled):
 def main():
     baseThreshold = 10
 
-    with timeit(autoreport=True):
-        for _ in range(100):
-            grayDiff = getGrayDiff(baseThreshold)
-            filled = floodFill(grayDiff.copy(), baseThreshold)
-            refined = refine(filled)
 
-    # cv2.imshow('grayDiff', grayDiff)
-    # cv2.imshow('filled', filled)
-    # cv2.imshow('refined', refined)
-    # cv2.waitKeyEx()
+    grayDiff = getGrayDiff(baseThreshold)
+    filled = floodFill(grayDiff.copy(), baseThreshold)
+    refined = refine(filled)
+
+    cv2.imshow('grayDiff', grayDiff)
+    cv2.imshow('filled', filled)
+    cv2.imshow('refined', refined)
+    cv2.waitKeyEx()
 
 
 main()
