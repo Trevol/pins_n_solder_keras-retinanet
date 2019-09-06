@@ -18,7 +18,7 @@ class VideoHandler(VideoPlaybackHandlerBase):
         self.bgSubtractor: cv2.BackgroundSubtractor = self.createBackgroudSubtractor()
 
     def createBackgroudSubtractor(self):
-        return cv2.createBackgroundSubtractorKNN(history=250, detectShadows=False)
+        return cv2.createBackgroundSubtractorKNN(history=500, detectShadows=False)
         # return cv2.bgsegm.createBackgroundSubtractorGSOC()
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
@@ -42,11 +42,11 @@ def main():
     for sourceVideoFile in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         handler = VideoHandler(videoPlayback.frameSize())
-        videoPlayback.playWithHandler(handler)
-
+        endOfVideo = videoPlayback.playWithHandler(handler, range=(8000,))
+        if endOfVideo:
+            cv2.waitKey()
         videoPlayback.release()
         handler.release()
-        cv2.waitKey()
 
 
 #########################

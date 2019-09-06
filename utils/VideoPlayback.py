@@ -143,10 +143,11 @@ class VideoPlayback:
                 if read:
                     break
                 if stop:
-                    return
+                    return False  # indicate interruption by user
+        return True  # indicate end of video/frameSequence
 
     def playWithHandler(self, handler: VideoPlaybackHandlerBase, range=None):
-        self.play(range, handler.frameReady, handler.syncPlaybackState)
+        return self.play(range, handler.frameReady, handler.syncPlaybackState)
 
 
 def readFrame(videoFile, framePos):
