@@ -1,34 +1,30 @@
-import os
-import time
-
 import numpy as np
 import cv2
-import resource
-
-import psutil
 
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
-from utils import resize
 from utils.VideoPlayback import VideoPlayback
-from utils import videoWriter
 
-from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 
 
-class TechProcessVideoHandler(VideoPlaybackHandlerBase):
+class TechProcessTracker_v2:
+    def track(self, frame, framePos, framePosNsec):
+        pass
+
+
+class TechProcessVideoHandler_v2(VideoPlaybackHandlerBase):
     def __init__(self, frameSize, framesDetections, videoWriter):
-        super(TechProcessVideoHandler, self).__init__(frameSize)
+        super(TechProcessVideoHandler_v2, self).__init__(frameSize)
         self.videoWriter = videoWriter
         self.framesDetections = framesDetections
-        self.techProcessTracker = TechProcessTracker()
+        self.techProcessTracker = TechProcessTracker_v2()
         self.frameDetections = None
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
         self.frameDetections = self.framesDetections.get(framePos, [])
         self.techProcessTracker.track(self.frameDetections, framePos, framePosMsec, frame)
-        super(TechProcessVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
+        super(TechProcessVideoHandler_v2, self).frameReady(frame, framePos, framePosMsec, playback)
 
     def processDisplayFrame(self, displayFrame0):
         self.techProcessTracker.draw(displayFrame0)
@@ -41,7 +37,7 @@ class TechProcessVideoHandler(VideoPlaybackHandlerBase):
         return displayFrame0
 
     def release(self):
-        super(TechProcessVideoHandler, self).release()
+        super(TechProcessVideoHandler_v2, self).release()
 
 
 def files():
@@ -54,12 +50,8 @@ def files():
     #        DetectionsCSV.loadPickle('../../csv_cache/data/detections_video2.pcl'))
 
 
-def printMemoryUsage():
-    print(psutil.Process().memory_info())  # in bytes
-
-
 def main():
-    printMemoryUsage()
+    np.seterr(all='raise')
 
     def getFramesRange():
         # framesRange = (4150, None)
@@ -67,23 +59,16 @@ def main():
         framesRange = None
         return framesRange
 
-    np.seterr(all='raise')
     for sourceVideoFile, resultVideo, framesDetections in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        videoWriter = None  # videoWriter(videoPlayback.cap, resultVideo)
-        handler = TechProcessVideoHandler(videoPlayback.frameSize(), framesDetections, videoWriter)
+        handler = TechProcessVideoHandler_v2(videoPlayback.frameSize(), framesDetections)
 
         endOfVideo = videoPlayback.playWithHandler(handler, range=getFramesRange())
-        printMemoryUsage()
-
         if endOfVideo:
             cv2.waitKey()
 
         videoPlayback.release()
         handler.release()
-        videoWriter and videoWriter.release()
-
-    cv2.waitKey()
 
 
 if __name__ == '__main__':

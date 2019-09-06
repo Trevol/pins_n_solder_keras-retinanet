@@ -18,19 +18,49 @@ class VideoHandler(VideoPlaybackHandlerBase):
         self.bgSubtractor: cv2.BackgroundSubtractor = self.createBackgroudSubtractor()
 
     def createBackgroudSubtractor(self):
-        return cv2.createBackgroundSubtractorKNN(history=500, detectShadows=False)
+        knn = cv2.createBackgroundSubtractorKNN(history=500, detectShadows=True)
+        knn.setShadowValue(0)
+        return knn
         # return cv2.bgsegm.createBackgroundSubtractorGSOC()
+        # return cv2.bgsegm.createBackgroundSubtractorLSBP()
+        # return cv2.bgsegm.createBackgroundSubtractorMOG()
+
+        mog2 = cv2.createBackgroundSubtractorMOG2(history=800, detectShadows=False)
+        # mog2.setShadowValue(0)
+        return mog2
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
         frame = resize(frame, .5)
         # frame = cv2.medianBlur(frame, 5)
         # frame = cv2.GaussianBlur(frame, (3, 3), 0)
 
-        fgMask1 = self.bgSubtractor.apply(frame)
-        bgImage1 = self.bgSubtractor.getBackgroundImage()
+        with timeit():
+            fgMask1 = self.bgSubtractor.apply(frame)
 
-        cv2.imshow('fgMask1', resize(fgMask1, 0.5))
-        cv2.imshow('bgImage1', resize(bgImage1, 0.5))
+        with timeit(autoreport=False) as t:
+            cntNonZero = cv2.countNonZero(fgMask1)
+            print('cntNonZero', t.getDuration(), cntNonZero)
+
+        with timeit(autoreport=False) as t:
+            retval, labels = cv2.connectedComponents(fgMask1)
+            print('connectedComponents', t.getDuration(), retval, labels.shape)
+
+        with timeit(autoreport=False) as t:
+            retval, labels, stats, centroids = cv2.connectedComponentsWithStats(fgMask1)
+            print('connectedComponentsWithStat', t.getDuration(), retval, labels.shape, stats.shape, centroids.shape)
+
+        print('-------------------------------')
+        # bgImage1 = self.bgSubtractor.getBackgroundImage()
+
+        niters = 3
+        refined = cv2.erode(fgMask1, None, None, None, 1)
+        refined = cv2.dilate(refined, None, refined, None, niters)
+        refined = cv2.erode(refined, None, refined, None, niters * 2)
+        refined = cv2.dilate(refined, None, refined, None, niters)
+
+        cv2.imshow('fgMask1', resize(fgMask1, 1))
+        cv2.imshow('refined', resize(refined, 1))
+        # cv2.imshow('bgImage1', resize(bgImage1, 1.5))
 
         super(VideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
 
@@ -42,7 +72,7 @@ def main():
     for sourceVideoFile in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         handler = VideoHandler(videoPlayback.frameSize())
-        endOfVideo = videoPlayback.playWithHandler(handler, range=(8000,))
+        endOfVideo = videoPlayback.playWithHandler(handler)
         if endOfVideo:
             cv2.waitKey()
         videoPlayback.release()

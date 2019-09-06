@@ -20,9 +20,14 @@ class Timer:
     def report(self):
         return f'{self.desc}: {self.duration:.7f}'
 
+    def getDuration(self):
+        now = time.time()
+        return now - self.start
+
 
 def timeit(desc='', autoreport=True):
     return Timer(desc, autoreport).timeit()
+
 
 if __name__ == '__main__':
     with timeit('timeit(sleep(1))'):
