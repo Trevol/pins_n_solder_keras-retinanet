@@ -21,7 +21,7 @@ class TechProcessVideoHandler(VideoPlaybackHandlerBase):
     def __init__(self, frameSize, framesDetections, videoWriter):
         super(TechProcessVideoHandler, self).__init__(frameSize)
         self.videoWriter = videoWriter
-        self.framesDetections = framesDetections
+        self.framesDetections: dict = framesDetections
         self.techProcessTracker = TechProcessTracker()
         self.frameDetections = None
 
@@ -34,7 +34,7 @@ class TechProcessVideoHandler(VideoPlaybackHandlerBase):
         self.techProcessTracker.draw(displayFrame0)
 
         utils.visualize.drawDetections(displayFrame0, self.frameDetections)
-        utils.visualize.putFramePos(displayFrame0, self._framePos, self._framePosMsec)
+        utils.visualize.putFramePos((10, 40), displayFrame0, self._framePos, self._framePosMsec)
         self.techProcessTracker.drawStats(displayFrame0)
 
         self.videoWriter and self.videoWriter.write(displayFrame0)

@@ -3,37 +3,36 @@ import cv2
 
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
+from detection.pins_tracking.v2_motion_analysis.PinDetector import PickledDictionaryPinDetector
 from utils.VideoPlayback import VideoPlayback
 
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 
 
 class TechProcessTracker_v2:
+    def __init__(self, pinDetector):
+        self.pinDetector = pinDetector
+
     def track(self, frame, framePos, framePosNsec):
         pass
 
+    def draw(self, point, displayFrame):
+        utils.visualize.drawDetections(displayFrame, self.frameDetections)
+        self.drawStats(displayFrame)
+
 
 class TechProcessVideoHandler_v2(VideoPlaybackHandlerBase):
-    def __init__(self, frameSize, framesDetections, videoWriter):
+    def __init__(self, frameSize, pinDetector):
         super(TechProcessVideoHandler_v2, self).__init__(frameSize)
-        self.videoWriter = videoWriter
-        self.framesDetections = framesDetections
-        self.techProcessTracker = TechProcessTracker_v2()
-        self.frameDetections = None
+        self.techProcessTracker = TechProcessTracker_v2(pinDetector)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
-        self.frameDetections = self.framesDetections.get(framePos, [])
-        self.techProcessTracker.track(self.frameDetections, framePos, framePosMsec, frame)
+        self.techProcessTracker.track(frame, framePos, framePosMsec)
         super(TechProcessVideoHandler_v2, self).frameReady(frame, framePos, framePosMsec, playback)
 
     def processDisplayFrame(self, displayFrame0):
-        self.techProcessTracker.draw(displayFrame0)
-
-        utils.visualize.drawDetections(displayFrame0, self.frameDetections)
-        utils.visualize.putFramePos(displayFrame0, self._framePos, self._framePosMsec)
-        self.techProcessTracker.drawStats(displayFrame0)
-
-        self.videoWriter and self.videoWriter.write(displayFrame0)
+        utils.visualize.putFramePos((10, 40), displayFrame0, self._framePos, self._framePosMsec)
+        self.techProcessTracker.draw((10, 110), displayFrame0)
         return displayFrame0
 
     def release(self):
@@ -43,7 +42,7 @@ class TechProcessVideoHandler_v2(VideoPlaybackHandlerBase):
 def files():
     yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
            '/HDD_DATA/Computer_Vision_Task/Video_6_result.mp4',
-           DetectionsCSV.loadPickle('../../csv_cache/data/detections_video6.pcl'))
+           '../../csv_cache/data/detections_video6.pcl')
 
     # yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
     #        '/HDD_DATA/Computer_Vision_Task/Video_2_result.mp4',
@@ -59,9 +58,9 @@ def main():
         framesRange = None
         return framesRange
 
-    for sourceVideoFile, resultVideo, framesDetections in files():
+    for sourceVideoFile, resultVideo, detectionsPickledCache in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        handler = TechProcessVideoHandler_v2(videoPlayback.frameSize(), framesDetections)
+        handler = TechProcessVideoHandler_v2(videoPlayback.frameSize(), PickledDictionaryPinDetector(detectionsPickledCache))
 
         endOfVideo = videoPlayback.playWithHandler(handler, range=getFramesRange())
         if endOfVideo:

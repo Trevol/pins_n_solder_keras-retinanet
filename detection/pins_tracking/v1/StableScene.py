@@ -101,7 +101,7 @@ class StableScene:
         framesBuffer = list(self.__framesBuffer)[bufferLen // 4:3 * (bufferLen // 4)]
         self.aggregatedFrame_F32 = self.__meanFrame(framesBuffer)
         self.__aggregatedAtFramePos = currentFramePos
-        DEBUG.imshow(f'aggregatedFrame {self.__sceneId}', self.aggregatedFrame_F32.astype(np.uint8))
+        # DEBUG.imshow(f'aggregatedFrame {self.__sceneId}', self.aggregatedFrame_F32.astype(np.uint8))
 
     @staticmethod
     def __meanFrame(framesBuffer):

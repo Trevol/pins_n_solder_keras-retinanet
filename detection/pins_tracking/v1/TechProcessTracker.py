@@ -116,11 +116,11 @@ class TechProcessTracker:
         TechProcessLogger.logChanges(currentScene, sceneChanges)
         self.__stableScenes.append(currentScene)
 
-        if prevScene:
-            self.DEBUG_show_diff_map(prevScene.aggregatedFrame_F32, currentScene.aggregatedFrame_F32)
-        else:
-            # TODO: show diff with background
-            pass
+        # if prevScene:
+        #     self.DEBUG_show_diff_map(prevScene.aggregatedFrame_F32, currentScene.aggregatedFrame_F32)
+        # else:
+        #     # TODO: show diff with background
+        #     pass
 
     @staticmethod
     def DEBUG_show_diff_map(prevFrame_F32, currentFrame_F32):
