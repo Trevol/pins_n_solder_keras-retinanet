@@ -28,12 +28,9 @@ class TechProcessVideoHandler(VideoPlaybackHandlerBase):
         super(TechProcessVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
 
     def processDisplayFrame(self, displayFrame0):
-        self.techProcessTracker.draw(displayFrame0)
-
-        utils.visualize.drawDetections(displayFrame0, self.frameDetections)
         utils.visualize.putFramePos((10, 40), displayFrame0, self._framePos, self._framePosMsec)
-        self.techProcessTracker.drawStats(displayFrame0)
-
+        self.techProcessTracker.drawStats((10, 110), displayFrame0)
+        self.techProcessTracker.draw(displayFrame0)
         return displayFrame0
 
     def release(self):
@@ -43,11 +40,11 @@ class TechProcessVideoHandler(VideoPlaybackHandlerBase):
 def files():
     yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
            '/HDD_DATA/Computer_Vision_Task/Video_6_result.mp4',
-           DetectionsCSV.loadPickle('../../csv_cache/data/detections_video6.pcl'))
+           '../../csv_cache/data/detections_video6.pcl')
 
     # yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
     #        '/HDD_DATA/Computer_Vision_Task/Video_2_result.mp4',
-    #        DetectionsCSV.loadPickle('../../csv_cache/data/detections_video2.pcl'))
+    #        '../../csv_cache/data/detections_video2.pcl')
 
 
 def printMemoryUsage():

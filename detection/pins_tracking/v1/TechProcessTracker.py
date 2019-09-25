@@ -7,6 +7,7 @@ from detection.pins_tracking.v1.PinDetector import PinDetector
 from detection.pins_tracking.v1.SceneChanges import SceneChanges
 from detection.pins_tracking.v1.StableScene import StableScene
 from detection.pins_tracking.v1.TechProcessLogger import TechProcessLogger
+from utils import visualize
 from utils.Timer import timeit
 
 
@@ -16,6 +17,7 @@ class TechProcessTracker:
         self.__stableScenes = []
         self.__currentScene = None
         self.sceneId = -1
+        self.frameDetections = None
 
     def nextSceneId(self):
         self.sceneId += 1
@@ -65,8 +67,8 @@ class TechProcessTracker:
                 print(' ', np.round(currentColor, 1), np.round(prevColor, 1))
 
     def track(self, framePos, framePosMsec, frame):
-        frameDetections = self.pinDetector.detect(frame, framePos)
-        boxes = (Box(d[0]) for d in self.__skipWeakDetections(frameDetections))
+        self.frameDetections = self.pinDetector.detect(frame, framePos)
+        boxes = (Box(d[0]) for d in self.__skipWeakDetections(self.frameDetections))
         bboxes = self.__skipEdgeBoxes(boxes, frame.shape)
         self.__trackBoxes(bboxes, framePos, framePosMsec, frame)
 
@@ -148,15 +150,17 @@ class TechProcessTracker:
         return SceneChanges(pinsAdded, solderAdded)
 
     def draw(self, img):
+        visualize.drawDetections(img, self.frameDetections)
         if self.__currentScene and self.__currentScene.stabilized:
             self.__currentScene.draw(img)
 
-    def drawStats(self, frame):
+    def drawStats(self, atPoint, frame):
         if not any(self.__stableScenes):
             return
         lastStableScene = self.__stableScenes[-1]
         red = (0, 0, 255)
         text = f'Pins: {lastStableScene.pinsCount}'
-        cv2.putText(frame, text, (10, 110), cv2.FONT_HERSHEY_COMPLEX, .7, red)
+        cv2.putText(frame, text, atPoint, cv2.FONT_HERSHEY_COMPLEX, .7, red)
+        x, y = atPoint
         text = f'Solder: {lastStableScene.pinsWithSolderCount}'
-        cv2.putText(frame, text, (10, 140), cv2.FONT_HERSHEY_COMPLEX, .7, red)
+        cv2.putText(frame, text, (x, y + 30), cv2.FONT_HERSHEY_COMPLEX, .7, red)
