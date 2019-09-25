@@ -3,6 +3,7 @@ import cv2
 import utils
 from detection.pins_tracking.v1 import DEBUG
 from detection.pins_tracking.v1.Box import Box
+from detection.pins_tracking.v1.PinDetector import PinDetector
 from detection.pins_tracking.v1.SceneChanges import SceneChanges
 from detection.pins_tracking.v1.StableScene import StableScene
 from detection.pins_tracking.v1.TechProcessLogger import TechProcessLogger
@@ -10,7 +11,8 @@ from utils.Timer import timeit
 
 
 class TechProcessTracker:
-    def __init__(self):
+    def __init__(self, pinDetector: PinDetector):
+        self.pinDetector = pinDetector
         self.__stableScenes = []
         self.__currentScene = None
         self.sceneId = -1
@@ -62,7 +64,8 @@ class TechProcessTracker:
             for currentColor, prevColor in zip(pinAtCurrent.meanColors, pinAtPrev.meanColors):
                 print(' ', np.round(currentColor, 1), np.round(prevColor, 1))
 
-    def track(self, frameDetections, framePos, framePosMsec, frame):
+    def track(self, framePos, framePosMsec, frame):
+        frameDetections = self.pinDetector.detect(frame, framePos)
         boxes = (Box(d[0]) for d in self.__skipWeakDetections(frameDetections))
         bboxes = self.__skipEdgeBoxes(boxes, frame.shape)
         self.__trackBoxes(bboxes, framePos, framePosMsec, frame)
@@ -128,7 +131,6 @@ class TechProcessTracker:
         current = cv2.cvtColor(currentFrame_F32, cv2.COLOR_BGR2GRAY)
         diff = cv2.subtract(np.uint8(current), np.uint8(prev))
         DEBUG.imshow('scenes diff', np.uint8(diff))
-
 
     @staticmethod
     def __registerSceneChanges(currentScene: StableScene, prevScene: StableScene):

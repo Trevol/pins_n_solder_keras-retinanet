@@ -9,6 +9,7 @@ import psutil
 
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
+from detection.pins_tracking.v1.PinDetector import PinDetector, PickledDictionaryPinDetector
 from utils import resize
 from utils.VideoPlayback import VideoPlayback
 from utils import videoWriter
@@ -18,16 +19,12 @@ from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 
 
 class TechProcessVideoHandler(VideoPlaybackHandlerBase):
-    def __init__(self, frameSize, framesDetections, videoWriter):
+    def __init__(self, frameSize, pinDetector: PinDetector):
         super(TechProcessVideoHandler, self).__init__(frameSize)
-        self.videoWriter = videoWriter
-        self.framesDetections: dict = framesDetections
-        self.techProcessTracker = TechProcessTracker()
-        self.frameDetections = None
+        self.techProcessTracker = TechProcessTracker(pinDetector)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
-        self.frameDetections = self.framesDetections.get(framePos, [])
-        self.techProcessTracker.track(self.frameDetections, framePos, framePosMsec, frame)
+        self.techProcessTracker.track(framePos, framePosMsec, frame)
         super(TechProcessVideoHandler, self).frameReady(frame, framePos, framePosMsec, playback)
 
     def processDisplayFrame(self, displayFrame0):
@@ -37,7 +34,6 @@ class TechProcessVideoHandler(VideoPlaybackHandlerBase):
         utils.visualize.putFramePos((10, 40), displayFrame0, self._framePos, self._framePosMsec)
         self.techProcessTracker.drawStats(displayFrame0)
 
-        self.videoWriter and self.videoWriter.write(displayFrame0)
         return displayFrame0
 
     def release(self):
@@ -68,10 +64,9 @@ def main():
         return framesRange
 
     np.seterr(all='raise')
-    for sourceVideoFile, resultVideo, framesDetections in files():
+    for sourceVideoFile, resultVideo, pclFile in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        videoWriter = None  # videoWriter(videoPlayback.cap, resultVideo)
-        handler = TechProcessVideoHandler(videoPlayback.frameSize(), framesDetections, videoWriter)
+        handler = TechProcessVideoHandler(videoPlayback.frameSize(), PickledDictionaryPinDetector(pclFile))
 
         endOfVideo = videoPlayback.playWithHandler(handler, range=getFramesRange())
         printMemoryUsage()
@@ -81,7 +76,6 @@ def main():
 
         videoPlayback.release()
         handler.release()
-        videoWriter and videoWriter.release()
 
     cv2.waitKey()
 
