@@ -31,7 +31,7 @@ def base_train():
     # vgg16NoTopWeights = None
     model = VGGUnet(n_classes, input_height=input_height, input_width=input_width,
                     vgg16NoTopWeights=vgg16NoTopWeights)
-    model.load_weights('checkpoints/not_augmented_base_vgg16_more_images/unet_pins_16_0.000024_1.000000.hdf5')
+    model.load_weights('checkpoints/not_augmented_base_vgg16_more_images/unet_pins_25_0.000016_1.000000.hdf5')
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=Adadelta(),

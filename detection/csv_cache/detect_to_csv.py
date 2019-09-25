@@ -32,13 +32,13 @@ def main():
          './data/detections_video2.csv')
     ]
 
-    raise Exception('Attention! Csv files and video files will be overwritten')
+    # raise Exception('Attention! Csv files and video files will be overwritten')
 
     for sourceVideoFile, targetVideoFile, detectionsCsvFile in files:
         videoSource = cv2.VideoCapture(sourceVideoFile)
-        videoTarget = videoWriter(videoSource, targetVideoFile)
+        # videoTarget = videoWriter(videoSource, targetVideoFile)
 
-        csvWriter = DetectionsCSV(detectionsCsvFile)
+        # csvWriter = DetectionsCSV(detectionsCsvFile)
 
         framePos = 0
         while True:
@@ -47,17 +47,17 @@ def main():
                 break
             detections = predict_on_image(model, frame, labels_to_names, scoreThresh=0.5)
             # csvWriter.write(framePos, detections)
-            detection.visualize.drawDetections(frame, detections)
-            detection.visualize.putFramePos(frame, framePos)
+            utils.visualize.drawDetections(frame, detections)
+            utils.visualize.putFramePos(frame, framePos)
             cv2.imshow('Video', frame)
-            videoTarget.write(image)
+            # videoTarget.write(frame)
             if cv2.waitKey(1) == 27:
                 break
             framePos += 1
 
         videoSource.release()
-        videoTarget.release()
-        csvWriter.close()
+        # videoTarget.release()
+        # csvWriter.close()
 
 
 def predict_on_image(model, image, labels_to_names, scoreThresh):
