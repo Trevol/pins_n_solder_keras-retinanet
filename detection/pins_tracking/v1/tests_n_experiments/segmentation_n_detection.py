@@ -22,7 +22,7 @@ class Segmenter():
         self.output_height = self.model.outputHeight
         self.output_width = self.model.outputWidth
 
-        weights = '../segmentation/checkpoints/not_augmented_base_vgg16_more_images/unet_pins_25_0.000016_1.000000.hdf5'
+        weights = '../modelWeights/unet_pins_25_0.000016_1.000000.hdf5'
         self.model.load_weights(weights)
 
     def prepareBatch(self, image):
@@ -37,14 +37,14 @@ class Segmenter():
     def segment(self, image):
         batch = self.prepareBatch(image)
         predictions = self.model.predict(batch)[0]
-        pixelClassProbabilities = predictions.reshape((self.output_height, self.output_width, self.n_classes))
+        pixelClassProbabilities: np.ndarray = predictions.reshape((self.output_height, self.output_width, self.n_classes))
         labelsImage = pixelClassProbabilities.argmax(axis=2)
         return labelsImage
 
 
 class Detector:
     def __init__(self):
-        model_path = '/HDD_DATA/training_checkpoints/keras_retinanet/pins/2/inference_2_28.h5'
+        model_path = '../modelWeights/inference_2_28.h5'
         self.model = models.load_model(model_path, backbone_name='resnet50')
 
     @staticmethod

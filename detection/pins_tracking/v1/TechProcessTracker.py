@@ -5,6 +5,7 @@ from detection.pins_tracking.v1 import DEBUG
 from detection.pins_tracking.v1.Box import Box
 from detection.pins_tracking.v1.PinDetector import PinDetector
 from detection.pins_tracking.v1.SceneChanges import SceneChanges
+from detection.pins_tracking.v1.SceneSegmentation import SceneSegmentation
 from detection.pins_tracking.v1.StableScene import StableScene
 from detection.pins_tracking.v1.TechProcessLogger import TechProcessLogger
 from utils import visualize
@@ -12,8 +13,9 @@ from utils.Timer import timeit
 
 
 class TechProcessTracker:
-    def __init__(self, pinDetector: PinDetector):
+    def __init__(self, pinDetector: PinDetector, sceneSegmentation: SceneSegmentation):
         self.pinDetector = pinDetector
+        self.sceneSegmentation = sceneSegmentation
         self.__stableScenes = []
         self.__currentScene = None
         self.sceneId = -1
@@ -67,14 +69,10 @@ class TechProcessTracker:
                 print(' ', np.round(currentColor, 1), np.round(prevColor, 1))
 
     def track(self, framePos, framePosMsec, frame):
-        self.frameDetections = self.pinDetector.detect(frame, framePos)
-        boxes = (Box(d[0]) for d in self.__skipWeakDetections(self.frameDetections))
+        self.frameDetections = self.pinDetector.detect(frame, framePos, scoreThresh=.85)
+        boxes = (Box(d[0]) for d in self.frameDetections)
         bboxes = self.__skipEdgeBoxes(boxes, frame.shape)
         self.__trackBoxes(bboxes, framePos, framePosMsec, frame)
-
-    @staticmethod
-    def __skipWeakDetections(detections):
-        return (d for d in detections if d[2] >= .85)
 
     @staticmethod
     def __skipEdgeBoxes(boxes, frameShape):
@@ -104,38 +102,26 @@ class TechProcessTracker:
 
         if currentSceneWasUnstable and self.__currentScene.stabilized:
             # add to stable scene IF this scene was unstable before addition new frame and become stable after
-            self.__registerCurrentSceneAsStable()
+            self.__registerCurrentSceneAsStable(frame, framePos)
 
         if not closeToCurrentScene:
             self.__currentScene.finalize()
             self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame, self.nextSceneId())
 
     ##############################################################################
-    def __registerCurrentSceneAsStable(self):
+    def __registerCurrentSceneAsStable(self, frame, framePos):
         assert self.__currentScene.stabilized
         assert self.__currentScene not in self.__stableScenes
 
         currentScene = self.__currentScene
         prevScene = utils.lastOrDefault(self.__stableScenes)
-        sceneChanges = self.__registerSceneChanges(currentScene, prevScene)
+        sceneChanges = self.__registerSceneChanges(currentScene, prevScene, frame, framePos, self.sceneSegmentation)
         TechProcessLogger.logChanges(currentScene, sceneChanges)
         self.__stableScenes.append(currentScene)
 
-        # if prevScene:
-        #     self.DEBUG_show_diff_map(prevScene.aggregatedFrame_F32, currentScene.aggregatedFrame_F32)
-        # else:
-        #     # TODO: show diff with background
-        #     pass
-
     @staticmethod
-    def DEBUG_show_diff_map(prevFrame_F32, currentFrame_F32):
-        prev = cv2.cvtColor(prevFrame_F32, cv2.COLOR_BGR2GRAY)
-        current = cv2.cvtColor(currentFrame_F32, cv2.COLOR_BGR2GRAY)
-        diff = cv2.subtract(np.uint8(current), np.uint8(prev))
-        DEBUG.imshow('scenes diff', np.uint8(diff))
-
-    @staticmethod
-    def __registerSceneChanges(currentScene: StableScene, prevScene: StableScene):
+    def __registerSceneChanges(currentScene: StableScene, prevScene: StableScene, frame, framePos,
+                               sceneSegmentation: SceneSegmentation):
         assert currentScene.stabilized
         if prevScene is None:
             return SceneChanges(currentScene.pinsCount, 0)
@@ -143,7 +129,9 @@ class TechProcessTracker:
         assert prevScene.stabilized
         assert currentScene.pinsCount >= prevScene.pinsCount
 
+
         if currentScene.pinsCount == prevScene.pinsCount:
+            currentSceneSegmentation = sceneSegmentation.getSegmentationMap(frame, framePos)
             currentScene.detectSolder(prevScene)
         pinsAdded = currentScene.pinsCount - prevScene.pinsCount
         solderAdded = currentScene.pinsWithSolderCount - prevScene.pinsWithSolderCount
@@ -159,3 +147,10 @@ class TechProcessTracker:
             return None
         lastStableScene = self.__stableScenes[-1]
         return lastStableScene.pinsCount, lastStableScene.pinsWithSolderCount
+
+    @staticmethod
+    def DEBUG_show_diff_map(prevFrame_F32, currentFrame_F32):
+        prev = cv2.cvtColor(prevFrame_F32, cv2.COLOR_BGR2GRAY)
+        current = cv2.cvtColor(currentFrame_F32, cv2.COLOR_BGR2GRAY)
+        diff = cv2.subtract(np.uint8(current), np.uint8(prev))
+        DEBUG.imshow('scenes diff', np.uint8(diff))

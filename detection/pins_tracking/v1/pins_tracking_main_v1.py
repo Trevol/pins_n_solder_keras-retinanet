@@ -9,7 +9,8 @@ import psutil
 
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
-from detection.pins_tracking.v1.PinDetector import PinDetector, PickledDictionaryPinDetector
+from detection.pins_tracking.v1.PinDetector import PinDetector, PickledDictionaryPinDetector, RetinanetPinDetector
+from detection.pins_tracking.v1.SceneSegmentation import CachedSceneSegmentation, UnetSceneSegmentation
 from utils import resize
 from utils.VideoPlayback import VideoPlayback
 from utils import videoWriter
@@ -19,9 +20,9 @@ from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 
 
 class TechProcessVideoHandler(VideoPlaybackHandlerBase):
-    def __init__(self, frameSize, pinDetector: PinDetector):
+    def __init__(self, frameSize, pinDetector: PinDetector, sceneSegmentation):
         super(TechProcessVideoHandler, self).__init__(frameSize)
-        self.techProcessTracker = TechProcessTracker(pinDetector)
+        self.techProcessTracker = TechProcessTracker(pinDetector, sceneSegmentation)
 
     def frameReady(self, frame, framePos, framePosMsec, playback):
         self.techProcessTracker.track(framePos, framePosMsec, frame)
@@ -51,7 +52,8 @@ class TechProcessVideoHandler(VideoPlaybackHandlerBase):
 def files():
     yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
            '/HDD_DATA/Computer_Vision_Task/Video_6_result.mp4',
-           '../../csv_cache/data/detections_video6.pcl')
+           '../../csv_cache/data/detections_video6.pcl',
+           '/home/trevol/HDD_DATA/Computer_Vision_Task/frames_6/not_augmented_base_vgg16_more_images_25')
 
     # yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
     #        '/HDD_DATA/Computer_Vision_Task/Video_2_result.mp4',
@@ -59,7 +61,8 @@ def files():
 
 
 def printMemoryUsage():
-    print(psutil.Process().memory_info())  # in bytes
+    # print(psutil.Process().memory_info())  # in bytes
+    pass
 
 
 def main():
@@ -72,9 +75,16 @@ def main():
         return framesRange
 
     np.seterr(all='raise')
-    for sourceVideoFile, resultVideo, pclFile in files():
+    for sourceVideoFile, resultVideo, pclFile, segmentationCacheDir in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
-        handler = TechProcessVideoHandler(videoPlayback.frameSize(), PickledDictionaryPinDetector(pclFile))
+
+        # pinDetector = PickledDictionaryPinDetector(pclFile)
+        pinDetector = RetinanetPinDetector('modelWeights/inference_2_28.h5')
+
+        # sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
+        sceneSegmentation = UnetSceneSegmentation('modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
+
+        handler = TechProcessVideoHandler(videoPlayback.frameSize(), pinDetector, sceneSegmentation)
 
         endOfVideo = videoPlayback.playWithHandler(handler, range=getFramesRange())
         printMemoryUsage()
