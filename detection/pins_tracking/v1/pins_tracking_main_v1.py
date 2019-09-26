@@ -29,9 +29,20 @@ class TechProcessVideoHandler(VideoPlaybackHandlerBase):
 
     def processDisplayFrame(self, displayFrame0):
         utils.visualize.putFramePos((10, 40), displayFrame0, self._framePos, self._framePosMsec)
-        self.techProcessTracker.drawStats((10, 110), displayFrame0)
-        self.techProcessTracker.draw(displayFrame0)
+        self.drawStats(self.techProcessTracker.getStats(), displayFrame0, (10, 110))
+        self.techProcessTracker.drawScene(displayFrame0)
         return displayFrame0
+
+    def drawStats(self, stats, onImage, atPoint):
+        if stats is None:
+            return
+        pinsCount, pinsWithSolderCount = stats
+        red = (0, 0, 255)
+        text = f'Pins: {pinsCount}'
+        cv2.putText(onImage, text, atPoint, cv2.FONT_HERSHEY_COMPLEX, .7, red)
+        x, y = atPoint
+        text = f'Solder: {pinsWithSolderCount}'
+        cv2.putText(onImage, text, (x, y + 30), cv2.FONT_HERSHEY_COMPLEX, .7, red)
 
     def release(self):
         super(TechProcessVideoHandler, self).release()
