@@ -7,13 +7,10 @@ import resource
 
 import psutil
 
-from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
 from detection.pins_tracking.v1.PinDetector import PinDetector, PickledDictionaryPinDetector, RetinanetPinDetector
 from detection.pins_tracking.v1.SceneSegmentation import CachedSceneSegmentation, UnetSceneSegmentation
-from utils import resize
 from utils.VideoPlayback import VideoPlayback
-from utils import videoWriter
 
 from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
