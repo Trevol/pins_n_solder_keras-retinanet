@@ -4,11 +4,11 @@ import numpy as np
 from keras_retinanet import models
 from keras_retinanet.utils.image import preprocess_image, resize_image
 
-from detection.pins_tracking.v1.segmentation.MyVGGUnet import VGGUnet
-from detection.pins_tracking.v1.segmentation.classesMeta import BGR
-from detection.pins_tracking.v1.segmentation.pin_utils import remainderlessDividable, colorizeLabel
+from segmentation.MyVGGUnet import VGGUnet
+from segmentation.classesMeta import BGR
+from utils.visualize import colorizeLabel
 from utils.tfSession import get_session
-from utils import visualize, resize
+from utils import visualize, resize, remainderlessDividable
 
 
 class Segmenter():

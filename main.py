@@ -66,9 +66,9 @@ def main():
     printMemoryUsage()
 
     def getFramesRange():
-        framesRange = (4150, None)
+        # framesRange = (4150, None)
         # framesRange = (8100, None)
-        # framesRange = None
+        framesRange = None
         return framesRange
 
     np.seterr(all='raise')

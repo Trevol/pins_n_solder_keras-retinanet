@@ -3,8 +3,8 @@ import os
 import cv2
 import numpy as np
 
-from detection.pins_tracking.v1.segmentation.MyVGGUnet import VGGUnet
-from detection.pins_tracking.v1.segmentation.pin_utils import remainderlessDividable
+from segmentation.MyVGGUnet import VGGUnet
+from utils import remainderlessDividable
 
 
 class SceneSegmentation:
@@ -47,7 +47,7 @@ class UnetSceneSegmentation(SceneSegmentation):
         image[:, :, 1] -= 116.779
         image[:, :, 2] -= 123.68
         image = np.rollaxis(image, 2, 0)  # channel_first
-        return np.expand_dims(image, 0)  # to [1, 3, h, w]
+        return np.expand_dims(image, 0)  # to batch [1, 3, h, w]
 
     def getSegmentationMap(self, frame, framePos):
         batch = self.prepareBatch(frame)

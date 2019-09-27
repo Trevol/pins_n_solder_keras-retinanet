@@ -92,3 +92,7 @@ def colorChannelsTo24bit(bgr):
 #     patch[int(dH):int(dH + innerH), int(dW):int(dW + innerW)] = np.NaN
 #     mean = np.nanmean(patch, (0, 1))
 #     return mean
+def remainderlessDividable(val, divider, ff):
+    assert divider > 0
+    assert ff == 0 or ff == 1
+    return (val + divider * ff - val % divider)
