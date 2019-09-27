@@ -1,6 +1,6 @@
 import cv2
 
-from detection.pins_tracking.v1.Colors import Colors
+from utils.Colors import Colors
 from utils import roundToInt
 from utils.Geometry2D import Geometry2D
 

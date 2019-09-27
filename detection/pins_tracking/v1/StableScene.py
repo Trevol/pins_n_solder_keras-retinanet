@@ -1,19 +1,13 @@
-import warnings
 from collections import deque
 import numpy as np
 import cv2
 from more_itertools import ilen
 
-from detection.pins_tracking.v1 import DEBUG
 from detection.pins_tracking.v1.Box import Box
-from detection.pins_tracking.v1.Colors import Colors
 from detection.pins_tracking.v1.Constants import StabilizationLength
 from detection.pins_tracking.v1.Pin import Pin
 from detection.pins_tracking.v1.FrameInfo import FrameInfo
 from detection.pins_tracking.v1.PinsWorkArea import PinsWorkArea
-from detection.pins_tracking.v1.segmentation.classesMeta import BGR
-from detection.pins_tracking.v1.segmentation.pin_utils import colorizeLabel
-from utils.Geometry2D import Geometry2D
 
 framesCounter = 0
 

@@ -1,9 +1,8 @@
 import cv2
 
 from detection.pins_tracking.v1.Box import Box
-from detection.pins_tracking.v1.Colors import Colors
+from utils.Colors import Colors
 from utils.Geometry2D import Geometry2D
-from utils.Timer import timeit
 
 
 class PinsWorkArea:

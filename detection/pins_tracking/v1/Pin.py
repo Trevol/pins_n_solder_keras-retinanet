@@ -1,11 +1,6 @@
-from collections import deque
-
 import cv2
-import numpy as np
 
-from detection.pins_tracking.v1.Colors import Colors
-from detection.pins_tracking.v1.Constants import StabilizationLength
-from detection.pins_tracking.v1.StatParams import StatParams
+from utils.Colors import Colors
 from utils import roundPoint, roundToInt
 
 

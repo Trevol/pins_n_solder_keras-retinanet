@@ -49,7 +49,7 @@ class TechProcessVideoHandler(VideoPlaybackHandlerBase):
 def files():
     yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
            '/HDD_DATA/Computer_Vision_Task/Video_6_result.mp4',
-           '../../csv_cache/data/detections_video6.pcl',
+           'detection/csv_cache/data/detections_video6.pcl',
            '/home/trevol/HDD_DATA/Computer_Vision_Task/frames_6/not_augmented_base_vgg16_more_images_25')
 
     # yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
@@ -76,7 +76,7 @@ def main():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
 
         pinDetector = PickledDictionaryPinDetector(pclFile)
-        # pinDetector = RetinanetPinDetector('modelWeights/inference_2_28.h5')
+        # pinDetector = RetinanetPinDetector('modelWeights/retinanet_pins_inference.h5')
 
         sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
         # sceneSegmentation = UnetSceneSegmentation('modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
