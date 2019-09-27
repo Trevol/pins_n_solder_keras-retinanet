@@ -11,6 +11,8 @@ from detection.pins_tracking.v1.Constants import StabilizationLength
 from detection.pins_tracking.v1.Pin import Pin
 from detection.pins_tracking.v1.FrameInfo import FrameInfo
 from detection.pins_tracking.v1.PinsWorkArea import PinsWorkArea
+from detection.pins_tracking.v1.segmentation.classesMeta import BGR
+from detection.pins_tracking.v1.segmentation.pin_utils import colorizeLabel
 from utils.Geometry2D import Geometry2D
 
 framesCounter = 0
@@ -177,20 +179,46 @@ class StableScene:
         pinsFilter = (p for p in self.pins if p.box.containsPoint(pt))
         return next(pinsFilter, None)
 
-    def detectSolder(self, prevScene):
-        # TODO: implement it using pins masks and analyzing differences between stable scenes
-        # assert self.pinsCount == prevScene.pinsCount
-        # pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
-        # assert pinsAreClose
-        #
-        # for currentPin, prevPin in zip(self.__pins, prevPins):
-        #     if prevPin.withSolder:
-        #         currentPin.withSolder = prevPin.withSolder
-        #     else:
-        #         currentPin.withSolder = currentPin.colorStat.areFromDifferentDistributions(prevPin.colorStat)
-        #
-        # self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recompute count of pins with solder
-        pass
+    def detectSolder(self, prevScene, currentSceneSegmentation, sceneSegmentationScaleY, sceneSegmentationScaleX):
+        assert self.pinsCount == prevScene.pinsCount
+        pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
+        assert pinsAreClose
+
+        # TODO: need scale to downscale pins boxes to currentSceneSegmentation
+        # sceneSegmentationScale = frame.shape[0] / currentSceneSegmentation.shape[0]
+
+        def DEBUG():
+            img = colorizeLabel(currentSceneSegmentation, BGR)
+            for pin in self.__pins:
+                rescaledBox = pin.box.rescale(sceneSegmentationScaleY, sceneSegmentationScaleX)
+                x0, y0, x1, y1 = rescaledBox.box
+                cv2.rectangle(img, (x0, y0), (x1, y1), 255, 1)
+            cv2.imshow('DEBUG GGG', img)
+
+        DEBUG()
+
+        for currentPin, prevPin in zip(self.__pins, prevPins):
+            if prevPin.withSolder:
+                currentPin.withSolder = prevPin.withSolder
+            else:
+                currentPin.withSolder = self.__detectSolderOnPin(currentPin, currentSceneSegmentation,
+                                                                 sceneSegmentationScaleY, sceneSegmentationScaleX)
+
+        self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recompute count of pins with solder
+
+    @staticmethod
+    def __detectSolderOnPin(pin, currentSceneSegmentation, sceneSegmentationScaleY, sceneSegmentationScaleX):
+        pinWithSolderLabel = 2
+        # project pin box to sceneSegmentation
+        rescaledBox = pin.box.rescale(sceneSegmentationScaleY, sceneSegmentationScaleX)
+        x0, y0, x1, y1 = rescaledBox.box
+        boxOnMap = currentSceneSegmentation[y0:y1, x0:x1]
+        solderMask = np.equal(boxOnMap, pinWithSolderLabel).astype(np.uint8)
+        solderArea = cv2.countNonZero(solderMask)
+        totalArea = (x1 - x0) * (y1 - y0)
+
+        # count pixels inside box with pinWithSolderLabel and compare with box area
+        return (solderArea / totalArea) > .5
 
 # @staticmethod
 # def __boxOuterMeanColor(frame, innerBox):

@@ -12,6 +12,14 @@ class Box:
         self.center = boxCenter(bbox)
         self.cityblockDiagonal = cityblockDistance(self.pt0, self.pt1)
 
+    def rescale(self, scaleY, scaleX):
+        x0 = self.box[0] // scaleX
+        y0 = self.box[1] // scaleY
+        x1 = self.box[2] // scaleX
+        y1 = self.box[3] // scaleY
+        box = np.array([x0, y0, x1, y1], np.int32)
+        return Box(box)
+
     def containsPoint(self, pt):
         return self.pt0[0] < pt[0] < self.pt1[0] and self.pt0[1] < pt[1] < self.pt1[1]
 

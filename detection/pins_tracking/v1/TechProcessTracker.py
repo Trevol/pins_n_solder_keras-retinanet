@@ -129,10 +129,12 @@ class TechProcessTracker:
         assert prevScene.stabilized
         assert currentScene.pinsCount >= prevScene.pinsCount
 
-
         if currentScene.pinsCount == prevScene.pinsCount:
             currentSceneSegmentation = sceneSegmentation.getSegmentationMap(frame, framePos)
-            currentScene.detectSolder(prevScene)
+            scaleY = frame.shape[0] / currentSceneSegmentation.shape[0]
+            scaleX = frame.shape[1] / currentSceneSegmentation.shape[1]
+            currentScene.detectSolder(prevScene, currentSceneSegmentation, scaleY, scaleX)
+
         pinsAdded = currentScene.pinsCount - prevScene.pinsCount
         solderAdded = currentScene.pinsWithSolderCount - prevScene.pinsWithSolderCount
         return SceneChanges(pinsAdded, solderAdded)

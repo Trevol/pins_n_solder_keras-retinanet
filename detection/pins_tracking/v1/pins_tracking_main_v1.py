@@ -69,20 +69,20 @@ def main():
     printMemoryUsage()
 
     def getFramesRange():
-        # framesRange = (4150, None)
+        framesRange = (4150, None)
         # framesRange = (8100, None)
-        framesRange = None
+        # framesRange = None
         return framesRange
 
     np.seterr(all='raise')
     for sourceVideoFile, resultVideo, pclFile, segmentationCacheDir in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
 
-        # pinDetector = PickledDictionaryPinDetector(pclFile)
-        pinDetector = RetinanetPinDetector('modelWeights/inference_2_28.h5')
+        pinDetector = PickledDictionaryPinDetector(pclFile)
+        # pinDetector = RetinanetPinDetector('modelWeights/inference_2_28.h5')
 
-        # sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
-        sceneSegmentation = UnetSceneSegmentation('modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
+        sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
+        # sceneSegmentation = UnetSceneSegmentation('modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
 
         handler = TechProcessVideoHandler(videoPlayback.frameSize(), pinDetector, sceneSegmentation)
 
