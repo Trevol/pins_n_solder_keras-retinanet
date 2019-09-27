@@ -6,10 +6,9 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
-from detection.pins_tracking.color_stats.ColorExtraction import ColorExtraction
-from detection.pins_tracking.color_stats.FrameInfoPlotter import FrameInfoPlotter
-from detection.pins_tracking.color_stats.MultiPointSelection import MultiPointSelection
-from detection.pins_tracking.color_stats.RectSelection import RectSelection
+from dead_stuff.color_stats.ColorExtraction import ColorExtraction
+from dead_stuff.color_stats.FrameInfoPlotter import FrameInfoPlotter
+from dead_stuff.color_stats.MultiPointSelection import MultiPointSelection
 from utils.VideoPlayback import VideoPlayback
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 import utils.visualize

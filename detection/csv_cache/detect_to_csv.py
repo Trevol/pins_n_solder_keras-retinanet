@@ -1,17 +1,13 @@
 import keras
-from detection.tfSession import get_session
+from utils.tfSession import get_session
 
 from keras_retinanet import models
-from keras_retinanet.utils.image import read_image_bgr, preprocess_image, resize_image
+from keras_retinanet.utils.image import preprocess_image, resize_image
 
-from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
-from utils import videoWriter
 
 import cv2
-import os
 import numpy as np
-import time
 
 
 def main():

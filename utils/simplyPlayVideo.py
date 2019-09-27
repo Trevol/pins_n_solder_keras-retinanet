@@ -15,7 +15,7 @@ def playVideo():
             self._frameScaleFactor = .85
 
         def processDisplayFrame(self, displayFrame0):
-            return utils.visualize.putFramePos(displayFrame0, self._framePos, None)
+            return utils.visualize.putFramePos((10, 40), displayFrame0, self._framePos, None)
 
     ################################################################
     for sourceVideoFile in files():

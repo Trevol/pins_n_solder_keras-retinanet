@@ -1,6 +1,6 @@
 import numpy as np
 
-from detection.pins_tracking.color_stats.main_color_stats import files
+from dead_stuff.color_stats.main_color_stats import files
 from utils.VideoPlayback import VideoPlayback
 
 

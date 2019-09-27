@@ -184,18 +184,15 @@ class StableScene:
         pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
         assert pinsAreClose
 
-        # TODO: need scale to downscale pins boxes to currentSceneSegmentation
-        # sceneSegmentationScale = frame.shape[0] / currentSceneSegmentation.shape[0]
-
-        def DEBUG():
-            img = colorizeLabel(currentSceneSegmentation, BGR)
-            for pin in self.__pins:
-                rescaledBox = pin.box.rescale(sceneSegmentationScaleY, sceneSegmentationScaleX)
-                x0, y0, x1, y1 = rescaledBox.box
-                cv2.rectangle(img, (x0, y0), (x1, y1), 255, 1)
-            cv2.imshow('DEBUG GGG', img)
-
-        DEBUG()
+        # def DEBUG():
+        #     img = colorizeLabel(currentSceneSegmentation, BGR)
+        #     for pin in self.__pins:
+        #         rescaledBox = pin.box.rescale(sceneSegmentationScaleY, sceneSegmentationScaleX)
+        #         x0, y0, x1, y1 = rescaledBox.box
+        #         cv2.rectangle(img, (x0, y0), (x1, y1), 255, 1)
+        #     cv2.imshow('DEBUG GGG', img)
+        #
+        # DEBUG()
 
         for currentPin, prevPin in zip(self.__pins, prevPins):
             if prevPin.withSolder:
@@ -219,19 +216,3 @@ class StableScene:
 
         # count pixels inside box with pinWithSolderLabel and compare with box area
         return (solderArea / totalArea) > .5
-
-# @staticmethod
-# def __boxOuterMeanColor(frame, innerBox):
-#     innerX0, innerY0, innerX1, innerY1 = innerBox.box
-#     # protect against boxes near frame edges
-#     assert innerX0 > 0 and innerY0 > 0 and innerX1 < frame.shape[1] - 1 and innerY1 < frame.shape[0] - 1
-#     dW, dH = innerBox.size / 4
-#
-#     patch = frame[int(innerY0 - dH): int(innerY1 + dH + 1), int(innerX0 - dW): int(innerX1 + dW + 1)]
-#     patch = patch.astype(np.float32)
-#
-#     # fill innerBox in path with NaN
-#     innerW, innerH = innerBox.size
-#     patch[int(dH):int(dH + innerH), int(dW):int(dW + innerW)] = np.NaN
-#     mean = np.nanmean(patch, (0, 1))
-#     return mean

@@ -1,4 +1,4 @@
-from detection.pins_tracking.color_stats.FrameInfoPlotter import FrameInfoPlotter
+from dead_stuff.color_stats.FrameInfoPlotter import FrameInfoPlotter
 from utils.random_images import random_images
 import cv2
 import matplotlib.pyplot as plt
