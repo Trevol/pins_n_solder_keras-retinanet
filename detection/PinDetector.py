@@ -2,6 +2,7 @@ import numpy as np
 from keras_retinanet import models
 from keras_retinanet.utils.image import preprocess_image, resize_image
 
+from detection.Box import Box
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
 
 
@@ -20,7 +21,9 @@ class PickledDictionaryPinDetector(PinDetector):
 
     def detect(self, frame, framePos, scoreThresh):
         allDetection = self.__detectionsCache.get(framePos, [])
-        return self.skipWeakDetections(allDetection, .85)
+        strongDetections = self.skipWeakDetections(allDetection, .85)
+        boxes = (Box(d[0]) for d in strongDetections)
+        return boxes, strongDetections
 
 
 class RetinanetPinDetector(PinDetector):
@@ -38,8 +41,8 @@ class RetinanetPinDetector(PinDetector):
 
         detections = [(box, label, score) for box, label, score in zip(boxes[0], labels[0], scores[0])
                       if score >= scoreThresh]
-
-        return detections
+        boxes = (Box(d[0]) for d in detections)
+        return boxes, detections
 
     def detect(self, frame, framePos, scoreThresh):
         return self.predict_on_image(self.model, frame, scoreThresh)

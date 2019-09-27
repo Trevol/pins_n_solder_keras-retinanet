@@ -3,11 +3,11 @@ import numpy as np
 import cv2
 from more_itertools import ilen
 
-from detection.pins_tracking.v1.Box import Box
-from detection.pins_tracking.v1.Constants import StabilizationLength
-from detection.pins_tracking.v1.Pin import Pin
-from detection.pins_tracking.v1.FrameInfo import FrameInfo
-from detection.pins_tracking.v1.PinsWorkArea import PinsWorkArea
+from detection.Box import Box
+from techprocess_tracking.Constants import StabilizationLength
+from techprocess_tracking.Pin import Pin
+from techprocess_tracking.FrameInfo import FrameInfo
+from techprocess_tracking.PinsWorkArea import PinsWorkArea
 
 framesCounter = 0
 

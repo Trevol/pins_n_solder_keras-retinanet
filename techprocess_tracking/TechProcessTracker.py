@@ -1,15 +1,14 @@
 import numpy as np
 import cv2
 import utils
-from detection.pins_tracking.v1 import DEBUG
-from detection.pins_tracking.v1.Box import Box
-from detection.pins_tracking.v1.PinDetector import PinDetector
-from detection.pins_tracking.v1.SceneChanges import SceneChanges
-from detection.pins_tracking.v1.SceneSegmentation import SceneSegmentation
-from detection.pins_tracking.v1.StableScene import StableScene
-from detection.pins_tracking.v1.TechProcessLogger import TechProcessLogger
+from techprocess_tracking import DEBUG
+from detection.Box import Box
+from detection.PinDetector import PinDetector
+from techprocess_tracking.SceneChanges import SceneChanges
+from segmentation.SceneSegmentation import SceneSegmentation
+from techprocess_tracking.StableScene import StableScene
+from techprocess_tracking.TechProcessLogger import TechProcessLogger
 from utils import visualize
-from utils.Timer import timeit
 
 
 class TechProcessTracker:
@@ -69,10 +68,9 @@ class TechProcessTracker:
                 print(' ', np.round(currentColor, 1), np.round(prevColor, 1))
 
     def track(self, framePos, framePosMsec, frame):
-        self.frameDetections = self.pinDetector.detect(frame, framePos, scoreThresh=.85)
-        boxes = (Box(d[0]) for d in self.frameDetections)
-        bboxes = self.__skipEdgeBoxes(boxes, frame.shape)
-        self.__trackBoxes(bboxes, framePos, framePosMsec, frame)
+        boxes, self.frameDetections = self.pinDetector.detect(frame, framePos, scoreThresh=.85)
+        boxes = self.__skipEdgeBoxes(boxes, frame.shape)
+        self.__trackBoxes(boxes, framePos, framePosMsec, frame)
 
     @staticmethod
     def __skipEdgeBoxes(boxes, frameShape):

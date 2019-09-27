@@ -1,18 +1,12 @@
-import os
-import time
-
 import numpy as np
 import cv2
-import resource
-
-import psutil
 
 import utils.visualize
-from detection.pins_tracking.v1.PinDetector import PinDetector, PickledDictionaryPinDetector, RetinanetPinDetector
-from detection.pins_tracking.v1.SceneSegmentation import CachedSceneSegmentation, UnetSceneSegmentation
+from detection.PinDetector import PinDetector, PickledDictionaryPinDetector, RetinanetPinDetector
+from segmentation.SceneSegmentation import CachedSceneSegmentation, UnetSceneSegmentation
 from utils.VideoPlayback import VideoPlayback
 
-from detection.pins_tracking.v1.TechProcessTracker import TechProcessTracker
+from techprocess_tracking.TechProcessTracker import TechProcessTracker
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 
 
@@ -76,7 +70,7 @@ def main():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
 
         pinDetector = PickledDictionaryPinDetector(pclFile)
-        # pinDetector = RetinanetPinDetector('modelWeights/retinanet_pins_inference.h5')
+        pinDetector = RetinanetPinDetector('modelWeights/retinanet_pins_inference.h5')
 
         sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
         # sceneSegmentation = UnetSceneSegmentation('modelWeights/unet_pins_25_0.000016_1.000000.hdf5')

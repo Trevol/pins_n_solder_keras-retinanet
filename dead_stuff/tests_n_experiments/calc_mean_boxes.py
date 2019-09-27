@@ -1,8 +1,8 @@
 import cv2
 from detection.csv_cache.DetectionsCSV import DetectionsCSV
 import utils.visualize
-from detection.pins_tracking.v1.Box import Box
-from utils import resize, roundToInt, roundPoint
+from detection.Box import Box
+from utils import resize, roundPoint
 from utils.VideoPlayback import VideoPlayback
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase
 

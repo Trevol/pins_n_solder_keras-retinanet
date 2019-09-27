@@ -1,6 +1,6 @@
 import numpy as np
 
-from detection.pins_tracking.v1.Box import Box
+from detection.Box import Box
 
 
 class FrameInfo:
