@@ -1,6 +1,6 @@
 import sys
 
-from TechProcessTrackingApplication import TechProcessTrackingApplication
+from widgets.TechProcessTrackingApplication import TechProcessTrackingApplication
 
 
 def main():

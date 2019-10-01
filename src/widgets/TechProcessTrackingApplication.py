@@ -12,4 +12,4 @@ class TechProcessTrackingApplication(QApplication):
 
     def exec(self):
         self.mainWindow.showMaximized()
-        super(TechProcessTrackingApplication, self).exec()
+        return super(TechProcessTrackingApplication, self).exec()
