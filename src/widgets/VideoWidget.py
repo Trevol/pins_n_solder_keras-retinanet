@@ -12,7 +12,6 @@ class VideoWidget(QWidget):
     def __initUI__(self):
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(layout)
 
         scroll = QScrollArea(self)
         layout.addWidget(scroll)
@@ -21,28 +20,27 @@ class VideoWidget(QWidget):
         self.imageLabel.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self.imageLabel.setScaledContents(True)
         scroll.setWidget(self.imageLabel)
+        self.setLayout(layout)
 
     def imshow(self, img):
-        if img is None:
+        if img is None:  # hide label and scroll bars
             self.imageLabel.clear()
             self.imageLabel.resize(1, 1)
             self.imageLabel.setVisible(False)
-        else:
+        else:  # show image and scroll bars (if needed)
             self.imageLabel.setVisible(True)
-            self.imageLabel.setPixmap(_get_pixmap(img))
+            self.imageLabel.setPixmap(ndarray2pixmap(img))
             self.imageLabel.resize(img.shape[1], img.shape[0])
 
 
-def _get_pixmap(image):
+def ndarray2pixmap(image: np.ndarray):
     if image is None:
         return None
-    # w, h, format = _get_image_size_n_format(image)
-    # qimage = QImage(image.data, w, h, image.strides[0], format)
-    qimage = ndarray_to_qimage(image)
+    qimage = ndarray2qimage(image)
     return QPixmap.fromImage(qimage)
 
 
-def ndarray_to_qimage(arr: np.ndarray):
+def ndarray2qimage(arr: np.ndarray):
     """
     Convert NumPy array to QImage object
     credits: https://github.com/PierreRaybaut/PythonQwt/blob/master/qwt/toqimage.py
@@ -64,7 +62,7 @@ def ndarray_to_qimage(arr: np.ndarray):
     if arr.dtype == np.uint8:
         if color_dim is None:
             qimage = QImage(data, nx, ny, stride, QImage.Format_Indexed8)
-            #            qimage.setColorTable([qRgb(i, i, i) for i in range(256)])
+            # qimage.setColorTable([qRgb(i, i, i) for i in range(256)])
             qimage.setColorCount(256)
         elif color_dim == 3:
             qimage = QImage(data, nx, ny, stride, QImage.Format_RGB888)

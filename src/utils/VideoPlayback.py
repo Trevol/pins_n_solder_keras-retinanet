@@ -9,6 +9,7 @@ from utils.visualize import putFramePos
 class VideoPlayback:
     def __init__(self, videoPath, initialFrameDelay=1, autoplayInitially=True):
         self.cap = cv2.VideoCapture(videoPath)
+        self.isCameraCapture = isinstance(videoPath, int)
         self.frameDelay = initialFrameDelay
         self.autoPlay = autoplayInitially
         self._controller = VideoController(self)
@@ -88,6 +89,25 @@ class VideoPlayback:
 
     def frames(self, range=None):
         assert self.cap
+        if self.isCameraCapture:
+            return self.__cameraFrames()
+        else:
+            return self.__videoFileFrames(range)
+
+    def __cameraFrames(self):
+        pos = -1
+        while True:
+            ret = self.cap.grab()
+            if not ret:
+                break
+            ret, frame = self.cap.retrieve()
+            if not ret:
+                break
+            posMsec = self.__currentPosMsec()
+            pos = pos + 1
+            yield pos, frame, posMsec
+
+    def __videoFileFrames(self, range=None):
         from_, to = self.__range(range)
         if from_:
             self.setPos(from_)
