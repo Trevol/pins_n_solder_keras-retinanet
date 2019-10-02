@@ -2,8 +2,8 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, qApp
 
-from detection.PinDetector import PickledDictionaryPinDetector
-from segmentation.SceneSegmentation import CachedSceneSegmentation
+from detection.PinDetector import PickledDictionaryPinDetector, RetinanetPinDetector
+from segmentation.SceneSegmentation import CachedSceneSegmentation, UnetSceneSegmentation
 from techprocess_tracking.TechProcessTracker import TechProcessTracker
 from widgets.TechProcessTrackingThread import TechProcessTrackingThread
 from .TechProcessInfoWidget import TechProcessInfoWidget
@@ -42,25 +42,30 @@ class MainWindow(QMainWindow):
         # TODO: stop thread
         pass
 
-    def __frameInfoReady(self, pos, frame, msec, pinsCount, pinsWithSolderCount):
+    def __frameInfoReady(self, pos, frame, msec, pinsCount, pinsWithSolderCount, logRecord):
         self.videoWidget.imshow(frame)
-        self.techProcessInfoWidget.setInfo(pos, msec, pinsCount, pinsWithSolderCount, [])
+        self.techProcessInfoWidget.setInfo(pos, msec, pinsCount, pinsWithSolderCount, logRecord)
 
     def startTechProcessTrackerThread(self):
         assert self.__thread is None
 
         videoSource = '/HDD_DATA/Computer_Vision_Task/Video_6.mp4'
-        videoSourceDelayMs = 50
-        pinDetector = PickledDictionaryPinDetector('detection/csv_cache/data/detections_video6.pcl')
-        sceneSegmentation = CachedSceneSegmentation(
-            '/home/trevol/HDD_DATA/Computer_Vision_Task/frames_6/not_augmented_base_vgg16_more_images_25')
+        videoSourceDelayMs = 1
 
         # videoSource = 0
         # videoSourceDelayMs=-1 #no delay for camera feed
-        # pinDetector = RetinanetPinDetector('modelWeights/retinanet_pins_inference.h5')
-        # sceneSegmentation = UnetSceneSegmentation('modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
 
-        techProcessTracker = TechProcessTracker(pinDetector, sceneSegmentation)
-        self.__thread = TechProcessTrackingThread(techProcessTracker, videoSource, videoSourceDelayMs)
+        def techProcessTrackerFactory():
+            # pinDetector = PickledDictionaryPinDetector('detection/csv_cache/data/detections_video6.pcl')
+            # sceneSegmentation = CachedSceneSegmentation(
+            #     '/home/trevol/HDD_DATA/Computer_Vision_Task/frames_6/not_augmented_base_vgg16_more_images_25')
+
+            pinDetector = RetinanetPinDetector('modelWeights/retinanet_pins_inference.h5')
+            sceneSegmentation = UnetSceneSegmentation('modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
+
+            techProcessTracker = TechProcessTracker(pinDetector, sceneSegmentation)
+            return techProcessTracker
+
+        self.__thread = TechProcessTrackingThread(techProcessTrackerFactory, videoSource, videoSourceDelayMs)
         self.__thread.frameInfoReady.connect(self.__frameInfoReady)
         self.__thread.start()

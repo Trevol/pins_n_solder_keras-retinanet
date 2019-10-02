@@ -32,7 +32,7 @@ class TechProcessInfoWidget(QGroupBox):
         self.pinsWithSolderCountWidget.setReadOnly(True)
         layout.addRow('With solder:', self.pinsWithSolderCountWidget)
 
-    def setInfo(self, pos, msec, pinsCount, pinsWithSolderCount, log):
+    def setInfo(self, pos, msec, pinsCount, pinsWithSolderCount, logRecord):
         self.framePosWidget.setText(str(pos))
         self.frameMsecWidget.setText(f'{msec:.2f}')
         self.pinsCountWidget.setText(str(pinsCount))

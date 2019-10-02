@@ -4,10 +4,13 @@ import cv2
 from more_itertools import ilen
 
 from detection.Box import Box
+from segmentation.classesMeta import BGR
 from techprocess_tracking.Constants import StabilizationLength
 from techprocess_tracking.Pin import Pin
 from techprocess_tracking.FrameInfo import FrameInfo
 from techprocess_tracking.PinsWorkArea import PinsWorkArea
+from utils.q_deferred_caller import deferredCall
+from utils.visualize import colorizeLabel
 
 framesCounter = 0
 
@@ -184,7 +187,7 @@ class StableScene:
         #         rescaledBox = pin.box.rescale(sceneSegmentationScaleY, sceneSegmentationScaleX)
         #         x0, y0, x1, y1 = rescaledBox.box
         #         cv2.rectangle(img, (x0, y0), (x1, y1), 255, 1)
-        #     cv2.imshow('DEBUG GGG', img)
+        #     deferredCall(cv2.imshow, 'DEBUG GGG', img)
         #
         # DEBUG()
 
