@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, qApp
 from detection.PinDetector import PickledDictionaryPinDetector
 from segmentation.SceneSegmentation import CachedSceneSegmentation
 from techprocess_tracking.TechProcessTracker import TechProcessTracker
+from widgets.TechProcessTrackingThread import TechProcessTrackingThread
 from .TechProcessInfoWidget import TechProcessInfoWidget
 from .VideoWidget import VideoWidget
 
@@ -13,43 +14,53 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.initUI()
+        self.__thread = None
+        self.startTechProcessTrackerThread()
 
     def initUI(self):
-        self.setWindowTitle("My Window")
+        self.setWindowTitle("Process")
         centralWidget = QWidget()
         self.setCentralWidget(centralWidget)
         self.initMainLayout(centralWidget)
 
     def initMainLayout(self, centralWidget: QWidget):
+        # TODO: add start/stop buttons
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
 
-        layout.addWidget(VideoWidget())
-        layout.addWidget(TechProcessInfoWidget())
+        self.videoWidget = VideoWidget()
+        self.techProcessInfoWidget = TechProcessInfoWidget()
+        layout.addWidget(self.videoWidget)
+        layout.addWidget(self.techProcessInfoWidget)
         centralWidget.setLayout(layout)
-
-    def initTracker(self):
-        pinDetector, sceneSegmentation = createServices(pclFile, segmentationCacheDir)
-        self.techProcessTracker = TechProcessTracker(pinDetector, sceneSegmentation)
-
 
     def keyPressEvent(self, keyEvent: QtGui.QKeyEvent):
         if keyEvent.key() == Qt.Key_Escape:
-            qApp.exit()
+            self.close()
 
-def files():
-    yield ('/HDD_DATA/Computer_Vision_Task/Video_6.mp4',
-           'detection/csv_cache/data/detections_video6.pcl',
-           '/home/trevol/HDD_DATA/Computer_Vision_Task/frames_6/not_augmented_base_vgg16_more_images_25')
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        # TODO: stop thread
+        pass
 
-    # yield ('/HDD_DATA/Computer_Vision_Task/Video_2.mp4',
-    #        '../../csv_cache/data/detections_video2.pcl')
+    def __frameInfoReady(self, pos, frame, msec, pinsCount, pinsWithSolderCount):
+        self.videoWidget.imshow(frame)
+        self.techProcessInfoWidget.setInfo(pos, msec, pinsCount, pinsWithSolderCount, [])
 
+    def startTechProcessTrackerThread(self):
+        assert self.__thread is None
 
-def createServices(pclFile, segmentationCacheDir):
-    pinDetector = PickledDictionaryPinDetector(pclFile)
-    # pinDetector = RetinanetPinDetector('modelWeights/retinanet_pins_inference.h5')
+        videoSource = '/HDD_DATA/Computer_Vision_Task/Video_6.mp4'
+        videoSourceDelayMs = 50
+        pinDetector = PickledDictionaryPinDetector('detection/csv_cache/data/detections_video6.pcl')
+        sceneSegmentation = CachedSceneSegmentation(
+            '/home/trevol/HDD_DATA/Computer_Vision_Task/frames_6/not_augmented_base_vgg16_more_images_25')
 
-    sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
-    # sceneSegmentation = UnetSceneSegmentation('modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
-    return pinDetector, sceneSegmentation
+        # videoSource = 0
+        # videoSourceDelayMs=-1 #no delay for camera feed
+        # pinDetector = RetinanetPinDetector('modelWeights/retinanet_pins_inference.h5')
+        # sceneSegmentation = UnetSceneSegmentation('modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
+
+        techProcessTracker = TechProcessTracker(pinDetector, sceneSegmentation)
+        self.__thread = TechProcessTrackingThread(techProcessTracker, videoSource, videoSourceDelayMs)
+        self.__thread.frameInfoReady.connect(self.__frameInfoReady)
+        self.__thread.start()

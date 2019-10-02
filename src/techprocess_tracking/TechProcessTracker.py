@@ -136,14 +136,15 @@ class TechProcessTracker:
         solderAdded = currentScene.pinsWithSolderCount - prevScene.pinsWithSolderCount
         return SceneChanges(pinsAdded, solderAdded)
 
-    def drawScene(self, img):
-        visualize.drawDetections(img, self.frameDetections)
+    def drawScene(self, img, withRawDetectionAndWorkArea=True):
+        if withRawDetectionAndWorkArea:
+            visualize.drawDetections(img, self.frameDetections)
         if self.__currentScene and self.__currentScene.stabilized:
-            self.__currentScene.draw(img)
+            self.__currentScene.draw(img, withRawDetectionAndWorkArea)
 
     def getStats(self):
         if not any(self.__stableScenes):
-            return None
+            return 0, 0
         lastStableScene = self.__stableScenes[-1]
         return lastStableScene.pinsCount, lastStableScene.pinsWithSolderCount
 

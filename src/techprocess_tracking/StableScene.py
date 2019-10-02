@@ -163,10 +163,10 @@ class StableScene:
         assert self.__pinsWorkArea
         return self.__pinsWorkArea.inWorkArea(boxes)
 
-    def draw(self, img):
+    def draw(self, img, withWorkarea=True):
         for pin in self.__pins:
             pin.draw(img)
-        if self.__pinsWorkArea:
+        if withWorkarea and self.__pinsWorkArea:
             self.__pinsWorkArea.draw(img)
 
     def pinAtPoint(self, pt):

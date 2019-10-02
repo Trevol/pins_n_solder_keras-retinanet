@@ -23,3 +23,17 @@ class TechProcessInfoWidget(QGroupBox):
         self.frameMsecWidget = QLineEdit()
         self.frameMsecWidget.setReadOnly(True)
         layout.addRow('MSec:', self.frameMsecWidget)
+
+        self.pinsCountWidget = QLineEdit()
+        self.pinsCountWidget.setReadOnly(True)
+        layout.addRow('Pins:', self.pinsCountWidget)
+
+        self.pinsWithSolderCountWidget = QLineEdit()
+        self.pinsWithSolderCountWidget.setReadOnly(True)
+        layout.addRow('With solder:', self.pinsWithSolderCountWidget)
+
+    def setInfo(self, pos, msec, pinsCount, pinsWithSolderCount, log):
+        self.framePosWidget.setText(str(pos))
+        self.frameMsecWidget.setText(f'{msec:.2f}')
+        self.pinsCountWidget.setText(str(pinsCount))
+        self.pinsWithSolderCountWidget.setText(str(pinsWithSolderCount))
