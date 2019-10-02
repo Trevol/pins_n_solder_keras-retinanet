@@ -15,12 +15,12 @@ class TechProcessTrackingThread(QThread):
         self.videoSource = videoSource
         self.videoSourceDelayMs = videoSourceDelayMs
 
-    def __sleep(self):
+    def _sleep(self):
         if self.videoSourceDelayMs and self.videoSourceDelayMs > 0:
             self.msleep(self.videoSourceDelayMs)
 
     def run(self):
-        def _shareResults():
+        def emitResults():
             pinsCount, pinsWithSolderCount = self.techProcessTracker.getStats()
             self.techProcessTracker.drawScene(frame, True)
             cv2.cvtColor(frame, cv2.COLOR_BGR2RGB, frame)
@@ -29,5 +29,5 @@ class TechProcessTrackingThread(QThread):
         video = VideoPlayback(self.videoSource)
         for pos, frame, msec in video.frames():
             self.techProcessTracker.track(pos, msec, frame)
-            _shareResults()
-            self.__sleep()
+            emitResults()
+            self._sleep()
