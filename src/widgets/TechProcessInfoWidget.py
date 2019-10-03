@@ -1,6 +1,9 @@
 from PyQt5 import QtCore
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QSizePolicy, QGroupBox, QLineEdit
+from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QSizePolicy, QGroupBox, QLineEdit, QTableWidget, \
+    QAbstractItemView, QTableWidgetItem, QVBoxLayout, QHBoxLayout, QPushButton
+
+from techprocess_tracking.TechProcesLogRecord import TechProcesLogRecord
 
 
 class TechProcessInfoWidget(QGroupBox):
@@ -11,29 +14,56 @@ class TechProcessInfoWidget(QGroupBox):
         self.framePosMsec = 0.0
 
         self.setTitle('Log')
-        self.setFixedWidth(220)
+        self.setFixedWidth(420)
 
-        layout = QFormLayout()
-        self.setLayout(layout)
+        vboxLayout = QVBoxLayout()
+        self.setLayout(vboxLayout)
+
+        buttonsLayout = QHBoxLayout()
+        vboxLayout.addLayout(buttonsLayout)
+        buttonsLayout.addWidget(QPushButton('Start'))
+        buttonsLayout.addWidget(QPushButton('Stop'))
+        buttonsLayout.addStretch(1)
+
+        formLayout = QFormLayout()
+        vboxLayout.addLayout(formLayout)
 
         self.framePosWidget = QLineEdit()
         self.framePosWidget.setReadOnly(True)
-        layout.addRow('Frame:', self.framePosWidget)
+        formLayout.addRow('Frame:', self.framePosWidget)
 
         self.frameMsecWidget = QLineEdit()
         self.frameMsecWidget.setReadOnly(True)
-        layout.addRow('MSec:', self.frameMsecWidget)
+        formLayout.addRow('MSec:', self.frameMsecWidget)
 
         self.pinsCountWidget = QLineEdit()
         self.pinsCountWidget.setReadOnly(True)
-        layout.addRow('Pins:', self.pinsCountWidget)
+        formLayout.addRow('Pins:', self.pinsCountWidget)
 
         self.pinsWithSolderCountWidget = QLineEdit()
         self.pinsWithSolderCountWidget.setReadOnly(True)
-        layout.addRow('With solder:', self.pinsWithSolderCountWidget)
+        formLayout.addRow('With solder:', self.pinsWithSolderCountWidget)
 
-    def setInfo(self, pos, msec, pinsCount, pinsWithSolderCount, logRecord):
+        self.logsWidget = QTableWidget()
+        vboxLayout.addWidget(self.logsWidget)
+        self.logsWidget.verticalHeader().setVisible(False)
+        self.logsWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.logsWidget.setColumnCount(5)
+        self.logsWidget.setHorizontalHeaderLabels(
+            ['MSec', 'Num of pins', 'Pins Added', 'Num of pins with solder', 'Solder added'])
+
+    def setInfo(self, pos, msec, pinsCount, pinsWithSolderCount, logRecord: TechProcesLogRecord):
         self.framePosWidget.setText(str(pos))
         self.frameMsecWidget.setText(f'{msec:.2f}')
         self.pinsCountWidget.setText(str(pinsCount))
         self.pinsWithSolderCountWidget.setText(str(pinsWithSolderCount))
+
+        if logRecord:
+            rowCount = self.logsWidget.rowCount()
+            self.logsWidget.setRowCount(rowCount + 1)
+            lastRow = rowCount
+            self.logsWidget.setItem(lastRow, 0, QTableWidgetItem(f'{logRecord.framePosMs:.2f}'))
+            self.logsWidget.setItem(lastRow, 1, QTableWidgetItem(f'{logRecord.pinsCount}'))
+            self.logsWidget.setItem(lastRow, 2, QTableWidgetItem(f'{logRecord.pinsAdded}'))
+            self.logsWidget.setItem(lastRow, 3, QTableWidgetItem(f'{logRecord.pinsWithSolderCount}'))
+            self.logsWidget.setItem(lastRow, 4, QTableWidgetItem(f'{logRecord.solderAdded}'))
