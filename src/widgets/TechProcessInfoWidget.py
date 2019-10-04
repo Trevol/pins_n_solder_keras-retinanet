@@ -22,7 +22,6 @@ class TechProcessInfoWidget(QGroupBox):
         buttonsLayout = QHBoxLayout()
         vboxLayout.addLayout(buttonsLayout)
         buttonsLayout.addWidget(QPushButton('Start'))
-        buttonsLayout.addWidget(QPushButton('Stop'))
         buttonsLayout.addStretch(1)
 
         formLayout = QFormLayout()
