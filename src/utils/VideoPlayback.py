@@ -1,3 +1,5 @@
+from time import perf_counter
+
 import cv2
 import math
 from utils import leftClip
@@ -95,7 +97,12 @@ class VideoPlayback:
             return self.__videoFileFrames(range)
 
     def __cameraFrames(self):
+        # warm up camera
+        self.cap.grab()
+        self.cap.retrieve()
+
         pos = -1
+        sec0 = perf_counter()
         while True:
             ret = self.cap.grab()
             if not ret:
@@ -103,7 +110,10 @@ class VideoPlayback:
             ret, frame = self.cap.retrieve()
             if not ret:
                 break
-            posMsec = self.__currentPosMsec()
+            sec1 = perf_counter()
+            # posMsec = self.__currentPosMsec()
+            posMsec = (sec1 - sec0) * 1000
+            # sec0 = sec1
             pos = pos + 1
             yield pos, frame, posMsec
 
