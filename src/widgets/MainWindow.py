@@ -15,7 +15,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.initUI()
         self.__thread = None
-        # self.startTechProcessTrackerThread()
+        self.startTechProcessTrackerThread()
 
     def initUI(self):
         self.setWindowTitle("Process")
@@ -29,15 +29,14 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.videoWidget = VideoWidget()
-        layout.addWidget(self.videoWidget)
-        layout.setSizeConstraint(QLayout.SetFixedSize)
+        layout.addWidget(self.videoWidget, stretch=1)
 
         vbox = QVBoxLayout()
-        vbox.setSizeConstraint(QLayout.SetFixedSize)
-        buttonsLayout = QHBoxLayout()
-        buttonsLayout.addWidget(QPushButton('Start'))
-        buttonsLayout.addStretch(1)
-        vbox.addLayout(buttonsLayout)
+        vbox.setContentsMargins(0, 6, 0, 0)
+
+        self.startStopButton = QPushButton('Start')
+        self.startStopButton.clicked.connect(self.startOrStop)
+        vbox.addWidget(self.startStopButton, stretch=0, alignment=Qt.AlignLeft)
 
         self.techProcessInfoWidget = TechProcessInfoWidget()
         vbox.addWidget(self.techProcessInfoWidget)
