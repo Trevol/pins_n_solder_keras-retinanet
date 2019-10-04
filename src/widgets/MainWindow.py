@@ -42,6 +42,9 @@ class MainWindow(QMainWindow):
         # TODO: stop thread
         pass
 
+    def startOrStop(self):
+        print('startOrStop')
+
     def __frameInfoReady(self, pos, frame, msec, pinsCount, pinsWithSolderCount, logRecord):
         self.videoWidget.imshow(frame)
         self.techProcessInfoWidget.setInfo(pos, msec, pinsCount, pinsWithSolderCount, logRecord)
