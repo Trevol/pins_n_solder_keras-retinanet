@@ -1,6 +1,6 @@
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, qApp
+from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, qApp, QVBoxLayout, QPushButton, QLayout
 
 from detection.PinDetector import PickledDictionaryPinDetector, RetinanetPinDetector
 from segmentation.SceneSegmentation import CachedSceneSegmentation, UnetSceneSegmentation
@@ -15,7 +15,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.initUI()
         self.__thread = None
-        self.startTechProcessTrackerThread()
+        # self.startTechProcessTrackerThread()
 
     def initUI(self):
         self.setWindowTitle("Process")
@@ -29,9 +29,21 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.videoWidget = VideoWidget()
-        self.techProcessInfoWidget = TechProcessInfoWidget()
         layout.addWidget(self.videoWidget)
-        layout.addWidget(self.techProcessInfoWidget)
+        layout.setSizeConstraint(QLayout.SetFixedSize)
+
+        vbox = QVBoxLayout()
+        vbox.setSizeConstraint(QLayout.SetFixedSize)
+        buttonsLayout = QHBoxLayout()
+        buttonsLayout.addWidget(QPushButton('Start'))
+        buttonsLayout.addStretch(1)
+        vbox.addLayout(buttonsLayout)
+
+        self.techProcessInfoWidget = TechProcessInfoWidget()
+        vbox.addWidget(self.techProcessInfoWidget)
+
+        layout.addLayout(vbox)
+
         centralWidget.setLayout(layout)
 
     def keyPressEvent(self, keyEvent: QtGui.QKeyEvent):
