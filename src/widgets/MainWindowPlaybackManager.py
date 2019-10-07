@@ -2,7 +2,7 @@ from detection.PinDetector import PickledDictionaryPinDetector
 from segmentation.SceneSegmentation import CachedSceneSegmentation
 from techprocess_tracking.TechProcessTracker import TechProcessTracker
 from widgets import MainWindow
-from widgets.TechProcessTrackingThread import TechProcessTrackingThread
+from widgets.threads.TechProcessTrackingThread import TechProcessTrackingThread
 
 
 class MainWindowPlaybackManager():
@@ -10,7 +10,6 @@ class MainWindowPlaybackManager():
         self.parent: MainWindow = parent
         self._trackingThread: TechProcessTrackingThread = None
         self._playbackThread = None
-        self.trackingStopped = True
 
     def startOrStop(self):
         if self._trackingThread:

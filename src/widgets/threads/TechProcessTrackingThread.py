@@ -1,9 +1,6 @@
 import cv2
 import numpy as np
 from PyQt5.QtCore import QThread, pyqtSignal
-
-from techprocess_tracking.TechProcesLogRecord import TechProcesLogRecord
-from techprocess_tracking.TechProcessTracker import TechProcessTracker
 from utils.VideoPlayback import VideoPlayback
 
 
