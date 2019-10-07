@@ -66,3 +66,10 @@ class TechProcessInfoWidget(QGroupBox):
             self.logsWidget.setItem(lastRow, 2, QTableWidgetItem(f'{logRecord.pinsAdded}'))
             self.logsWidget.setItem(lastRow, 3, QTableWidgetItem(f'{logRecord.pinsWithSolderCount}'))
             self.logsWidget.setItem(lastRow, 4, QTableWidgetItem(f'{logRecord.solderAdded}'))
+
+    def clearInfo(self):
+        self.framePosWidget.clear()
+        self.frameMsecWidget.clear()
+        self.pinsCountWidget.clear()
+        self.pinsWithSolderCountWidget.clear()
+        self.logsWidget.setRowCount(0)

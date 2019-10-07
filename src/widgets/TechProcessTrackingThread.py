@@ -12,6 +12,7 @@ class TechProcessTrackingThread(QThread):
 
     def __init__(self, techProcessTrackerFactory, videoSource, videoSourceDelayMs=None, parent=None):
         super(TechProcessTrackingThread, self).__init__(parent)
+        self._finishRequired = False
         self.techProcessTrackerFactory = techProcessTrackerFactory
         self.videoSource = videoSource
         self.videoSourceDelayMs = videoSourceDelayMs
@@ -28,14 +29,24 @@ class TechProcessTrackingThread(QThread):
             self.frameInfoReady.emit(pos, frame, msec, pinsCount, pinsWithSolderCount, log)
 
         video = VideoPlayback(self.videoSource)
-        techProcessTracker = self.techProcessTrackerFactory()
-        for pos, frame, msec in video.frames():
-            log = techProcessTracker.track(pos, msec, frame)
-            emitResults()
-            self._sleep()
+        try:
+            techProcessTracker = self.techProcessTrackerFactory()
+            for pos, frame, msec in video.frames():
+                log = techProcessTracker.track(pos, msec, frame)
+                if self._finishRequired:
+                    break
+                emitResults()
+                self._sleep()
+                if self._finishRequired:
+                    break
+        finally:
+            video.release()
 
     def run(self):
         try:
             self._execProcessTracking()
         except BaseException as e:
             print(type(e), e)
+
+    def finish(self):
+        self._finishRequired = True

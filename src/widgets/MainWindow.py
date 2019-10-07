@@ -1,5 +1,5 @@
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, qApp, QVBoxLayout, QPushButton, QLayout
 
 from detection.PinDetector import PickledDictionaryPinDetector, RetinanetPinDetector
@@ -14,7 +14,7 @@ class MainWindow(QMainWindow):
     class ThreadManager():
         def __init__(self, parent):
             self.parent: MainWindow = parent
-            self._trackingThread = None
+            self._trackingThread: TechProcessTrackingThread = None
             self._playbackThread = None
             self.trackingStopped = True
 
@@ -26,10 +26,12 @@ class MainWindow(QMainWindow):
                 self.startTracking()
 
         def stopTracking(self):
-            pass
+            self.parent.startStopButton.setDisabled(True)
+            self._trackingThread.finish()
 
         def startTracking(self):
             try:
+                self.parent.clearTrackingInfo()
                 self.parent.startStopButton.setDisabled(True)
                 self.startTechProcessTrackerThread()
             except:
@@ -42,10 +44,17 @@ class MainWindow(QMainWindow):
             self.parent.startStopButton.setEnabled(True)
 
         def _trackingThreadFinished(self):
-            raise NotImplementedError()
+            self._trackingThread = None
+            self.parent.startStopButton.setText('Start')
+            self.parent.startStopButton.setEnabled(True)
 
-        def stopAll(self, waitForCompletion=False):
-            pass
+        def shutdown(self, waitForCompletion=False, msecs=500):
+            if self._trackingThread:
+                self._trackingThread.finish()
+                self._trackingThread.wait(msecs)
+            if self._playbackThread:
+                self._trackingThread.finish()
+                self._trackingThread.wait(msecs)
 
         def __frameInfoReady(self, pos, frame, msec, pinsCount, pinsWithSolderCount, logRecord):
             self.parent.videoWidget.imshow(frame)
@@ -117,8 +126,12 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         self.hide()
-        self.threadManager.stop(waitForCompletion=True)
+        self.threadManager.shutdown(waitForCompletion=True)
         self.close()
 
     def startOrStop(self):
         self.threadManager.startOrStop()
+
+    def clearTrackingInfo(self):
+        self.videoWidget.imshow(None)
+        self.techProcessInfoWidget.clearInfo()
