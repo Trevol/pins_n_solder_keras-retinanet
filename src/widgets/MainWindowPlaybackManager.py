@@ -3,12 +3,35 @@ from segmentation.SceneSegmentation import CachedSceneSegmentation
 from techprocess_tracking.TechProcessTracker import TechProcessTracker
 from widgets import MainWindow
 from widgets.threads.TechProcessTrackingThread import TechProcessTrackingThread
+from widgets.threads.VideoPlaybackThread import VideoPlaybackThread
 
 
 class MainWindowPlaybackManager():
     def __init__(self, parent):
         self.parent: MainWindow = parent
         self._trackingThread: TechProcessTrackingThread = None
+        self._playbackThread = None
+        self.startPlayback()
+
+    def startPlayback(self):
+        assert self._playbackThread is None
+
+        videoSource = '/HDD_DATA/Computer_Vision_Task/Video_6.mp4'
+        videoSourceDelayMs = 50
+
+        self._playbackThread = VideoPlaybackThread(videoSource, videoSourceDelayMs)
+        # self._playbackThread.started.connect(self._trackingThreadStarted)
+        # self._playbackThread.finished.connect(self._trackingThreadFinished)
+
+        self._playbackThread.frameReady.connect(self._playbackFrameReady)
+        self._playbackThread.start()
+
+    def _playbackFrameReady(self, pos, frame, msec):
+        self.parent.videoWidget.imshow(frame)
+
+    def stopPlayback(self):
+        assert self._playbackThread is not None
+        self._playbackThread.finish()
         self._playbackThread = None
 
     def startOrStop(self):
@@ -21,9 +44,11 @@ class MainWindowPlaybackManager():
     def stopTracking(self):
         self.parent.startStopButton.setDisabled(True)
         self._trackingThread.finish()
+        self.startPlayback()
 
     def startTracking(self):
         try:
+            self.stopPlayback()
             self.parent.clearTrackingInfo()
             self.parent.startStopButton.setDisabled(True)
             self.startTechProcessTrackerThread()
