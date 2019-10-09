@@ -4,6 +4,7 @@ from techprocess_tracking.TechProcessTracker import TechProcessTracker
 from widgets import MainWindow
 from widgets.threads.TechProcessTrackingThread import TechProcessTrackingThread
 from widgets.threads.VideoPlaybackThread import VideoPlaybackThread
+from .videoTrackingConfig import videoSource, videoSourceDelayMs, techProcessTrackerFactory
 
 
 class MainWindowPlaybackManager():
@@ -16,13 +17,7 @@ class MainWindowPlaybackManager():
     def startPlayback(self):
         assert self._playbackThread is None
 
-        videoSource = '/HDD_DATA/Computer_Vision_Task/Video_6.mp4'
-        videoSourceDelayMs = 50
-
         self._playbackThread = VideoPlaybackThread(videoSource, videoSourceDelayMs)
-        # self._playbackThread.started.connect(self._trackingThreadStarted)
-        # self._playbackThread.finished.connect(self._trackingThreadFinished)
-
         self._playbackThread.frameReady.connect(self._playbackFrameReady)
         self._playbackThread.start()
 
@@ -30,9 +25,10 @@ class MainWindowPlaybackManager():
         self.parent.videoWidget.imshow(frame)
 
     def stopPlayback(self):
-        assert self._playbackThread is not None
-        self._playbackThread.finish()
-        self._playbackThread = None
+        if self._playbackThread is not None:
+            self._playbackThread.finish()
+            self._playbackThread = None
+
 
     def startOrStop(self):
         if self._trackingThread:
@@ -76,34 +72,16 @@ class MainWindowPlaybackManager():
             if waitMsecs > 0:
                 self._playbackThread.wait(waitMsecs)
 
-    def __frameInfoReady(self, pos, frame, msec, pinsCount, pinsWithSolderCount, logRecord):
+    def _frameInfoReady(self, pos, frame, msec, pinsCount, pinsWithSolderCount, logRecord):
         self.parent.videoWidget.imshow(frame)
         self.parent.techProcessInfoWidget.setInfo(pos, msec, pinsCount, pinsWithSolderCount, logRecord)
 
     def startTechProcessTrackerThread(self):
         assert self._trackingThread is None
 
-        videoSource = '/HDD_DATA/Computer_Vision_Task/Video_6.mp4'
-        # videoSource = '/HDD_DATA/Computer_Vision_Task/Video_2.mp4'
-        videoSourceDelayMs = 50
-
-        # videoSource = 0
-        # videoSourceDelayMs=-1 #no delay for camera feed
-
-        def techProcessTrackerFactory():
-            pinDetector = PickledDictionaryPinDetector('detection/csv_cache/data/detections_video6.pcl')
-            sceneSegmentation = CachedSceneSegmentation(
-                '/home/trevol/HDD_DATA/Computer_Vision_Task/frames_6/not_augmented_base_vgg16_more_images_25')
-
-            # pinDetector = RetinanetPinDetector('modelWeights/retinanet_pins_inference.h5')
-            # sceneSegmentation = UnetSceneSegmentation('modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
-
-            techProcessTracker = TechProcessTracker(pinDetector, sceneSegmentation)
-            return techProcessTracker
-
         self._trackingThread = TechProcessTrackingThread(techProcessTrackerFactory, videoSource, videoSourceDelayMs)
         self._trackingThread.started.connect(self._trackingThreadStarted)
         self._trackingThread.finished.connect(self._trackingThreadFinished)
 
-        self._trackingThread.frameInfoReady.connect(self.__frameInfoReady)
+        self._trackingThread.frameInfoReady.connect(self._frameInfoReady)
         self._trackingThread.start()
