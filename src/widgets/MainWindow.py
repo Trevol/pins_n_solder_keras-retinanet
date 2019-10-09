@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
         self.close()
 
     def startOrStop(self):
-        self.playbackManager.startOrStop()
+        self.playbackManager.startOrStopTracking()
 
     def clearTrackingInfo(self):
         self.videoWidget.imshow(None)

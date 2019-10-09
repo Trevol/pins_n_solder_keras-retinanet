@@ -8,80 +8,101 @@ from .videoTrackingConfig import videoSource, videoSourceDelayMs, techProcessTra
 
 
 class MainWindowPlaybackManager():
-    def __init__(self, parent):
-        self.parent: MainWindow = parent
-        self._trackingThread: TechProcessTrackingThread = None
-        self._playbackThread = None
-        self.startPlayback()
+    class Tracking:
+        def __init__(self, manager):
+            self.manager: MainWindowPlaybackManager = manager
+            self._thread: TechProcessTrackingThread = None
 
-    def startPlayback(self):
-        assert self._playbackThread is None
+        def shutdown(self, waitMsecs):
+            if self._thread is None:
+                return
+            self._thread.finish()
+            if waitMsecs > 0:
+                self._thread.wait(waitMsecs)
+            self._thread = None
 
-        self._playbackThread = VideoPlaybackThread(videoSource, videoSourceDelayMs)
-        self._playbackThread.frameReady.connect(self._playbackFrameReady)
-        self._playbackThread.start()
+        def started(self):
+            return self._thread is not None
 
-    def _playbackFrameReady(self, pos, frame, msec):
-        self.parent.videoWidget.imshow(frame)
+        def stop(self):
+            self.manager.mainWindow.startStopButton.setDisabled(True)
+            self._thread.finish()
+            self.manager.playback.start()
 
-    def stopPlayback(self):
-        if self._playbackThread is not None:
-            self._playbackThread.finish()
-            self._playbackThread = None
+        def start(self):
+            try:
+                self.manager.playback.stop()
+                self.manager.mainWindow.clearTrackingInfo()
+                self.manager.mainWindow.startStopButton.setDisabled(True)
+                self.startThread()
+            except:
+                self._thread = None
+                self.manager.mainWindow.startStopButton.setEnabled(True)
+                raise
 
+        def _threadStarted(self):
+            self.manager.mainWindow.startStopButton.setText('Stop')
+            self.manager.mainWindow.startStopButton.setEnabled(True)
 
-    def startOrStop(self):
-        if self._trackingThread:
-            # started!
-            self.stopTracking()
+        def _threadFinished(self):
+            self._thread = None
+            self.manager.mainWindow.startStopButton.setText('Start')
+            self.manager.mainWindow.startStopButton.setEnabled(True)
+
+        def _frameInfoReady(self, pos, frame, msec, pinsCount, pinsWithSolderCount, logRecord):
+            self.manager.mainWindow.videoWidget.imshow(frame)
+            self.manager.mainWindow.techProcessInfoWidget.setInfo(pos, msec, pinsCount, pinsWithSolderCount, logRecord)
+
+        def startThread(self):
+            assert self._thread is None
+
+            self._thread = TechProcessTrackingThread(techProcessTrackerFactory, videoSource, videoSourceDelayMs)
+            self._thread.started.connect(self._threadStarted)
+            self._thread.finished.connect(self._threadFinished)
+
+            self._thread.frameInfoReady.connect(self._frameInfoReady)
+            self._thread.start()
+
+    class Playback:
+        def __init__(self, manager):
+            self.manager: MainWindowPlaybackManager = manager
+            self._thread = None
+
+        def shutdown(self, waitMsecs):
+            if self._thread is None:
+                return
+            self._thread.finish()
+            if waitMsecs > 0:
+                self._thread.wait(waitMsecs)
+            self._thread = None
+
+        def start(self):
+            assert self._thread is None
+
+            self._thread = VideoPlaybackThread(videoSource, videoSourceDelayMs)
+            self._thread.frameReady.connect(self._frameReady)
+            self._thread.start()
+
+        def _frameReady(self, pos, frame, msec):
+            self.manager.mainWindow.videoWidget.imshow(frame)
+
+        def stop(self):
+            if self._thread is not None:
+                self._thread.finish()
+                self._thread = None
+
+    def __init__(self, mainWindow):
+        self.mainWindow: MainWindow = mainWindow
+        self.tracking = self.Tracking(self)
+        self.playback = self.Playback(self)
+        self.playback.start()
+
+    def startOrStopTracking(self):
+        if self.tracking.started():
+            self.tracking.stop()
         else:
-            self.startTracking()
-
-    def stopTracking(self):
-        self.parent.startStopButton.setDisabled(True)
-        self._trackingThread.finish()
-        self.startPlayback()
-
-    def startTracking(self):
-        try:
-            self.stopPlayback()
-            self.parent.clearTrackingInfo()
-            self.parent.startStopButton.setDisabled(True)
-            self.startTechProcessTrackerThread()
-        except:
-            self._trackingThread = None
-            self.parent.startStopButton.setEnabled(True)
-            raise
-
-    def _trackingThreadStarted(self):
-        self.parent.startStopButton.setText('Stop')
-        self.parent.startStopButton.setEnabled(True)
-
-    def _trackingThreadFinished(self):
-        self._trackingThread = None
-        self.parent.startStopButton.setText('Start')
-        self.parent.startStopButton.setEnabled(True)
+            self.tracking.start()
 
     def shutdown(self, waitMsecs=500):
-        if self._trackingThread:
-            self._trackingThread.finish()
-            if waitMsecs > 0:
-                self._trackingThread.wait(waitMsecs)
-        if self._playbackThread:
-            self._playbackThread.finish()
-            if waitMsecs > 0:
-                self._playbackThread.wait(waitMsecs)
-
-    def _frameInfoReady(self, pos, frame, msec, pinsCount, pinsWithSolderCount, logRecord):
-        self.parent.videoWidget.imshow(frame)
-        self.parent.techProcessInfoWidget.setInfo(pos, msec, pinsCount, pinsWithSolderCount, logRecord)
-
-    def startTechProcessTrackerThread(self):
-        assert self._trackingThread is None
-
-        self._trackingThread = TechProcessTrackingThread(techProcessTrackerFactory, videoSource, videoSourceDelayMs)
-        self._trackingThread.started.connect(self._trackingThreadStarted)
-        self._trackingThread.finished.connect(self._trackingThreadFinished)
-
-        self._trackingThread.frameInfoReady.connect(self._frameInfoReady)
-        self._trackingThread.start()
+        self.tracking.shutdown(waitMsecs)
+        self.playback.shutdown(waitMsecs)
