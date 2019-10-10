@@ -1,0 +1,6 @@
+1) Run inference
+    - every Nth second (fps)
+    -
+
+https://build-system.fman.io/
+https://github.com/mherrmann/fbs-tutorial

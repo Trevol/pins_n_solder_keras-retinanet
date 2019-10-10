@@ -8,11 +8,14 @@ class Timer:
         self.start = self.end = self.duration = None
         self.autoreport = autoreport
 
+    def _getTime(self):
+        return time.perf_counter()
+
     @contextmanager
     def timeit(self):
-        self.start = time.time()
+        self.start = self._getTime()
         yield self
-        self.end = time.time()
+        self.end = self._getTime()
         self.duration = self.end - self.start
         if self.autoreport:
             print(self.report())
@@ -21,7 +24,7 @@ class Timer:
         return f'{self.desc}: {self.duration:.7f}'
 
     def getDuration(self):
-        now = time.time()
+        now = self._getTime()
         return now - self.start
 
 
