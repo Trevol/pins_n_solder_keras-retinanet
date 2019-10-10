@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 from PyQt5.QtCore import QThread, pyqtSignal
+
+from timings import timings
 from utils.VideoPlayback import VideoPlayback
 
 
@@ -36,6 +38,7 @@ class TechProcessTrackingThread(QThread):
                 self._sleep()
                 if self._finishRequired:
                     break
+            timings.save('timings_thread.pcl')
         finally:
             video.release()
 
