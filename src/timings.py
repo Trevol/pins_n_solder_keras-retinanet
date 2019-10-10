@@ -1,5 +1,7 @@
 import pickle
 
+from matplotlib.lines import Line2D
+
 
 class __Timings:
     data = []
@@ -20,9 +22,35 @@ class __Timings:
             return pickle.load(file)
 
     def loadAndPlot(self, fileName='timings.pcl'):
+        import numpy as np
+
         data = self.load(fileName)
-        print(len(data))
-        print(len(data[-1]))
+        totals = []
+        detections = []
+        segmentations = []
+        for total, detection, segmentation in data:
+            totals.append(total)
+            detections.append(detection)
+            segmentations.append(segmentation)
+        print('total: ', np.mean(totals), np.median(totals), np.std(totals))
+        print('detections: ', np.mean(detections), np.median(detections), np.std(detections))
+        actualSegmentations = [s for s in segmentations if s > 0]
+        print('segmentations: ', np.mean(actualSegmentations), np.median(actualSegmentations),
+              np.std(actualSegmentations))
+
+        # plot
+        import matplotlib.pyplot as plt
+
+        f = plt.figure()
+        ax = f.subplots(1, 1)
+        ax.set_xlim(0, len(totals))
+
+        x = range(len(totals))
+        ax.add_line(Line2D(x, totals, markersize='1', color='#808000'))  # olive
+        ax.add_line(Line2D(x, detections, markersize='1', color='#808080'))  # gray
+        ax.add_line(Line2D(x, segmentations, markersize='1', color='#800080'))  # Purple
+
+        plt.show()
 
 
 timings = __Timings()
