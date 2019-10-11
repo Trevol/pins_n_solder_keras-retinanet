@@ -9,7 +9,6 @@ from segmentation.SceneSegmentation import SceneSegmentation
 from techprocess_tracking.StableScene import StableScene
 from techprocess_tracking.TechProcesLogRecord import TechProcesLogRecord
 from techprocess_tracking.TechProcessLogger import TechProcessLogger
-from timings import timings
 from utils import visualize
 from utils.Timer import timeit
 
@@ -71,16 +70,9 @@ class TechProcessTracker:
                 print(' ', np.round(currentColor, 1), np.round(prevColor, 1))
 
     def track(self, framePos, framePosMsec, frame):
-        timings.newRecord(3, 0)
-        with timeit(autoreport=False) as tAll:
-            with timeit(autoreport=False) as tDetect:
-                boxes, self.frameDetections = self.pinDetector.detect(frame, framePos, scoreThresh=.85)
-            timings.addValue(1, tDetect.duration)
-
-            boxes = self.__skipEdgeBoxes(boxes, frame.shape)
-            track_boxes = self.__trackBoxes(boxes, framePos, framePosMsec, frame)
-        timings.addValue(0, tAll.duration)
-        return track_boxes
+        boxes, self.frameDetections = self.pinDetector.detect(frame, framePos, scoreThresh=.85)
+        boxes = self.__skipEdgeBoxes(boxes, frame.shape)
+        return self.__trackBoxes(boxes, framePos, framePosMsec, frame)
 
     @staticmethod
     def __skipEdgeBoxes(boxes, frameShape):
@@ -154,10 +146,7 @@ class TechProcessTracker:
         assert currentScene.pinsCount >= prevScene.pinsCount
 
         if currentScene.pinsCount == prevScene.pinsCount:
-            with timeit(autoreport=False) as tSegment:
-                currentSceneSegmentation = sceneSegmentation.getSegmentationMap(frame, framePos)
-            timings.addValue(2, tSegment.duration)
-
+            currentSceneSegmentation = sceneSegmentation.getSegmentationMap(frame, framePos)
             scaleY = frame.shape[0] / currentSceneSegmentation.shape[0]
             scaleX = frame.shape[1] / currentSceneSegmentation.shape[1]
             currentScene.detectSolder(prevScene, currentSceneSegmentation, scaleY, scaleX)

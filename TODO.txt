@@ -4,3 +4,9 @@
 
 https://build-system.fman.io/
 https://github.com/mherrmann/fbs-tutorial
+
+
+Timings (mean median std):
+total:         0.1617 0.1644 0.0422
+detections:    0.1273 0.1265 0.031
+segmentations: 0.0903 0.0676 0.1848
