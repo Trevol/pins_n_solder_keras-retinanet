@@ -1,5 +1,7 @@
-from detection.PinDetector import PickledDictionaryPinDetector, RetinanetPinDetector
-from segmentation.SceneSegmentation import CachedSceneSegmentation, UnetSceneSegmentation
+from detection.PinDetector import PickledDictionaryPinDetector
+from detection.RetinanetPinDetector import RetinanetPinDetector
+from segmentation.SceneSegmentation import CachedSceneSegmentation
+from segmentation.UnetSceneSegmentation import UnetSceneSegmentation
 from techprocess_tracking.TechProcessTracker import TechProcessTracker
 
 videoSource = '/HDD_DATA/Computer_Vision_Task/Video_6.mp4'
