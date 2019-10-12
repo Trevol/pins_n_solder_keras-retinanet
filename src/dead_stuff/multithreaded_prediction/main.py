@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from threading import Lock
 
 import cv2
@@ -15,6 +16,29 @@ from utils import remainderlessDividable
 
 import tensorflow as tf
 import keras.backend as K
+
+
+def makeSessionContext():
+    class SessionContext:
+        session = K.get_session()
+        graph = tf.get_default_graph()
+
+        @contextmanager
+        def asDefault(self):
+            with self.session.as_default():
+                with self.graph.as_default():
+                    yield
+
+    return SessionContext()
+
+
+sessionContext = makeSessionContext()
+
+with sessionContext.asDefault():
+    pass
+
+with sessionContext.asDefault():
+    pass
 
 
 class RetinanetPinDetector:
@@ -71,10 +95,8 @@ class UnetSceneSegmentation:
 class TestThread(QThread):
     lock = Lock()
 
-    def __init__(self, session, graph, detector, segmentation, testFrame, id):
+    def __init__(self, detector, segmentation, testFrame, id):
         super(TestThread, self).__init__()
-        self.session = session
-        self.graph = graph
         self.segmentation = segmentation
         self.id = id
         self.testFrame = testFrame
@@ -84,11 +106,10 @@ class TestThread(QThread):
         try:
             with self.lock:
                 print('Thread ', int(self.id), ' started!!!')
-            with self.session.as_default():
-                with self.graph.as_default():
-                    for _ in range(10):
-                        boxes, detections = self.detector.detect(self.testFrame, 366, .85)
-                        self.segmentation.getSegmentationMap(self.testFrame, 366)
+            with sessionContext.asDefault():
+                for _ in range(100):
+                    boxes, detections = self.detector.detect(self.testFrame, 366, .85)
+                    self.segmentation.getSegmentationMap(self.testFrame, 366)
             with self.lock:
                 print('Thread ', int(self.id), ' finished!!!')
         except Exception as e:
@@ -112,11 +133,11 @@ def test_case_1():
 
     graph.finalize()
 
-    thread1 = TestThread(session, graph, detector, segmentation, frame, 11111)
-    thread2 = TestThread(session, graph, detector, segmentation, frame, 22222)
-    thread3 = TestThread(session, graph, detector, segmentation, frame, 33333)
-    thread4 = TestThread(session, graph, detector, segmentation, frame, 44444)
-    thread5 = TestThread(session, graph, detector, segmentation, frame, 55555)
+    thread1 = TestThread(detector, segmentation, frame, 11111)
+    thread2 = TestThread(detector, segmentation, frame, 22222)
+    thread3 = TestThread(detector, segmentation, frame, 33333)
+    thread4 = TestThread(detector, segmentation, frame, 44444)
+    thread5 = TestThread(detector, segmentation, frame, 55555)
 
     thread1.start()
     thread1.wait()
@@ -146,11 +167,11 @@ def test_case_2():
 
     graph.finalize()
 
-    thread1 = TestThread(session, graph, detector, segmentation, frame, 11111)
-    thread2 = TestThread(session, graph, detector, segmentation, frame, 22222)
-    thread3 = TestThread(session, graph, detector, segmentation, frame, 33333)
-    thread4 = TestThread(session, graph, detector, segmentation, frame, 44444)
-    thread5 = TestThread(session, graph, detector, segmentation, frame, 55555)
+    thread1 = TestThread(detector, segmentation, frame, 11111)
+    thread2 = TestThread(detector, segmentation, frame, 22222)
+    thread3 = TestThread(detector, segmentation, frame, 33333)
+    thread4 = TestThread(detector, segmentation, frame, 44444)
+    thread5 = TestThread(detector, segmentation, frame, 55555)
 
     thread1.start()
     thread2.start()
@@ -167,8 +188,8 @@ def test_case_2():
 
 def main():
     app = QApplication([])
-    # test_case_2()
-    test_case_1()
+    test_case_2()
+    # test_case_1()
 
 
 main()
