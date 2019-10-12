@@ -68,59 +68,38 @@ class UnetSceneSegmentation:
         return labelsImage
 
 
+class TestThread(QThread):
+    lock = Lock()
+
+    def __init__(self, session, graph, detector, segmentation, testFrame, id):
+        super(TestThread, self).__init__()
+        self.session = session
+        self.graph = graph
+        self.segmentation = segmentation
+        self.id = id
+        self.testFrame = testFrame
+        self.detector = detector
+
+    def run(self):
+        try:
+            with self.lock:
+                print('Thread ', int(self.id), ' started!!!')
+            with self.session.as_default():
+                with self.graph.as_default():
+                    for _ in range(10):
+                        boxes, detections = self.detector.detect(self.testFrame, 366, .85)
+                        self.segmentation.getSegmentationMap(self.testFrame, 366)
+            with self.lock:
+                print('Thread ', int(self.id), ' finished!!!')
+        except Exception as e:
+            print('ERROR!', e)
+            raise
+
+
 def test_case_1():
-    """
-    create and predict in different sequential threads
-    """
-
-    class TestThread(QThread):
-        def __init__(self, detectorFactory, testFrame):
-            super(TestThread, self).__init__()
-            self.testFrame = testFrame
-            self.detectorFactory = detectorFactory
-
-        def run(self):
-            detector = self.detectorFactory()
-            boxes, detections = detector.detect(self.testFrame, 366, .85)
-            print(len(list(boxes)))
-
-    framePath = 'f_0366_24400.00_24.40.jpg'
-    frame = cv2.imread(framePath)
-
-    thread = TestThread(lambda: RetinanetPinDetector('../../modelWeights/retinanet_pins_inference.h5'), frame)
-    thread.start()
-    thread.wait()
-    print('Thread 1 finished')
-    thread = TestThread(lambda: RetinanetPinDetector('../../modelWeights/retinanet_pins_inference.h5'), frame)
-    thread.start()
-    thread.wait()
-
-
-def test_case_2():
     """
     create in main thread and predict in different sequential threads
     """
-
-    class TestThread(QThread):
-        lock = Lock()
-
-        def __init__(self, session, graph, detector, segmentation, testFrame, id):
-            super(TestThread, self).__init__()
-            self.session = session
-            self.graph = graph
-            self.segmentation = segmentation
-            self.id = id
-            self.testFrame = testFrame
-            self.detector = detector
-
-        def run(self):
-            with self.session.as_default():
-                with self.graph.as_default():
-                    for _ in range(1000):
-                        boxes, detections = self.detector.detect(self.testFrame, 366, .85)
-                        self.segmentation.getSegmentationMap(frame, 366)
-                        # with self.lock:
-                        #     print('Thread ', int(self.currentThreadId()), self.id)
 
     framePath = 'f_0366_24400.00_24.40.jpg'
     frame = cv2.imread(framePath)
@@ -135,17 +114,61 @@ def test_case_2():
 
     thread1 = TestThread(session, graph, detector, segmentation, frame, 11111)
     thread2 = TestThread(session, graph, detector, segmentation, frame, 22222)
+    thread3 = TestThread(session, graph, detector, segmentation, frame, 33333)
+    thread4 = TestThread(session, graph, detector, segmentation, frame, 44444)
+    thread5 = TestThread(session, graph, detector, segmentation, frame, 55555)
+
+    thread1.start()
+    thread1.wait()
+    thread2.start()
+    thread2.wait()
+    thread3.start()
+    thread3.wait()
+    thread4.start()
+    thread4.wait()
+    thread5.start()
+    thread5.wait()
+
+
+def test_case_2():
+    """
+    create in main thread and predict in different sequential threads
+    """
+
+    framePath = 'f_0366_24400.00_24.40.jpg'
+    frame = cv2.imread(framePath)
+
+    session = K.get_session()
+    graph = tf.get_default_graph()
+
+    detector = RetinanetPinDetector('../../modelWeights/retinanet_pins_inference.h5')
+    segmentation = UnetSceneSegmentation('../../modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
+
+    graph.finalize()
+
+    thread1 = TestThread(session, graph, detector, segmentation, frame, 11111)
+    thread2 = TestThread(session, graph, detector, segmentation, frame, 22222)
+    thread3 = TestThread(session, graph, detector, segmentation, frame, 33333)
+    thread4 = TestThread(session, graph, detector, segmentation, frame, 44444)
+    thread5 = TestThread(session, graph, detector, segmentation, frame, 55555)
 
     thread1.start()
     thread2.start()
+    thread3.start()
+    thread4.start()
+    thread5.start()
 
     thread1.wait()
     thread2.wait()
+    thread3.wait()
+    thread4.wait()
+    thread5.wait()
 
 
 def main():
     app = QApplication([])
-    test_case_2()
+    # test_case_2()
+    test_case_1()
 
 
 main()
