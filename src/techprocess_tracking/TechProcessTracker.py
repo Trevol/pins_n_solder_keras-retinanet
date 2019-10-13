@@ -1,16 +1,13 @@
 import numpy as np
-import cv2
 
 import utils
-from techprocess_tracking import DEBUG
-from detection.PinDetector import PinDetector
+from models.detection import PinDetector
 from techprocess_tracking.SceneChanges import SceneChanges
 from segmentation.SceneSegmentation import SceneSegmentation
 from techprocess_tracking.StableScene import StableScene
 from techprocess_tracking.TechProcesLogRecord import TechProcesLogRecord
 from techprocess_tracking.TechProcessLogger import TechProcessLogger
 from utils import visualize
-from utils.Timer import timeit
 
 
 class TechProcessTracker:

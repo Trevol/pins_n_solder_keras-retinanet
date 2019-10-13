@@ -9,7 +9,7 @@ import numpy as np
 
 from keras_retinanet import models
 from keras_retinanet.utils.image import preprocess_image, resize_image
-from detection.Box import Box
+from models.detection import Box
 
 from segmentation.MyVGGUnet import VGGUnet
 from utils import remainderlessDividable

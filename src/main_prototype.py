@@ -2,10 +2,8 @@ import numpy as np
 import cv2
 
 import utils.visualize
-from detection.PinDetector import PinDetector, PickledDictionaryPinDetector
-from detection.RetinanetPinDetector import RetinanetPinDetector
+from models.detection import PinDetector, PickledDictionaryPinDetector
 from segmentation.SceneSegmentation import CachedSceneSegmentation
-from segmentation.UnetSceneSegmentation import UnetSceneSegmentation
 from utils.VideoPlayback import VideoPlayback
 
 from techprocess_tracking.TechProcessTracker import TechProcessTracker

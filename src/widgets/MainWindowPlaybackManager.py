@@ -1,6 +1,3 @@
-from detection.PinDetector import PickledDictionaryPinDetector
-from segmentation.SceneSegmentation import CachedSceneSegmentation
-from techprocess_tracking.TechProcessTracker import TechProcessTracker
 from widgets import MainWindow
 from widgets.threads.TechProcessTrackingThread import TechProcessTrackingThread
 from widgets.threads.VideoPlaybackThread import VideoPlaybackThread

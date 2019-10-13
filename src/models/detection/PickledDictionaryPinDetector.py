@@ -1,14 +1,6 @@
-from detection.Box import Box
-from detection.csv_cache.DetectionsCSV import DetectionsCSV
-
-
-class PinDetector:
-    @staticmethod
-    def skipWeakDetections(detections, scoreThreshold):
-        return [d for d in detections if d[2] >= scoreThreshold]
-
-    def detect(self, frame, framePos, scoreThresh):
-        pass
+from models.detection import Box
+from models.detection.PinDetector import PinDetector
+from models.detection.csv_cache.DetectionsCSV import DetectionsCSV
 
 
 class PickledDictionaryPinDetector(PinDetector):
@@ -20,5 +12,3 @@ class PickledDictionaryPinDetector(PinDetector):
         strongDetections = self.skipWeakDetections(allDetection, .85)
         boxes = (Box(d[0]) for d in strongDetections)
         return boxes, strongDetections
-
-

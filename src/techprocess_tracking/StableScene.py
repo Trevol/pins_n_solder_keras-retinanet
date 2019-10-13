@@ -3,14 +3,11 @@ import numpy as np
 import cv2
 from more_itertools import ilen
 
-from detection.Box import Box
-from segmentation.classesMeta import BGR
+from models.detection import Box
 from techprocess_tracking.Constants import StabilizationLength
 from techprocess_tracking.Pin import Pin
 from techprocess_tracking.FrameInfo import FrameInfo
 from techprocess_tracking.PinsWorkArea import PinsWorkArea
-from utils.q_deferred_caller import deferredCall
-from utils.visualize import colorizeLabel
 
 framesCounter = 0
 

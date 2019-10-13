@@ -1,6 +1,4 @@
-from detection.PinDetector import PickledDictionaryPinDetector
-from detection.RetinanetPinDetector import RetinanetPinDetector
-from segmentation.SceneSegmentation import CachedSceneSegmentation
+from models.detection.RetinanetPinDetector import RetinanetPinDetector
 from segmentation.UnetSceneSegmentation import UnetSceneSegmentation
 from techprocess_tracking.TechProcessTracker import TechProcessTracker
 
