@@ -1,9 +1,12 @@
 1) Run inference
     - every Nth second (fps)
-    -
-
-https://build-system.fman.io/
-https://github.com/mherrmann/fbs-tutorial
+    - Background Subtractor (detect motion/stable scene)
+    - simple frame difference with threshold
+2) build app (executable)
+    https://build-system.fman.io/
+    https://github.com/mherrmann/fbs-tutorial
+3) settings (edit/save/apply)
+4) play videoSource in overlay widget
 
 
 Timings (mean median std):

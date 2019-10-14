@@ -3,7 +3,10 @@ import cv2
 
 import utils.visualize
 from detection import PickledDictionaryPinDetector, PinDetector
+from detection.RetinanetPinDetector import RetinanetPinDetector
+from models.weights.config import retinanet_pins_weights, unet_pins_weights
 from segmentation.CachedSceneSegmentation import CachedSceneSegmentation
+from segmentation.UnetSceneSegmentation import UnetSceneSegmentation
 from utils.VideoPlayback import VideoPlayback
 
 from techprocess_tracking.TechProcessTracker import TechProcessTracker
@@ -57,11 +60,11 @@ def printMemoryUsage():
 
 
 def createServices(pclFile, segmentationCacheDir):
-    pinDetector = PickledDictionaryPinDetector(pclFile)
-    # pinDetector = RetinanetPinDetector('models/weights/retinanet_pins_inference.h5')
+    # pinDetector = PickledDictionaryPinDetector(pclFile)
+    pinDetector = RetinanetPinDetector(retinanet_pins_weights, warmup=True)
 
-    sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
-    # sceneSegmentation = UnetSceneSegmentation('models/weights/unet_pins_25_0.000016_1.000000.hdf5')
+    # sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
+    sceneSegmentation = UnetSceneSegmentation(unet_pins_weights, warmup=True)
     return pinDetector, sceneSegmentation
 
 
