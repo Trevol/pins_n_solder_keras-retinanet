@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from more_itertools import ilen
 
-from models.detection import Box
+from detection.Box import Box
 from techprocess_tracking.Constants import StabilizationLength
 from techprocess_tracking.Pin import Pin
 from techprocess_tracking.FrameInfo import FrameInfo

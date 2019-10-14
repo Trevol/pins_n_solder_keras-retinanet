@@ -4,7 +4,7 @@ from utils.Colors import Colors
 from utils import Geometry2D
 from utils.Timer import timeit
 from utils import readFrame
-from models.detection import DetectionsCSV
+from detection.csv_cache import DetectionsCSV
 import utils
 
 

@@ -2,8 +2,8 @@ import numpy as np
 from keras_retinanet import models
 from keras_retinanet.utils.image import preprocess_image, resize_image
 
-from models.detection import Box
-from models.detection.PinDetector import PinDetector
+from detection.Box import Box
+from detection.PinDetector import PinDetector
 
 
 class RetinanetPinDetector(PinDetector):

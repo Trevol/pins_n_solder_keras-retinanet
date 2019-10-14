@@ -1,4 +1,4 @@
-from models.detection.RetinanetPinDetector import RetinanetPinDetector
+from detection.RetinanetPinDetector import RetinanetPinDetector
 from segmentation.UnetSceneSegmentation import UnetSceneSegmentation
 from techprocess_tracking.TechProcessTracker import TechProcessTracker
 
@@ -14,8 +14,8 @@ def techProcessTrackerFactory():
     # sceneSegmentation = CachedSceneSegmentation(
     #     '/home/trevol/HDD_DATA/Computer_Vision_Task/frames_6/not_augmented_base_vgg16_more_images_25')
 
-    pinDetector = RetinanetPinDetector('modelWeights/retinanet_pins_inference.h5')
-    sceneSegmentation = UnetSceneSegmentation('modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
+    pinDetector = RetinanetPinDetector('models/weights/retinanet_pins_inference.h5')
+    sceneSegmentation = UnetSceneSegmentation('models/weights/unet_pins_25_0.000016_1.000000.hdf5')
 
     techProcessTracker = TechProcessTracker(pinDetector, sceneSegmentation)
     return techProcessTracker

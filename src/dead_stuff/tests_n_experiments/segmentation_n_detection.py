@@ -20,7 +20,7 @@ class Segmenter():
         self.output_height = self.model.outputHeight
         self.output_width = self.model.outputWidth
 
-        weights = '../modelWeights/unet_pins_25_0.000016_1.000000.hdf5'
+        weights = '../models/weights/unet_pins_25_0.000016_1.000000.hdf5'
         self.model.load_weights(weights)
 
     def prepareBatch(self, image):
@@ -42,7 +42,7 @@ class Segmenter():
 
 class Detector:
     def __init__(self):
-        model_path = '../modelWeights/inference_2_28.h5'
+        model_path = '../models/weights/inference_2_28.h5'
         self.model = models.load_model(model_path, backbone_name='resnet50')
 
     @staticmethod

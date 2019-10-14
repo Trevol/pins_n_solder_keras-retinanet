@@ -1,7 +1,7 @@
 import cv2
-from models.detection import DetectionsCSV
+from detection.csv_cache import DetectionsCSV
 import utils
-from models.detection import Box
+from detection.Box import Box
 from utils import resize, roundPoint
 from utils import VideoPlayback
 from utils.VideoPlaybackHandlerBase import VideoPlaybackHandlerBase

@@ -1,6 +1,6 @@
-from models.detection import Box
-from models.detection.PinDetector import PinDetector
-from models.detection.csv_cache.DetectionsCSV import DetectionsCSV
+from detection.Box import Box
+from detection.PinDetector import PinDetector
+from detection.csv_cache.DetectionsCSV import DetectionsCSV
 
 
 class PickledDictionaryPinDetector(PinDetector):

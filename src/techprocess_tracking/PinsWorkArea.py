@@ -1,6 +1,6 @@
 import cv2
 
-from models.detection import Box
+from detection.Box import Box
 from utils.Colors import Colors
 from utils.Geometry2D import Geometry2D
 

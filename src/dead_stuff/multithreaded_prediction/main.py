@@ -9,7 +9,7 @@ import numpy as np
 
 from keras_retinanet import models
 from keras_retinanet.utils.image import preprocess_image, resize_image
-from models.detection import Box
+from detection.Box import Box
 
 from segmentation.MyVGGUnet import VGGUnet
 from utils import remainderlessDividable
@@ -34,11 +34,7 @@ def makeSessionContext():
 
 sessionContext = makeSessionContext()
 
-with sessionContext.asDefault():
-    pass
 
-with sessionContext.asDefault():
-    pass
 
 
 class RetinanetPinDetector:
@@ -128,8 +124,8 @@ def test_case_1():
     session = K.get_session()
     graph = tf.get_default_graph()
 
-    detector = RetinanetPinDetector('../../modelWeights/retinanet_pins_inference.h5')
-    segmentation = UnetSceneSegmentation('../../modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
+    detector = RetinanetPinDetector('../../models/weights/retinanet_pins_inference.h5')
+    segmentation = UnetSceneSegmentation('../../models/weights/unet_pins_25_0.000016_1.000000.hdf5')
 
     graph.finalize()
 
@@ -162,8 +158,8 @@ def test_case_2():
     session = K.get_session()
     graph = tf.get_default_graph()
 
-    detector = RetinanetPinDetector('../../modelWeights/retinanet_pins_inference.h5')
-    segmentation = UnetSceneSegmentation('../../modelWeights/unet_pins_25_0.000016_1.000000.hdf5')
+    detector = RetinanetPinDetector('../../models/weights/retinanet_pins_inference.h5')
+    segmentation = UnetSceneSegmentation('../../models/weights/unet_pins_25_0.000016_1.000000.hdf5')
 
     graph.finalize()
 

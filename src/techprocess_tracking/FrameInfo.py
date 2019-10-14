@@ -1,6 +1,6 @@
 import numpy as np
 
-from models.detection import Box
+from detection.Box import Box
 
 
 class FrameInfo:

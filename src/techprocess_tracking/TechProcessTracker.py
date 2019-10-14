@@ -1,7 +1,7 @@
 import numpy as np
 
 import utils
-from models.detection import PinDetector
+from detection import PinDetector
 from techprocess_tracking.SceneChanges import SceneChanges
 from segmentation.SceneSegmentation import SceneSegmentation
 from techprocess_tracking.StableScene import StableScene

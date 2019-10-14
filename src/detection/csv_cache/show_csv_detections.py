@@ -1,5 +1,5 @@
 import cv2
-from models.detection import DetectionsCSV
+from detection.csv_cache import DetectionsCSV
 import utils
 from utils import resize
 from utils import VideoPlayback
