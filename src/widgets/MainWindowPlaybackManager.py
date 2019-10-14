@@ -1,7 +1,9 @@
+from models.ModelsContext import ModelsContext
+from techprocess_tracking.TechProcessTracker import TechProcessTracker
 from widgets import MainWindow
 from widgets.threads.TechProcessTrackingThread import TechProcessTrackingThread
 from widgets.threads.VideoPlaybackThread import VideoPlaybackThread
-from .videoTrackingConfig import videoSource, videoSourceDelayMs, techProcessTrackerFactory
+from .videoTrackingConfig import videoSource, videoSourceDelayMs
 
 
 class MainWindowPlaybackManager():
@@ -52,13 +54,19 @@ class MainWindowPlaybackManager():
 
         def startThread(self):
             assert self._thread is None
-
-            self._thread = TechProcessTrackingThread(techProcessTrackerFactory, videoSource, videoSourceDelayMs)
+            techProcessTracker = TechProcessTracker(ModelsContext.getDetector(), ModelsContext.getSegmentation())
+            self._thread = TechProcessTrackingThread(techProcessTracker, videoSource, videoSourceDelayMs)
             self._thread.started.connect(self._threadStarted)
             self._thread.finished.connect(self._threadFinished)
 
             self._thread.frameInfoReady.connect(self._frameInfoReady)
             self._thread.start()
+
+        def cachedStuff(self):
+            # pinDetector = PickledDictionaryPinDetector('detection/csv_cache/data/detections_video6.pcl')
+            # sceneSegmentation = CachedSceneSegmentation(
+            #     '/home/trevol/HDD_DATA/Computer_Vision_Task/frames_6/not_augmented_base_vgg16_more_images_25')
+            pass
 
     class Playback:
         def __init__(self, manager):

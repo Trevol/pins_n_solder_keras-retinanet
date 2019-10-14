@@ -7,8 +7,14 @@ from detection.PinDetector import PinDetector
 
 
 class RetinanetPinDetector(PinDetector):
-    def __init__(self, modelWeightsPath):
+    def __init__(self, modelWeightsPath, warmup=True):
         self.model = models.load_model(modelWeightsPath, backbone_name='resnet50')
+        if warmup:
+            self._warmupModel()
+
+    def _warmupModel(self):
+        warmupImg = np.zeros([1, 1, 1, 3])
+        self.model.predict_on_batch(warmupImg)
 
     @staticmethod
     def predict_on_image(model, image, scoreThresh):

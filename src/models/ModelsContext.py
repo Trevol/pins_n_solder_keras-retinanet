@@ -1,31 +1,63 @@
 from threading import Lock
 
+import gc
+import tensorflow as tf
+import keras.backend as K
+from Cython.Compiler.TypeSlots import GCClearReferencesSlot
+
+from detection.RetinanetPinDetector import RetinanetPinDetector
+from models.weights.config import retinanet_pins_weights, unet_pins_weights
+from segmentation.UnetSceneSegmentation import UnetSceneSegmentation
+
 
 class ModelsContext:
-    pinsRetinanet = None
-    pinsUnet = None
-    rootSession = None
-    rootGraph = None
+    __detector = None
+    __segmentation = None
+    session = None
+    graph = None
     _lock = Lock()
+
+    def __init__(self):
+        self._initializer()
+
+    @classmethod
+    def getDetector(cls):
+        cls._initializer()
+        return cls.__detector
+
+    @classmethod
+    def getSegmentation(cls):
+        cls._initializer()
+        return cls.__segmentation
 
     @classmethod
     def _create(cls):
         with cls._lock:
-            pass
+            if cls._initialized:
+                return
+            cls.session = K.get_session()
+            cls.graph = tf.get_default_graph()
+            cls.__detector = RetinanetPinDetector(retinanet_pins_weights, warmup=True)
+            cls.__segmentation = UnetSceneSegmentation(unet_pins_weights, warmup=True)
+            cls.graph.finalize()
+            cls._initializer = cls._done
+            cls._initialized = True
 
-    accessor = _create
+    _initializer = _create
+    _initialized = False
 
-    def _read(self):
-        pass
+    @classmethod
+    def _done(cls): pass
 
     def __enter__(self):
-        # create model instances if not created
-        pass
+        with self.session.as_default():
+            with self.graph.as_default():
+                return self
 
-    def __exit__(self, *_):
-        pass
+    def __exit__(self, *_): pass
 
 
 if __name__ == '__main__':
-    with ModelsContext():
-        pass
+    with ModelsContext() as ctx:
+        assert ctx.detector is not None
+    assert ModelsContext.detector is not None

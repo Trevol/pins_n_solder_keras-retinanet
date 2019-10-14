@@ -7,7 +7,7 @@ from utils import remainderlessDividable
 
 
 class UnetSceneSegmentation(SceneSegmentation):
-    def __init__(self, weightsPath):
+    def __init__(self, weightsPath, warmup):
         self.input_height = remainderlessDividable(1080 // 2, 32, 1)
         self.input_width = remainderlessDividable(1920 // 2, 32, 1)
         self.n_classes = 6
@@ -15,6 +15,12 @@ class UnetSceneSegmentation(SceneSegmentation):
         self.output_height = self.model.outputHeight
         self.output_width = self.model.outputWidth
         self.model.load_weights(weightsPath)
+        if warmup:
+            self._warmupModel()
+
+    def _warmupModel(self):
+        img = np.zeros([1, 3, self.input_height, self.input_width])
+        self.model.predict_on_batch(img)  # warm up model
 
     def prepareBatch(self, image):
         image = cv2.resize(image, (self.input_width, self.input_height))
