@@ -1,11 +1,10 @@
 import cv2
 import numpy as np
 from keras_retinanet import models
-from keras_retinanet.utils.image import preprocess_image, resize_image, compute_resize_scale
+from keras_retinanet.utils.image import compute_resize_scale
 
 from detection.Box import Box
 from detection.PinDetector import PinDetector
-from utils.Timer import timeit
 
 
 class RetinanetPinDetector(PinDetector):
