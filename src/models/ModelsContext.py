@@ -5,8 +5,10 @@ import tensorflow as tf
 import keras.backend as K
 from Cython.Compiler.TypeSlots import GCClearReferencesSlot
 
+from detection.PickledDictionaryPinDetector import PickledDictionaryPinDetector
 from detection.RetinanetPinDetector import RetinanetPinDetector
 from models.weights.config import retinanet_pins_weights, unet_pins_weights
+from segmentation.CachedSceneSegmentation import CachedSceneSegmentation
 from segmentation.UnetSceneSegmentation import UnetSceneSegmentation
 
 
@@ -37,8 +39,12 @@ class ModelsContext:
                 return
             cls.session = K.get_session()
             cls.graph = tf.get_default_graph()
+
             cls.__detector = RetinanetPinDetector(retinanet_pins_weights, warmup=True)
+            # cls.__detector = PickledDictionaryPinDetector('detection/csv_cache/data/detections_video6.pcl')
             cls.__segmentation = UnetSceneSegmentation(unet_pins_weights, warmup=True)
+            # cls.__segmentation = CachedSceneSegmentation('/home/trevol/HDD_DATA/Computer_Vision_Task/frames_6/not_augmented_base_vgg16_more_images_25')
+
             cls.graph.finalize()
             cls._initializer = cls._done
             cls._initialized = True
