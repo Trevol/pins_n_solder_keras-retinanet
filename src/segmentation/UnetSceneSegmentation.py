@@ -15,16 +15,19 @@ class UnetSceneSegmentation(SceneSegmentation):
         self.output_height = self.model.outputHeight
         self.output_width = self.model.outputWidth
         self.model.load_weights(weightsPath)
+        self._uintBuf = np.empty((self.input_height, self.input_width, 3), np.uint8)
+        self._floatBuff = np.empty((self.input_height, self.input_width, 3), np.float32)
         if warmup:
             self._warmupModel()
 
     def _warmupModel(self):
-        img = np.zeros([1, 3, self.input_height, self.input_width])
+        img = np.empty([1, 3, self.input_height, self.input_width])
         self.model.predict_on_batch(img)  # warm up model
 
     def prepareBatch(self, image):
-        image = cv2.resize(image, (self.input_width, self.input_height))
-        image = image.astype(np.float32)
+        image = cv2.resize(image, (self.input_width, self.input_height), dst=self._uintBuf)
+        np.copyto(self._floatBuff, image)
+        image = self._floatBuff
         image[:, :, 0] -= 103.939
         image[:, :, 1] -= 116.779
         image[:, :, 2] -= 123.68

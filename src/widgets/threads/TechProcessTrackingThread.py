@@ -27,7 +27,7 @@ class TechProcessTrackingThread(QThread):
 
         video = VideoPlayback(self.videoSource)
         try:
-            for pos, frame, msec in video.frames():
+            for pos, frame, msec in video.frames(4300):
                 log = self.techProcessTracker.track(pos, msec, frame)
                 if self._finishRequired:
                     break
