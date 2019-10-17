@@ -13,4 +13,9 @@ def main():
             boxes, _ = detector.detect(frame, 0, .85)
 
 
+def main():
+    import numpy as np
+
+
+
 main()
