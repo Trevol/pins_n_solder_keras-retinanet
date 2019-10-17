@@ -17,7 +17,7 @@ class TechProcessTracker:
         self.__stableScenes = []
         self.__currentScene = None
         self.sceneId = -1
-        self.frameDetections = None
+        self.frameDetections = []
 
     def nextSceneId(self):
         self.sceneId += 1
@@ -67,6 +67,8 @@ class TechProcessTracker:
                 print(' ', np.round(currentColor, 1), np.round(prevColor, 1))
 
     def track(self, framePos, framePosMsec, frame):
+        if framePos % 4 != 0:
+            return None
         boxes, self.frameDetections = self.pinDetector.detect(frame, framePos, scoreThresh=.85)
         boxes = self.__skipEdgeBoxes(boxes, frame.shape)
         return self.__trackBoxes(boxes, framePos, framePosMsec, frame)

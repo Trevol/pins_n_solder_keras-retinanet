@@ -1,2 +1,2 @@
-# count of frames to ensure scene stability
-StabilizationLength = 20
+# count of detections to ensure scene stability
+StabilizationLength = 5
