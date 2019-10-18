@@ -3,6 +3,7 @@ import cv2
 
 import utils.visualize
 from detection import PickledDictionaryPinDetector, PinDetector
+from detection.PickledDictionaryPinDetector import PickledDictionaryPinDetector
 from detection.RetinanetPinDetector import RetinanetPinDetector
 from models.weights.config import retinanet_pins_weights, unet_pins_weights
 from segmentation.CachedSceneSegmentation import CachedSceneSegmentation
@@ -63,8 +64,8 @@ def createServices(pclFile, segmentationCacheDir):
     # pinDetector = PickledDictionaryPinDetector(pclFile)
     pinDetector = RetinanetPinDetector(retinanet_pins_weights, warmup=True)
 
-    # sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
-    sceneSegmentation = UnetSceneSegmentation(unet_pins_weights, warmup=True)
+    sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
+    # sceneSegmentation = UnetSceneSegmentation(unet_pins_weights, warmup=True)
     return pinDetector, sceneSegmentation
 
 
@@ -72,9 +73,9 @@ def main():
     printMemoryUsage()
 
     def getFramesRange():
-        # framesRange = (4150, None)
+        framesRange = (4100, None)
         # framesRange = (8100, None)
-        framesRange = None
+        # framesRange = None
         return framesRange
 
     np.seterr(all='raise')

@@ -176,9 +176,29 @@ class StableScene:
         pinsFilter = (p for p in self.pins if p.box.containsPoint(pt))
         return next(pinsFilter, None)
 
-    def detectSolder(self, prevScene, currentSceneSegmentation, sceneSegmentationScaleY, sceneSegmentationScaleX):
+    def detectSolder(self, prevScene, currentSceneSegmentation, sceneSegmentationScaleY, sceneSegmentationScaleX,
+                     frame=None):
         assert self.pinsCount == prevScene.pinsCount
         pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
+
+        ############ DEBUG ############
+        if not pinsAreClose:
+            def DEBUG_Differences():
+                if frame is None:
+                    return
+                f = frame.copy()
+                for pin in self.__pins:
+                    x0, y0, x1, y1 = pin.box.box
+                    cv2.rectangle(f, (x0, y0), (x1, y1), 255, 1)
+                for pin in prevScene.pins:
+                    x0, y0, x1, y1 = pin.box.box
+                    cv2.rectangle(f, (x0, y0), (x1, y1), (0, 0, 255), 1)
+                cv2.imshow('DEBUG_Differences', f)
+                cv2.waitKey()
+
+            DEBUG_Differences()
+        ####################
+
         assert pinsAreClose
 
         # def DEBUG():

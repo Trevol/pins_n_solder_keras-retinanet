@@ -148,7 +148,7 @@ class TechProcessTracker:
             currentSceneSegmentation = sceneSegmentation.getSegmentationMap(frame, framePos)
             scaleY = frame.shape[0] / currentSceneSegmentation.shape[0]
             scaleX = frame.shape[1] / currentSceneSegmentation.shape[1]
-            currentScene.detectSolder(prevScene, currentSceneSegmentation, scaleY, scaleX)
+            currentScene.detectSolder(prevScene, currentSceneSegmentation, scaleY, scaleX, frame=frame)
 
         pinsAdded = currentScene.pinsCount - prevScene.pinsCount
         solderAdded = currentScene.pinsWithSolderCount - prevScene.pinsWithSolderCount
