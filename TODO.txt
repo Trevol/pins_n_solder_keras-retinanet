@@ -13,3 +13,10 @@ Timings (mean median std):
 total:         0.1617 0.1644 0.0422
 detections:    0.1273 0.1265 0.031
 segmentations: 0.0903 0.0676 0.1848
+
+Linux and Logitech
+sudo apt-get install guvcview
+sudo apt-get install dov4l dv4l lib32v4l-0 libpt-1.10.10-plugins-v4l2 libv4l-0 libv4l-dev libv4lconvert0 libvideo-capture-v4l-perl qv4l2 v4l-conf v4l-utils v4l2loopback-dkms v4l2loopback-source v4l2ucp
+sudo apt-get install v4l-utils
+https://www.christitus.com/logitech-c920-linux-driver/
+https://askubuntu.com/questions/396897/logitech-c920-on-ubuntu-12-04-lts-where-to-begin-does-it-work-anyone-using-it
