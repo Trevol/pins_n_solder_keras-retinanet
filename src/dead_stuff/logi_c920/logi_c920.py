@@ -65,8 +65,6 @@ def main():
             video.set(cv2.CAP_PROP_FOCUS, currentFocus)
             print('Focus:', video.get(cv2.CAP_PROP_FOCUS), currentFocus)
 
-
-
     video.release()
 
 
