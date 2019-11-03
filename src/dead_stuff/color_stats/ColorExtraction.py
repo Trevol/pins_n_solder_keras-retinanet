@@ -29,12 +29,12 @@ class ColorExtraction:
 
     @staticmethod
     def multiPointSelectionMeanColor(img, multiPointSelection):
-        colors = [img[p[1], p[0]] for p in multiPointSelection.points]
+        colors = [img[p[1], p[0]] for p in multiPointSelection.vertices]
         return np.mean(colors, axis=0)
 
     @staticmethod
     def multiPointSelectionHsvColors(img, multiPointSelection):
-        bgrColors = [img[p[1], p[0]] for p in multiPointSelection.points]
+        bgrColors = [img[p[1], p[0]] for p in multiPointSelection.vertices]
 
         return [ColorExtraction.bgrTohsv(bgr) for bgr in bgrColors]
 
