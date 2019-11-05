@@ -96,7 +96,7 @@ class StableScene:
         if self.__aggregatedAtFramePos == currentFramePos:
             return
         bufferLen = len(self.__framesBuffer)
-        # извлекаем поливину буфера из его середины
+        # извлекаем половину буфера из его середины
         framesBuffer = list(self.__framesBuffer)[bufferLen // 4:3 * (bufferLen // 4)]
         self.aggregatedFrame_F32 = self.__meanFrame(framesBuffer)
         self.__aggregatedAtFramePos = currentFramePos
