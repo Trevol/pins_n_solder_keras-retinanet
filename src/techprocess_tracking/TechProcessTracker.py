@@ -79,14 +79,13 @@ class TechProcessTracker:
 
     #####################################################################
     def __trackBoxes(self, bboxes, framePos, framePosMsec, frame):
-        logRecord = None
         if not self.__currentScene:
             if any(bboxes):
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame, self.nextSceneId())
             else:
                 # TODO:  collect background without pins and arms
                 pass
-            return logRecord
+            return None
 
         lastStableScene = utils.lastOrDefault(self.__stableScenes, None)
         if lastStableScene:  # stable scene define workarea (cluster of pins)
@@ -95,12 +94,14 @@ class TechProcessTracker:
                 # CHECK - currently stabilized scene should be superset of lastStableScene
                 self.__currentScene.finalize()
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame, self.nextSceneId())
-                return logRecord
+                return None
 
         currentSceneWasUnstable = not self.__currentScene.stabilized
         closeToCurrentScene = self.__currentScene.addIfClose(bboxes, framePos, framePosMsec, frame)
 
+        logRecord = None
         if currentSceneWasUnstable and self.__currentScene.stabilized:
+            print('currentSceneWasUnstable and self.__currentScene.stabilized')
             # add to stable scene IF this scene was unstable before addition new frame and become stable after
             logRecord = self.__registerCurrentSceneAsStable(frame, framePos)
 

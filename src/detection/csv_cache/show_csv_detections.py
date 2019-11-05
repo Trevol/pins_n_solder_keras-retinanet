@@ -1,8 +1,8 @@
 import cv2
-from detection.csv_cache import DetectionsCSV
-import utils
+from detection.csv_cache.DetectionsCSV import DetectionsCSV
+import utils.visualize
 from utils import resize
-from utils import VideoPlayback
+from utils.VideoPlayback import VideoPlayback
 
 
 def csvToPcl():

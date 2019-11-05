@@ -65,5 +65,5 @@ class ModelsContext:
 
 if __name__ == '__main__':
     with ModelsContext() as ctx:
-        assert ctx.detector is not None
-    assert ModelsContext.detector is not None
+        assert ctx.getDetector() is not None
+    assert ModelsContext.getDetector() is not None
