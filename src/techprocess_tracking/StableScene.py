@@ -71,6 +71,10 @@ class StableScene:
     def stabilized(self):
         return self.__frameInfos.stabilized()
 
+    @property
+    def unstable(self):
+        return not self.stabilized
+
     def addIfClose(self, bboxes, framePos, framePosMsec, frame):
         if not any(bboxes):
             return False  # skip empty detections
@@ -176,8 +180,8 @@ class StableScene:
         pinsFilter = (p for p in self.pins if p.box.containsPoint(pt))
         return next(pinsFilter, None)
 
-    def detectSolder(self, prevScene, currentSceneSegmentation, sceneSegmentationScaleY, sceneSegmentationScaleX,
-                     frame=None):
+    def detectSolder_OLD(self, prevScene, currentSceneSegmentation, sceneSegmentationScaleY, sceneSegmentationScaleX,
+                         frame=None):
         assert self.pinsCount == prevScene.pinsCount
         pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
 
@@ -217,6 +221,16 @@ class StableScene:
             else:
                 currentPin.withSolder = self.__detectSolderOnPin(currentPin, currentSceneSegmentation,
                                                                  sceneSegmentationScaleY, sceneSegmentationScaleX)
+
+        self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recompute count of pins with solder
+
+    def detectSolder(self, prevScene, currentSceneSegmentation, sceneSegmentationScaleY, sceneSegmentationScaleX,
+                     frame=None):
+        assert self.pinsCount == prevScene.pinsCount
+
+        for pin in self.__pins:
+            pin.withSolder = self.__detectSolderOnPin(pin, currentSceneSegmentation,
+                                                      sceneSegmentationScaleY, sceneSegmentationScaleX)
 
         self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recompute count of pins with solder
 

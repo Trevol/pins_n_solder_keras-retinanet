@@ -20,3 +20,8 @@ sudo apt-get install dov4l dv4l lib32v4l-0 libpt-1.10.10-plugins-v4l2 libv4l-0 l
 sudo apt-get install v4l-utils
 https://www.christitus.com/logitech-c920-linux-driver/
 https://askubuntu.com/questions/396897/logitech-c920-on-ubuntu-12-04-lts-where-to-begin-does-it-work-anyone-using-it
+
+По камерам
+https://www.baslerweb.com/en/sales-support/knowledge-base/usb3-0-cameras/
+https://visionmachines.ru/catalog/kamery/matrichnye_basler/dart/287/
+www.vitec.ru

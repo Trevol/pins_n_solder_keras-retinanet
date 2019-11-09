@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 
 import utils.visualize
+
 from utils.VideoPlayback import VideoPlayback
 
 from techprocess_tracking.TechProcessTracker import TechProcessTracker
@@ -55,17 +56,20 @@ def printMemoryUsage():
 
 
 def createServices(pclFile, segmentationCacheDir):
-    from detection.PickledDictionaryPinDetector import PickledDictionaryPinDetector
-    pinDetector = PickledDictionaryPinDetector(pclFile)
+    # from detection.PickledDictionaryPinDetector import PickledDictionaryPinDetector
+    # pinDetector = PickledDictionaryPinDetector(pclFile)
 
-    # from models.weights.config import retinanet_pins_weights, unet_pins_weights
-    # from detection.RetinanetPinDetector import RetinanetPinDetector
-    # pinDetector = RetinanetPinDetector(retinanet_pins_weights, warmup=True)
+    from models.weights.config import retinanet_pins_weights
+    from detection.RetinanetPinDetector import RetinanetPinDetector
+    pinDetector = RetinanetPinDetector(retinanet_pins_weights, warmup=True)
+
     # -----------------------------------
-    from segmentation.CachedSceneSegmentation import CachedSceneSegmentation
-    sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
-    # from segmentation.UnetSceneSegmentation import UnetSceneSegmentation
-    # sceneSegmentation = UnetSceneSegmentation(unet_pins_weights, warmup=True)
+
+    # from segmentation.CachedSceneSegmentation import CachedSceneSegmentation
+    # sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
+    from segmentation.UnetSceneSegmentation import UnetSceneSegmentation
+    from models.weights.config import unet_pins_weights
+    sceneSegmentation = UnetSceneSegmentation(unet_pins_weights, warmup=True)
     return pinDetector, sceneSegmentation
 
 
@@ -73,9 +77,9 @@ def main():
     printMemoryUsage()
 
     def getFramesRange():
-        framesRange = (4100, None)
+        # framesRange = (4100, None)
         # framesRange = (8100, None)
-        # framesRange = None
+        framesRange = None
         return framesRange
 
     np.seterr(all='raise')
