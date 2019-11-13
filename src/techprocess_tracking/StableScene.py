@@ -186,10 +186,8 @@ class StableScene:
         pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
 
         ############ DEBUG ############
-        if not pinsAreClose:
-            def DEBUG_Differences():
-                if frame is None:
-                    return
+        if not pinsAreClose:  # DEBUG differences
+            if frame is not None:
                 f = frame.copy()
                 for pin in self.__pins:
                     x0, y0, x1, y1 = pin.box.box
@@ -199,8 +197,6 @@ class StableScene:
                     cv2.rectangle(f, (x0, y0), (x1, y1), (0, 0, 255), 1)
                 cv2.imshow('DEBUG_Differences', f)
                 cv2.waitKey()
-
-            DEBUG_Differences()
         ####################
 
         assert pinsAreClose

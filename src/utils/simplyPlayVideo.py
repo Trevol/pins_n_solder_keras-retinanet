@@ -14,16 +14,13 @@ def playVideo():
             super(VideoHandler, self).__init__(frameSize)
             self._frameScaleFactor = .85
 
-        def processDisplayFrame(self, displayFrame0):
-            return utils.visualize.putFramePos((10, 40), displayFrame0, self._framePos, None)
-
     ################################################################
     for sourceVideoFile in files():
         videoPlayback = VideoPlayback(sourceVideoFile, 1, autoplayInitially=False)
         handler = VideoHandler(videoPlayback.frameSize())
 
-        # framesRange = (4150, None)
-        framesRange = None
+        framesRange = (4000, None)
+        # framesRange = None
         videoPlayback.playWithHandler(handler, framesRange)
         cv2.waitKey()
         videoPlayback.release()
