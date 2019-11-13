@@ -180,36 +180,6 @@ class StableScene:
         pinsFilter = (p for p in self.pins if p.box.containsPoint(pt))
         return next(pinsFilter, None)
 
-    def detectSolder_OLD(self, prevScene, currentSceneSegmentation, sceneSegmentationScaleY, sceneSegmentationScaleX,
-                         frame=None):
-        assert self.pinsCount == prevScene.pinsCount
-        pinsAreClose, prevPins = self.__checkPinsCloseToScene(prevScene.pins)
-
-        ############ DEBUG ############
-        if not pinsAreClose:  # DEBUG differences
-            if frame is not None:
-                f = frame.copy()
-                for pin in self.__pins:
-                    x0, y0, x1, y1 = pin.box.box
-                    cv2.rectangle(f, (x0, y0), (x1, y1), 255, 1)
-                for pin in prevScene.pins:
-                    x0, y0, x1, y1 = pin.box.box
-                    cv2.rectangle(f, (x0, y0), (x1, y1), (0, 0, 255), 1)
-                cv2.imshow('DEBUG_Differences', f)
-                cv2.waitKey()
-        ####################
-
-        assert pinsAreClose
-
-        for currentPin, prevPin in zip(self.__pins, prevPins):
-            if prevPin.withSolder:
-                currentPin.withSolder = prevPin.withSolder
-            else:
-                currentPin.withSolder = self.__detectSolderOnPin(currentPin, currentSceneSegmentation,
-                                                                 sceneSegmentationScaleY, sceneSegmentationScaleX)
-
-        self.__pinsWithSolderCount = ilen(1 for p in self.__pins if p.withSolder)  # recompute count of pins with solder
-
     def detectSolder(self, prevScene, currentSceneSegmentation, sceneSegmentationScaleY, sceneSegmentationScaleX,
                      frame=None):
         assert self.pinsCount == prevScene.pinsCount

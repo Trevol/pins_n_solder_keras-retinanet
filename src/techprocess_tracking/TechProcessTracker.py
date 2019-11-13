@@ -77,42 +77,7 @@ class TechProcessTracker:
     def __skipEdgeBoxes(boxes, frameShape):
         return [b for b in boxes if b.farFromFrameEdges(frameShape)]
 
-    #####################################################################
-    def __trackBoxes_NO_DEBUG(self, bboxes, framePos, framePosMsec, frame):
-        if not self.__currentScene:
-            if any(bboxes):
-                self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame, self.nextSceneId())
-            else:
-                # TODO:  collect background without pins and arms
-                pass
-            return None
-
-        lastStableScene = utils.lastOrDefault(self.__stableScenes, None)
-        if lastStableScene:  # stable scene define workarea (cluster of pins)
-            bboxes = lastStableScene.inWorkArea(bboxes)
-            if len(bboxes) < lastStableScene.pinsCount:
-                # CHECK - currently stabilized scene should be superset of lastStableScene
-                self.__currentScene.finalize()
-                self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame, self.nextSceneId())
-                return None
-
-        currentSceneWasUnstable = self.__currentScene.unstable
-        closeToCurrentScene = self.__currentScene.addIfClose(bboxes, framePos, framePosMsec, frame)
-
-        logRecord = None
-        if currentSceneWasUnstable and self.__currentScene.stabilized:
-            print('currentSceneWasUnstable and self.__currentScene.stabilized')
-            # add to stable scene IF this scene was unstable before addition new frame and become stable after
-            logRecord = self.__registerCurrentSceneAsStable(frame, framePos)
-
-        if not closeToCurrentScene:
-            self.__currentScene.finalize()
-            self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame, self.nextSceneId())
-        return logRecord
-
     def __trackBoxes(self, bboxes, framePos, framePosMsec, frame):
-        if framePos == 4156:
-            d = 1
         if not self.__currentScene:
             if any(bboxes):
                 self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame, self.nextSceneId())
@@ -143,7 +108,6 @@ class TechProcessTracker:
             self.__currentScene = StableScene(bboxes, framePos, framePosMsec, frame, self.nextSceneId())
         return logRecord
 
-    ##############################################################################
     def __registerCurrentSceneAsStable(self, frame, framePos):
         assert self.__currentScene.stabilized
         assert self.__currentScene not in self.__stableScenes
