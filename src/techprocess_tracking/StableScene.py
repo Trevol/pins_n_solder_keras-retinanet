@@ -201,16 +201,6 @@ class StableScene:
 
         assert pinsAreClose
 
-        # def DEBUG():
-        #     img = colorizeLabel(currentSceneSegmentation, BGR)
-        #     for pin in self.__pins:
-        #         rescaledBox = pin.box.rescale(sceneSegmentationScaleY, sceneSegmentationScaleX)
-        #         x0, y0, x1, y1 = rescaledBox.box
-        #         cv2.rectangle(img, (x0, y0), (x1, y1), 255, 1)
-        #     deferredCall(cv2.imshow, 'Scene Segmentation', img)
-        #
-        # DEBUG()
-
         for currentPin, prevPin in zip(self.__pins, prevPins):
             if prevPin.withSolder:
                 currentPin.withSolder = prevPin.withSolder
@@ -223,6 +213,16 @@ class StableScene:
     def detectSolder(self, prevScene, currentSceneSegmentation, sceneSegmentationScaleY, sceneSegmentationScaleX,
                      frame=None):
         assert self.pinsCount == prevScene.pinsCount
+
+        # def DEBUG_showSegmentation():
+        #     img = colorizeLabel(currentSceneSegmentation, BGR)
+        #     for pin in self.__pins:
+        #         rescaledBox = pin.box.rescale(sceneSegmentationScaleY, sceneSegmentationScaleX)
+        #         x0, y0, x1, y1 = rescaledBox.box
+        #         cv2.rectangle(img, (x0, y0), (x1, y1), 255, 1)
+        #     deferredCall(cv2.imshow, 'Scene Segmentation', img)
+        #
+        # DEBUG_showSegmentation()
 
         for pin in self.__pins:
             pin.withSolder = self.__detectSolderOnPin(pin, currentSceneSegmentation,
