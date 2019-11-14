@@ -1,38 +1,47 @@
 import numpy as np
 import cv2
 
-from utils.Timer import timeit
+
+class Rect:
+    def __init__(self, rect):
+        self.rect = rect
+        self.pt1, self.pt2 = rect
+
+    def draw(self, img, color=255):
+        return cv2.rectangle(img, self.pt1, self.pt2, color, 1)
+
+    def imageCut(self, img):
+        (x1, y1), (x2, y2) = self.rect
+        return img[y1:y2, x1:x2]
 
 
 def main():
-    image = np.random.randint(0, 256, [800, 1300], np.uint8)
-    image[500: 550, 1000:1050] = 127
-    tpl = np.full([50, 50], 127, np.uint8)
+    im4128 = cv2.imread('4128.png')
+    im4136 = cv2.imread('4136.png')
 
-    for _ in range(3):
-        with timeit():
-            r1 = cv2.matchTemplate(image, tpl, cv2.TM_SQDIFF_NORMED)
-    print('------------------')
-    for _ in range(3):
-        with timeit():
-            r2 = cv2.matchTemplate(image, tpl, cv2.TM_CCORR_NORMED)
-    print('------------------')
-    for _ in range(3):
-        with timeit():
-            r1 = cv2.matchTemplate(image, tpl, cv2.TM_SQDIFF_NORMED)
+    # rawRect = [(420, 664), (472, 713)]
+    rawRect = [(938, 116),  (979, 157)]
+    templateRect = Rect(rawRect)
+    templateFrom4128 = templateRect.imageCut(im4128)
 
-    return
-    cv2.imshow('image', image)
-    cv2.imshow('r1', np.uint8(r1 * 255))
-    cv2.imshow('r2', np.uint8(r2 * 255))
+    cv2.imshow('templateFrom4128', templateFrom4128)
+    cv2.imshow('4128', templateRect.draw(im4128.copy()))
+
+    r = cv2.matchTemplate(im4136, templateFrom4128, cv2.TM_CCORR_NORMED)
+    max = r.max()
+    print(max)
+
+
+    x, y = cv2.minMaxLoc(r)[3]
+    print(x, y)
+
+    visMatch = (r / max * 255).round().astype(np.uint8)
+    visMatch = cv2.circle(visMatch, (x, y), 3, 0, -1)
+    cv2.imshow('r', visMatch)
+    vis4136 = cv2.circle(templateRect.draw(im4136.copy()), (x, y), 3, (0, 0, 255), -1)
+    cv2.imshow('4136', vis4136)
+
     while cv2.waitKey() != 27: pass
 
-
-def main():
-    # TODO: diff and cross-correlation between stable frames - prev and  4156
-    image = np.random.randint(0, 256, [800, 1300], np.uint8)
-    r = cv2.matchTemplate(image, image, cv2.TM_CCORR_NORMED)
-    cv2.imshow('r2', np.uint8(r * 255))
-    while cv2.waitKey() != 27: pass
 
 main()
