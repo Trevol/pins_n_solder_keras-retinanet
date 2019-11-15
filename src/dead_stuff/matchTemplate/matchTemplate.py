@@ -20,17 +20,19 @@ def main():
     im4136 = cv2.imread('4136.png')
 
     # rawRect = [(420, 664), (472, 713)]
-    rawRect = [(938, 116),  (979, 157)]
+    rawRect = [(938, 116), (979, 157)]
     templateRect = Rect(rawRect)
     templateFrom4128 = templateRect.imageCut(im4128)
 
-    cv2.imshow('templateFrom4128', templateFrom4128)
+    # cv2.imshow('templateFrom4128', templateFrom4128)
     cv2.imshow('4128', templateRect.draw(im4128.copy()))
 
-    r = cv2.matchTemplate(im4136, templateFrom4128, cv2.TM_CCORR_NORMED)
+    h, w = im4136.shape[:2]
+    r = cv2.matchTemplate(im4136[0:h, 0:w], templateFrom4128, cv2.TM_CCORR_NORMED)
+
+    # r = cv2.matchTemplate(im4136, templateFrom4128, cv2.TM_CCORR_NORMED)
     max = r.max()
     print(max)
-
 
     x, y = cv2.minMaxLoc(r)[3]
     print(x, y)

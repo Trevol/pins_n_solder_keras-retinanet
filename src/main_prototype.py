@@ -56,20 +56,23 @@ def printMemoryUsage():
 
 
 def createServices(pclFile, segmentationCacheDir):
-    # from detection.PickledDictionaryPinDetector import PickledDictionaryPinDetector
-    # pinDetector = PickledDictionaryPinDetector(pclFile)
+    from detection.PickledDictionaryPinDetector import PickledDictionaryPinDetector
+    pinDetector = PickledDictionaryPinDetector(pclFile)
 
-    from models.weights.config import retinanet_pins_weights
-    from detection.RetinanetPinDetector import RetinanetPinDetector
-    pinDetector = RetinanetPinDetector(retinanet_pins_weights, warmup=True)
+    # from models.weights.config import retinanet_pins_weights
+    # from detection.RetinanetPinDetector import RetinanetPinDetector
+    # pinDetector = RetinanetPinDetector(retinanet_pins_weights, warmup=True)
 
     # -----------------------------------
 
-    # from segmentation.CachedSceneSegmentation import CachedSceneSegmentation
-    # sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
-    from segmentation.UnetSceneSegmentation import UnetSceneSegmentation
-    from models.weights.config import unet_pins_weights
-    sceneSegmentation = UnetSceneSegmentation(unet_pins_weights, warmup=True)
+    from segmentation.CachedSceneSegmentation import CachedSceneSegmentation
+    sceneSegmentation = CachedSceneSegmentation(segmentationCacheDir)
+    # from segmentation.UnetSceneSegmentation import UnetSceneSegmentation
+    # from models.weights.config import unet_pins_weights
+    # sceneSegmentation = UnetSceneSegmentation(unet_pins_weights, warmup=True)
+
+    # ------------------------------------
+
     return pinDetector, sceneSegmentation
 
 
