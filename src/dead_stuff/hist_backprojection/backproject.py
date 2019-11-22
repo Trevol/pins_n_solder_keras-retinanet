@@ -3,9 +3,8 @@ import numpy as np
 
 
 def imageWithRoi():
-    file, roi = 'messi5.jpg', (20, 273, 121, 295)
-    # file, roi = '4136.jpg', (1, 2, 3, 4)
-
+    # file, roi = 'messi5.jpg', (20, 273, 121, 295)
+    file, roi = '4136.png', (699, 659, 752, 726)
     return cv2.imread(file), roi
 
 
@@ -46,6 +45,12 @@ def main():
            backProjection2=backProjection2,
            thresholded=thresholded,
            result=result)
+    while cv2.waitKey() != 27: pass
+
+
+def main__():
+    bgrImage, roi = imageWithRoi()
+    imshow(drawRoi(bgrImage.copy(), roi))
     while cv2.waitKey() != 27: pass
 
 
