@@ -3,8 +3,8 @@ import numpy as np
 
 
 def imageWithRoi():
-    # file, roi = 'messi5.jpg', (20, 273, 121, 295)
-    file, roi = '4136.png', (699, 659, 752, 726)
+    file, roi = '../_images/messi5.jpg', (20, 273, 121, 295)
+    # file, roi = '../_images/4136.png', (699, 659, 752, 726)
     return cv2.imread(file), roi
 
 

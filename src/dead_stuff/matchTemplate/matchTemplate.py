@@ -16,8 +16,8 @@ class Rect:
 
 
 def main():
-    im4128 = cv2.imread('4128.png')
-    im4136 = cv2.imread('4136.png')
+    im4128 = cv2.imread('../_images/4128.png')
+    im4136 = cv2.imread('../_images/4136.png')
 
     # rawRect = [(420, 664), (472, 713)]
     rawRect = [(938, 116), (979, 157)]
@@ -46,8 +46,8 @@ def main():
     while cv2.waitKey() != 27: pass
 
 
-def main():
-    im4128 = cv2.imread('4128.png')
+def main_():
+    im4128 = cv2.imread('../_images/4128.png')
     im4136 = np.full_like(im4128, 200)
 
     # rawRect = [(420, 664), (472, 713)]
